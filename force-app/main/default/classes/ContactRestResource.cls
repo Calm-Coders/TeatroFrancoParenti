@@ -2,6 +2,7 @@
 global without sharing class ContactRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
     private static final Integer MAX_SECUTIX_LONG_TEXT_LENGTH = 32768;
+    private static final String FLOW_NAME = 'ContactRestResource.receiveContact';
 
     @HttpPost
     global static void receiveContact() {
@@ -10,20 +11,20 @@ global without sharing class ContactRestResource {
         }
 
         Integration_Log__c logRec = new Integration_Log__c();
-        initializeLog(logRec, 'ContactRestResource.receiveContact');
+        initializeLog(logRec, FLOW_NAME);
 
         try {
             String rawBody = (RestContext.request == null || RestContext.request.requestBody == null)
                 ? null
                 : RestContext.request.requestBody.toString();
-            logRec.Request_Body__c = abbreviateForLog(rawBody);
+            logRec.Request_Body__c = trimForLog(rawBody);
 
             if (String.isBlank(rawBody)) {
                 setErrorResponse(400, 'Request body is required.', logRec);
                 return;
             }
 
-            List<ContactPayloadEnvelope> payloads;
+            List<ContactWrapper> payloads;
             try {
                 payloads = deserializePayloads(rawBody);
             } catch (System.JSONException e) {
@@ -42,13 +43,13 @@ global without sharing class ContactRestResource {
             List<String> externalContactNumbers = new List<String>();
 
             try {
-                for (ContactPayloadEnvelope payloadEnvelope : payloads) {
-                    validatePayload(payloadEnvelope);
-                    Contact newContact = createContact(payloadEnvelope);
+                for (ContactWrapper contactWrapper : payloads) {
+                    validatePayload(contactWrapper);
+                    Contact newContact = createContact(contactWrapper);
 
                     createdContactIds.add(newContact.Id);
-                    if (!String.isBlank(payloadEnvelope.payload.contactNumber)) {
-                        externalContactNumbers.add(payloadEnvelope.payload.contactNumber);
+                    if (!String.isBlank(contactWrapper.payload.contactNumber)) {
+                        externalContactNumbers.add(contactWrapper.payload.contactNumber);
                     }
                 }
             } catch (Exception e) {
@@ -78,11 +79,11 @@ global without sharing class ContactRestResource {
         }
     }
 
-    private static Contact buildContact(ContactPayloadEnvelope payloadEnvelope) {
-        ContactWebhookPayload payload = payloadEnvelope.payload;
-        Map<String, Object> rawPayload = payloadEnvelope.rawPayload;
+    private static Contact buildContact(ContactWrapper contactWrapper) {
+        ContactWrapper.Payload payload = contactWrapper.payload;
+        Map<String, Object> rawPayload = contactWrapper.rawPayload;
         Contact contactRecord = new Contact();
-        IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
 
         contactRecord.FirstName = individual == null ? null : individual.individualFirstname;
         contactRecord.LastName = deriveLastName(payload);
@@ -95,7 +96,7 @@ global without sharing class ContactRestResource {
             contactRecord.Secutix_Birthdate__c = birthdate;
         }
 
-        AddressPayload primaryAddress = selectPrimaryAddress(payload.addresses);
+        ContactWrapper.AddressPayload primaryAddress = selectPrimaryAddress(payload.addresses);
         if (primaryAddress != null) {
             contactRecord.MailingStreet = buildStreet(primaryAddress);
             contactRecord.MailingCity = primaryAddress.town;
@@ -121,10 +122,73 @@ global without sharing class ContactRestResource {
             rawPayload == null ? null : rawPayload.get('authorizations'),
             MAX_SECUTIX_LONG_TEXT_LENGTH
         );
+        contactRecord.Contact_Ballot_Data__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('contactBallotData'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Contact_Connections__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('contactConnections'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Contact_Criteria__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('contactCriteria'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Contact_Origin_Detail__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('contactOrigin'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Contact_Permission__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('contactPermission'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Contact_Qualities__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('contactQualities'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Created_From__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('createdFrom'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Addresses__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('addresses'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Advantages__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('advantages'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Individual_Contact__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('individualContact'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
         contactRecord.Secutix_Indicators__c = serializeRawValue(
             rawPayload == null ? null : rawPayload.get('indicators'),
             MAX_SECUTIX_LONG_TEXT_LENGTH
         );
+        contactRecord.Invalidated_Contact_Qualities__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('invalidatedContactQualities'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Social_Connections__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('socialConnections'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+        contactRecord.Structure_Contact__c = serializeRawValue(
+            rawPayload == null ? null : rawPayload.get('structureContact'),
+            MAX_SECUTIX_LONG_TEXT_LENGTH
+        );
+
+        contactRecord.Creation_Date__c = truncateValue(payload.creationDate, 40);
+        contactRecord.Date_Last_Modified__c = truncateValue(payload.dateLastModified, 40);
+        contactRecord.End_Validity_Date__c = truncateValue(payload.endValidityDate, 40);
+        contactRecord.Has_Advantages__c = payload.hasAdvantages;
+        contactRecord.Has_Warning__c = payload.hasWarning;
+        contactRecord.Guest__c = payload.guest;
+        contactRecord.Login__c = truncateValue(payload.login, 255);
+        contactRecord.Login_Last_Update_Time__c = truncateValue(payload.loginLastUpdateTime, 40);
+        contactRecord.Login_Last_Update_User__c = truncateValue(payload.loginLastUpdateUser, 80);
+        contactRecord.Role__c = truncateValue(payload.role, 40);
 
         String description = buildDescription(payload, primaryAddress);
         if (!String.isBlank(description)) {
@@ -137,51 +201,169 @@ global without sharing class ContactRestResource {
         return contactRecord;
     }
 
-    private static List<ContactPayloadEnvelope> deserializePayloads(String rawBody) {
+    private static List<ContactWrapper> deserializePayloads(String rawBody) {
         String trimmedBody = rawBody == null ? null : rawBody.trim();
 
         if (String.isBlank(trimmedBody)) {
-            return new List<ContactPayloadEnvelope>();
+            return new List<ContactWrapper>();
         }
 
         Object rawPayload = JSON.deserializeUntyped(trimmedBody);
-        List<ContactPayloadEnvelope> payloads = new List<ContactPayloadEnvelope>();
+        List<ContactWrapper> payloads = new List<ContactWrapper>();
 
         if (rawPayload instanceof List<Object>) {
             for (Object item : (List<Object>) rawPayload) {
-                payloads.add(buildPayloadEnvelope(item));
+                payloads.add(buildWrapper(item));
             }
             return payloads;
         }
 
-        payloads.add(buildPayloadEnvelope(rawPayload));
+        if (rawPayload instanceof Map<String, Object>) {
+            Map<String, Object> rawPayloadMap = (Map<String, Object>) rawPayload;
+            if (rawPayloadMap.containsKey('bucket')) {
+                Object bucketPayload = rawPayloadMap.get('bucket');
+                if (bucketPayload == null) {
+                    return payloads;
+                }
+
+                if (!(bucketPayload instanceof List<Object>)) {
+                    throw new ContactWebhookException('The bucket node must be a JSON array.');
+                }
+
+                for (Object item : (List<Object>) bucketPayload) {
+                    payloads.add(buildWrapper(item));
+                }
+                return payloads;
+            }
+        }
+
+        payloads.add(buildWrapper(rawPayload));
         return payloads;
     }
 
-    private static ContactPayloadEnvelope buildPayloadEnvelope(Object rawPayload) {
+    private static ContactWrapper buildWrapper(Object rawPayload) {
         if (!(rawPayload instanceof Map<String, Object>)) {
             throw new ContactWebhookException('Each contact payload must be a valid JSON object.');
         }
 
         Map<String, Object> rawPayloadMap = (Map<String, Object>) rawPayload;
-        ContactPayloadEnvelope envelope = new ContactPayloadEnvelope();
-        envelope.rawPayload = rawPayloadMap;
-        envelope.payload = (ContactWebhookPayload) JSON.deserialize(
-            JSON.serialize(rawPayloadMap),
-            ContactWebhookPayload.class
-        );
-        return envelope;
+        ContactWrapper contactWrapper = new ContactWrapper();
+        contactWrapper.rawPayload = rawPayloadMap;
+        contactWrapper.payload = buildPayload(rawPayloadMap);
+        return contactWrapper;
     }
 
-    private static void validatePayload(ContactPayloadEnvelope payloadEnvelope) {
-        if (payloadEnvelope == null || payloadEnvelope.payload == null) {
+    private static ContactWrapper.Payload buildPayload(Map<String, Object> rawPayloadMap) {
+        ContactWrapper.Payload payload = new ContactWrapper.Payload();
+        payload.addresses = buildAddresses(rawPayloadMap.get('addresses'));
+        payload.contactId = asLong(rawPayloadMap.get('contactId'));
+        payload.contactNumber = asString(rawPayloadMap.get('contactNumber'));
+        payload.contactOrigin = buildContactOrigin(rawPayloadMap.get('contactOrigin'));
+        payload.creationDate = asString(rawPayloadMap.get('creationDate'));
+        payload.dateLastModified = asString(rawPayloadMap.get('dateLastModified'));
+        payload.endValidityDate = asString(rawPayloadMap.get('endValidityDate'));
+        payload.guest = asBoolean(rawPayloadMap.get('guest'));
+        payload.hasAdvantages = asBoolean(rawPayloadMap.get('hasAdvantages'));
+        payload.hasWarning = asBoolean(rawPayloadMap.get('hasWarning'));
+        payload.individualContact = buildIndividualContact(rawPayloadMap.get('individualContact'));
+        payload.login = asString(rawPayloadMap.get('login'));
+        payload.loginLastUpdateTime = asString(rawPayloadMap.get('loginLastUpdateTime'));
+        payload.loginLastUpdateUser = asString(rawPayloadMap.get('loginLastUpdateUser'));
+        payload.role = asString(rawPayloadMap.get('role'));
+        payload.state = asString(rawPayloadMap.get('state'));
+        payload.structureContact = buildStructureContact(rawPayloadMap.get('structureContact'));
+        payload.type = asString(rawPayloadMap.get('type'));
+        return payload;
+    }
+
+    private static List<ContactWrapper.AddressPayload> buildAddresses(Object rawAddresses) {
+        List<ContactWrapper.AddressPayload> addresses = new List<ContactWrapper.AddressPayload>();
+        if (!(rawAddresses instanceof List<Object>)) {
+            return addresses;
+        }
+
+        for (Object rawAddress : (List<Object>) rawAddresses) {
+            if (!(rawAddress instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            Map<String, Object> rawAddressMap = (Map<String, Object>) rawAddress;
+            ContactWrapper.AddressPayload address = new ContactWrapper.AddressPayload();
+            address.billingAddress = asBoolean(rawAddressMap.get('billingAddress'));
+            address.countryCode = asString(rawAddressMap.get('countryCode'));
+            address.formattedAddress = asString(rawAddressMap.get('formattedAddress'));
+            address.line1 = asString(rawAddressMap.get('line1'));
+            address.line2 = asString(rawAddressMap.get('line2'));
+            address.line3 = asString(rawAddressMap.get('line3'));
+            address.main = asBoolean(rawAddressMap.get('main'));
+            address.shippingAddress = asBoolean(rawAddressMap.get('shippingAddress'));
+            address.street1 = asString(rawAddressMap.get('street1'));
+            address.street2 = asString(rawAddressMap.get('street2'));
+            address.street3 = asString(rawAddressMap.get('street3'));
+            address.town = asString(rawAddressMap.get('town'));
+            address.zipCode = asString(rawAddressMap.get('zipCode'));
+            addresses.add(address);
+        }
+
+        return addresses;
+    }
+
+    private static ContactWrapper.ContactOriginPayload buildContactOrigin(Object rawContactOrigin) {
+        if (!(rawContactOrigin instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        Map<String, Object> rawContactOriginMap = (Map<String, Object>) rawContactOrigin;
+        ContactWrapper.ContactOriginPayload contactOrigin = new ContactWrapper.ContactOriginPayload();
+        contactOrigin.code = asString(rawContactOriginMap.get('code'));
+        return contactOrigin;
+    }
+
+    private static ContactWrapper.IndividualContactPayload buildIndividualContact(Object rawIndividualContact) {
+        if (!(rawIndividualContact instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        Map<String, Object> rawIndividualMap = (Map<String, Object>) rawIndividualContact;
+        ContactWrapper.IndividualContactPayload individual = new ContactWrapper.IndividualContactPayload();
+        individual.alternativeEmails = asStringList(rawIndividualMap.get('alternativeEmails'));
+        individual.cellPhoneNumber = asString(rawIndividualMap.get('cellPhoneNumber'));
+        individual.email = asString(rawIndividualMap.get('email'));
+        individual.individualBirthdate = asString(rawIndividualMap.get('individualBirthdate'));
+        individual.individualFirstname = asString(rawIndividualMap.get('individualFirstname'));
+        individual.individualLastname = asString(rawIndividualMap.get('individualLastname'));
+        individual.individualTitle = asString(rawIndividualMap.get('individualTitle'));
+        return individual;
+    }
+
+    private static ContactWrapper.StructureContactPayload buildStructureContact(Object rawStructureContact) {
+        if (!(rawStructureContact instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        Map<String, Object> rawStructureMap = (Map<String, Object>) rawStructureContact;
+        ContactWrapper.StructureContactPayload structure = new ContactWrapper.StructureContactPayload();
+        structure.alternativeEmails = asStringList(rawStructureMap.get('alternativeEmails'));
+        structure.companyName = asString(rawStructureMap.get('companyName'));
+        structure.cellPhoneNumber = asString(rawStructureMap.get('cellPhoneNumber'));
+        structure.displayName = asString(rawStructureMap.get('displayName'));
+        structure.email = asString(rawStructureMap.get('email'));
+        structure.legalName = asString(rawStructureMap.get('legalName'));
+        structure.name = asString(rawStructureMap.get('name'));
+        structure.organizationName = asString(rawStructureMap.get('organizationName'));
+        structure.structureName = asString(rawStructureMap.get('structureName'));
+        return structure;
+    }
+
+    private static void validatePayload(ContactWrapper contactWrapper) {
+        if (contactWrapper == null || contactWrapper.payload == null) {
             throw new ContactWebhookException('Each contact payload must be a valid JSON object.');
         }
     }
 
-    private static Contact createContact(ContactPayloadEnvelope payloadEnvelope) {
-        ContactWebhookPayload payload = payloadEnvelope.payload;
-        Contact contactRecord = buildContact(payloadEnvelope);
+    private static Contact createContact(ContactWrapper contactWrapper) {
+        ContactWrapper.Payload payload = contactWrapper.payload;
+        Contact contactRecord = buildContact(contactWrapper);
 
         try {
             insert contactRecord;
@@ -208,10 +390,10 @@ global without sharing class ContactRestResource {
         }
     }
 
-    private static String deriveLastName(ContactWebhookPayload payload) {
+    private static String deriveLastName(ContactWrapper.Payload payload) {
         List<String> candidates = new List<String>();
-        IndividualContactPayload individual = payload == null ? null : payload.individualContact;
-        StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
 
         if (individual != null) {
             addDistinctValue(candidates, individual.individualLastname);
@@ -242,10 +424,10 @@ global without sharing class ContactRestResource {
         );
     }
 
-    private static String deriveEmail(ContactWebhookPayload payload) {
+    private static String deriveEmail(ContactWrapper.Payload payload) {
         List<String> candidates = new List<String>();
-        IndividualContactPayload individual = payload == null ? null : payload.individualContact;
-        StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
 
         if (individual != null) {
             addDistinctValue(candidates, individual.email);
@@ -260,10 +442,10 @@ global without sharing class ContactRestResource {
         return firstNonBlankValue(candidates);
     }
 
-    private static String deriveMobilePhone(ContactWebhookPayload payload) {
+    private static String deriveMobilePhone(ContactWrapper.Payload payload) {
         List<String> candidates = new List<String>();
-        IndividualContactPayload individual = payload == null ? null : payload.individualContact;
-        StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
 
         if (individual != null) {
             addDistinctValue(candidates, individual.cellPhoneNumber);
@@ -287,7 +469,7 @@ global without sharing class ContactRestResource {
             (normalizedMessage.contains('required') || normalizedMessage.contains('missing'));
     }
 
-    private static String buildFallbackAccountName(ContactWebhookPayload payload) {
+    private static String buildFallbackAccountName(ContactWrapper.Payload payload) {
         List<String> nameParts = new List<String>();
 
         if (payload != null && payload.individualContact != null) {
@@ -303,12 +485,12 @@ global without sharing class ContactRestResource {
         return ('Secutix - ' + baseName).left(255);
     }
 
-    private static AddressPayload selectPrimaryAddress(List<AddressPayload> addresses) {
+    private static ContactWrapper.AddressPayload selectPrimaryAddress(List<ContactWrapper.AddressPayload> addresses) {
         if (addresses == null || addresses.isEmpty()) {
             return null;
         }
 
-        for (AddressPayload candidate : addresses) {
+        for (ContactWrapper.AddressPayload candidate : addresses) {
             if (candidate != null && (candidate.main == true || candidate.billingAddress == true || candidate.shippingAddress == true)) {
                 return candidate;
             }
@@ -317,7 +499,7 @@ global without sharing class ContactRestResource {
         return addresses[0];
     }
 
-    private static String buildStreet(AddressPayload address) {
+    private static String buildStreet(ContactWrapper.AddressPayload address) {
         if (address == null) {
             return null;
         }
@@ -337,7 +519,7 @@ global without sharing class ContactRestResource {
         return streetLines.isEmpty() ? null : String.join(streetLines, '\n');
     }
 
-    private static String buildDescription(ContactWebhookPayload payload, AddressPayload address) {
+    private static String buildDescription(ContactWrapper.Payload payload, ContactWrapper.AddressPayload address) {
         List<String> lines = new List<String>();
 
         addLabelValue(lines, 'Secutix contactId', payload.contactId == null ? null : String.valueOf(payload.contactId));
@@ -398,6 +580,58 @@ global without sharing class ContactRestResource {
         return null;
     }
 
+    private static String asString(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static Boolean asBoolean(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+
+        String stringValue = String.valueOf(value);
+        if (stringValue == 'true') {
+            return true;
+        }
+
+        if (stringValue == 'false') {
+            return false;
+        }
+
+        return null;
+    }
+
+    private static Long asLong(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(String.valueOf(value));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static List<String> asStringList(Object value) {
+        List<String> values = new List<String>();
+        if (!(value instanceof List<Object>)) {
+            return values;
+        }
+
+        for (Object item : (List<Object>) value) {
+            if (item != null) {
+                values.add(String.valueOf(item));
+            }
+        }
+
+        return values;
+    }
+
     private static String truncateValue(String value, Integer maxLength) {
         if (value == null || maxLength == null || value.length() <= maxLength) {
             return value;
@@ -438,15 +672,15 @@ global without sharing class ContactRestResource {
 
         logRec.Is_Error__c = isError;
         logRec.Response_State__c = String.valueOf(statusCode);
-        logRec.Response_Body__c = abbreviateForLog(responseJson);
+        logRec.Response_Body__c = trimForLog(responseJson);
     }
 
     private static void populateException(Integration_Log__c logRec, Exception e) {
-        logRec.Exception_Message__c = abbreviateForLog(e.getMessage());
-        logRec.Exception_StackTrace__c = abbreviateForLog(e.getStackTraceString());
+        logRec.Exception_Message__c = trimForLog(e.getMessage());
+        logRec.Exception_StackTrace__c = trimForLog(e.getStackTraceString());
     }
 
-    private static String abbreviateForLog(String value) {
+    private static String trimForLog(String value) {
         if (value == null) {
             return null;
         }
@@ -465,64 +699,6 @@ global without sharing class ContactRestResource {
         if (req != null && req.headers != null) {
             logRec.Request_Headers__c = JSON.serialize(req.headers);
         }
-    }
-
-    global class ContactWebhookPayload {
-        public List<AddressPayload> addresses;
-        public Long contactId;
-        public String contactNumber;
-        public ContactOriginPayload contactOrigin;
-        public IndividualContactPayload individualContact;
-        public StructureContactPayload structureContact;
-        public String state;
-        public String type;
-    }
-
-    global class ContactPayloadEnvelope {
-        public ContactWebhookPayload payload;
-        public Map<String, Object> rawPayload;
-    }
-
-    global class AddressPayload {
-        public Boolean billingAddress;
-        public String countryCode;
-        public String formattedAddress;
-        public String line1;
-        public String line2;
-        public String line3;
-        public Boolean main;
-        public Boolean shippingAddress;
-        public String street1;
-        public String street2;
-        public String street3;
-        public String town;
-        public String zipCode;
-    }
-
-    global class ContactOriginPayload {
-        public String code;
-    }
-
-    global class IndividualContactPayload {
-        public List<String> alternativeEmails;
-        public String cellPhoneNumber;
-        public String email;
-        public String individualBirthdate;
-        public String individualFirstname;
-        public String individualLastname;
-        public String individualTitle;
-    }
-
-    global class StructureContactPayload {
-        public List<String> alternativeEmails;
-        public String companyName;
-        public String cellPhoneNumber;
-        public String displayName;
-        public String email;
-        public String legalName;
-        public String name;
-        public String organizationName;
-        public String structureName;
     }
 
     global class ContactWebhookException extends Exception {
