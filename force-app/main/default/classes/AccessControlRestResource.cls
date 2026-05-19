@@ -1,4 +1,4 @@
-@RestResource(urlMapping='/v1/accesscontrol')
+@RestResource(urlMapping='/v1/accesscontrols')
 global without sharing class AccessControlRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
     private static final Integer MAX_LONG_TEXT_LENGTH = 32768;

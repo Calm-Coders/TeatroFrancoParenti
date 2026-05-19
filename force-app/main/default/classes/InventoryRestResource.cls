@@ -1,4 +1,4 @@
-@RestResource(urlMapping='/v1/inventory')
+@RestResource(urlMapping='/v1/inventories')
 global without sharing class InventoryRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
     private static final Integer MAX_LONG_TEXT_LENGTH = 32768;

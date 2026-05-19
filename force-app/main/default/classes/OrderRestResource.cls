@@ -1,4 +1,4 @@
-@RestResource(urlMapping='/v1/order')
+@RestResource(urlMapping='/v1/orders')
 global without sharing class OrderRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
     private static final Integer MAX_SECUTIX_LONG_TEXT_LENGTH = 32768;
