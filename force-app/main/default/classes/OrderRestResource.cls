@@ -174,11 +174,6 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Reservation_Amount__c', details.reservationAmount);
         setCustomField(orderRecord, 'Option_Amount__c', details.optionAmount);
         setCustomField(orderRecord, 'Waiting_Account_Balance_Amount__c', details.waitingAccountBalanceAmount);
-        setCustomField(
-            orderRecord,
-            'Order_Details__c',
-            serializeRawValue(orderWrapper.rawPayload == null ? null : orderWrapper.rawPayload.get('orderDetailsData'), MAX_SECUTIX_LONG_TEXT_LENGTH)
-        );
         setCustomField(orderRecord, 'Operation_Datas__c', serializeRawValue(details.operationDatas, MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Movement_Datas__c', serializeRawValue(details.movementDatas, MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Movement_Ticket_Datas__c', serializeRawValue(details.movementTicketDatas, MAX_SECUTIX_LONG_TEXT_LENGTH));
