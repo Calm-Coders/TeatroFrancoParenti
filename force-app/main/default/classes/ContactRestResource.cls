@@ -90,10 +90,11 @@ global without sharing class ContactRestResource {
         contactRecord.Email = deriveEmail(payload);
         contactRecord.MobilePhone = deriveMobilePhone(payload);
         contactRecord.Title = individual == null ? null : individual.individualTitle;
+        contactRecord.Active__c = individual == null ? null : individual.active;
 
         Date birthdate = parseDate(individual == null ? null : individual.individualBirthdate);
         if (birthdate != null) {
-            contactRecord.Secutix_Birthdate__c = birthdate;
+            contactRecord.Birthdate__c = birthdate;
         }
 
         ContactWrapper.AddressPayload primaryAddress = selectPrimaryAddress(payload.addresses);
@@ -103,22 +104,22 @@ global without sharing class ContactRestResource {
             contactRecord.MailingPostalCode = primaryAddress.zipCode;
         }
 
-        contactRecord.Secutix_Contact_Id__c = truncateValue(
+        contactRecord.Contact_Id__c = truncateValue(
             payload.contactId == null ? null : String.valueOf(payload.contactId),
             30
         );
-        contactRecord.Secutix_Contact_Number__c = truncateValue(payload.contactNumber, 80);
-        contactRecord.Secutix_Contact_Origin__c = truncateValue(
+        contactRecord.Contact_Number__c = truncateValue(payload.contactNumber, 80);
+        contactRecord.Contact_Origin__c = truncateValue(
             payload.contactOrigin == null ? null : payload.contactOrigin.code,
             80
         );
-        contactRecord.Secutix_State__c = truncateValue(payload.state, 40);
-        contactRecord.Secutix_Type__c = truncateValue(payload.type, 40);
-        contactRecord.Secutix_Country_Code__c = truncateValue(
+        contactRecord.State__c = truncateValue(payload.state, 40);
+        contactRecord.Type__c = truncateValue(payload.type, 40);
+        contactRecord.Country_Code__c = truncateValue(
             primaryAddress == null ? null : primaryAddress.countryCode,
             10
         );
-        contactRecord.Secutix_Authorizations__c = serializeRawValue(
+        contactRecord.Authorizations__c = serializeRawValue(
             rawPayload == null ? null : rawPayload.get('authorizations'),
             MAX_SECUTIX_LONG_TEXT_LENGTH
         );
@@ -162,7 +163,7 @@ global without sharing class ContactRestResource {
             rawPayload == null ? null : rawPayload.get('individualContact'),
             MAX_SECUTIX_LONG_TEXT_LENGTH
         );
-        contactRecord.Secutix_Indicators__c = serializeRawValue(
+        contactRecord.Indicators__c = serializeRawValue(
             rawPayload == null ? null : rawPayload.get('indicators'),
             MAX_SECUTIX_LONG_TEXT_LENGTH
         );
@@ -192,7 +193,7 @@ global without sharing class ContactRestResource {
 
         String description = buildDescription(payload, primaryAddress);
         if (!String.isBlank(description)) {
-            contactRecord.Secutix_Description__c = truncateValue(
+            contactRecord.Description__c = truncateValue(
                 description,
                 MAX_SECUTIX_LONG_TEXT_LENGTH
             );
@@ -326,6 +327,7 @@ global without sharing class ContactRestResource {
 
         Map<String, Object> rawIndividualMap = (Map<String, Object>) rawIndividualContact;
         ContactWrapper.IndividualContactPayload individual = new ContactWrapper.IndividualContactPayload();
+        individual.active = asBoolean(rawIndividualMap.get('active'));
         individual.alternativeEmails = asStringList(rawIndividualMap.get('alternativeEmails'));
         individual.cellPhoneNumber = asString(rawIndividualMap.get('cellPhoneNumber'));
         individual.email = asString(rawIndividualMap.get('email'));

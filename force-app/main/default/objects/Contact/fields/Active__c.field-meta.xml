@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Secutix_Birthdate__c</fullName>
-    <label>Secutix Birthdate</label>
-    <required>false</required>
+    <fullName>Active__c</fullName>
+    <defaultValue>false</defaultValue>
+    <label>Active</label>
     <trackTrending>false</trackTrending>
-    <type>Date</type>
+    <type>Checkbox</type>
 </CustomField>

@@ -60,6 +60,7 @@ global class ContactWrapper {
     }
 
     global class IndividualContactPayload {
+        public Boolean active;
         public List<String> alternativeEmails;
         public String cellPhoneNumber;
         public String email;
