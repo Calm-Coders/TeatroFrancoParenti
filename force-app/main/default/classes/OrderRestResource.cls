@@ -121,11 +121,149 @@ global without sharing class OrderRestResource {
         Map<String, Object> rawPayloadMap = (Map<String, Object>) rawPayload;
         OrderWrapper orderWrapper = new OrderWrapper();
         orderWrapper.rawPayload = rawPayloadMap;
-        orderWrapper.payload = (OrderWrapper.Payload) JSON.deserialize(
-            JSON.serialize(rawPayloadMap),
-            OrderWrapper.Payload.class
-        );
+        orderWrapper.payload = buildPayload(rawPayloadMap);
         return orderWrapper;
+    }
+
+    private static OrderWrapper.Payload buildPayload(Map<String, Object> rawPayloadMap) {
+        OrderWrapper.Payload payload = new OrderWrapper.Payload();
+        payload.orderDetailGranularity = toStringValue(rawPayloadMap.get('orderDetailGranularity'));
+
+        Object rawDetails = rawPayloadMap.get('orderDetailsData');
+        if (rawDetails != null) {
+            if (!(rawDetails instanceof Map<String, Object>)) {
+                throw new OrderWebhookException('The orderDetailsData node must be a valid JSON object.');
+            }
+            payload.orderDetailsData = buildOrderDetailsData((Map<String, Object>) rawDetails);
+        }
+
+        return payload;
+    }
+
+    private static OrderWrapper.OrderDetailsData buildOrderDetailsData(Map<String, Object> rawDetailsMap) {
+        OrderWrapper.OrderDetailsData details = new OrderWrapper.OrderDetailsData();
+        details.orderId = toLongValue(rawDetailsMap.get('orderId'));
+        details.orderState = toStringValue(rawDetailsMap.get('orderState'));
+        details.creationDateTime = toStringValue(rawDetailsMap.get('creationDateTime'));
+        details.referenceDate = toStringValue(rawDetailsMap.get('referenceDate'));
+        details.expirationDate = toStringValue(rawDetailsMap.get('expirationDate'));
+        details.saleAmount = toDecimalValue(rawDetailsMap.get('saleAmount'));
+        details.preSaleAmount = toDecimalValue(rawDetailsMap.get('preSaleAmount'));
+        details.reservationAmount = toDecimalValue(rawDetailsMap.get('reservationAmount'));
+        details.optionAmount = toDecimalValue(rawDetailsMap.get('optionAmount'));
+        details.waitingAccountBalanceAmount = toDecimalValue(rawDetailsMap.get('waitingAccountBalanceAmount'));
+        details.operationDatas = buildOperationDatas(rawDetailsMap.get('operationDatas'));
+        details.movementDatas = buildMovementDatas(rawDetailsMap.get('movementDatas'));
+        details.movementTicketDatas = buildMovementTicketDatas(rawDetailsMap.get('movementTicketDatas'));
+        details.contactReference = toStringValue(rawDetailsMap.get('contactReference'));
+        details.salesChannelName = buildTranslationContainer(rawDetailsMap.get('salesChannelName'));
+        details.orderType = toStringValue(rawDetailsMap.get('orderType'));
+        details.generatedContiguities = toObjectList(rawDetailsMap.get('generatedContiguities'));
+        details.orderOriginData = buildOrderOriginData(rawDetailsMap.get('orderOriginData'));
+        details.salesChannelType = toStringValue(rawDetailsMap.get('salesChannelType'));
+        details.orderInstallmentsToCreate = toObjectList(rawDetailsMap.get('orderInstallmentsToCreate'));
+        details.orderSecretId = toStringValue(rawDetailsMap.get('orderSecretId'));
+        details.orderOriginator = toStringValue(rawDetailsMap.get('orderOriginator'));
+        details.salesChannelCode = toStringValue(rawDetailsMap.get('salesChannelCode'));
+        details.catalogCurrency = buildCatalogCurrency(rawDetailsMap.get('catalogCurrency'));
+        details.organizationCode = toStringValue(rawDetailsMap.get('organizationCode'));
+        details.organizationName = buildTranslationContainer(rawDetailsMap.get('organizationName'));
+        details.multicurrency = toBooleanValue(rawDetailsMap.get('multicurrency'));
+        return details;
+    }
+
+    private static List<OrderWrapper.OperationData> buildOperationDatas(Object rawValue) {
+        List<OrderWrapper.OperationData> operations = new List<OrderWrapper.OperationData>();
+        for (Object item : toObjectList(rawValue)) {
+            if (!(item instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            Map<String, Object> rawOperation = (Map<String, Object>) item;
+            OrderWrapper.OperationData operation = new OrderWrapper.OperationData();
+            operation.product = toStringValue(rawOperation.get('product'));
+            operation.site = toStringValue(rawOperation.get('site'));
+            operation.itemDate = toStringValue(rawOperation.get('itemDate'));
+            if (String.isBlank(operation.itemDate)) {
+                operation.itemDate = toStringValue(rawOperation.get('performanceDate'));
+            }
+            operations.add(operation);
+        }
+        return operations;
+    }
+
+    private static List<OrderWrapper.MovementData> buildMovementDatas(Object rawValue) {
+        List<OrderWrapper.MovementData> movements = new List<OrderWrapper.MovementData>();
+        for (Object item : toObjectList(rawValue)) {
+            if (!(item instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            Map<String, Object> rawMovement = (Map<String, Object>) item;
+            OrderWrapper.MovementData movement = new OrderWrapper.MovementData();
+            movement.contactReference = toStringValue(rawMovement.get('contactReference'));
+            movements.add(movement);
+        }
+        return movements;
+    }
+
+    private static List<OrderWrapper.MovementTicketData> buildMovementTicketDatas(Object rawValue) {
+        List<OrderWrapper.MovementTicketData> movementTickets = new List<OrderWrapper.MovementTicketData>();
+        for (Object item : toObjectList(rawValue)) {
+            if (item instanceof Map<String, Object>) {
+                movementTickets.add(new OrderWrapper.MovementTicketData());
+            }
+        }
+        return movementTickets;
+    }
+
+    private static OrderWrapper.TranslationContainer buildTranslationContainer(Object rawValue) {
+        if (!(rawValue instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        OrderWrapper.TranslationContainer container = new OrderWrapper.TranslationContainer();
+        container.translations = new List<OrderWrapper.TranslationValue>();
+
+        Map<String, Object> rawMap = (Map<String, Object>) rawValue;
+        for (Object item : toObjectList(rawMap.get('translations'))) {
+            if (!(item instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            Map<String, Object> rawTranslation = (Map<String, Object>) item;
+            OrderWrapper.TranslationValue translation = new OrderWrapper.TranslationValue();
+            translation.locale = toStringValue(rawTranslation.get('locale'));
+            translation.value = toStringValue(rawTranslation.get('value'));
+            container.translations.add(translation);
+        }
+
+        return container;
+    }
+
+    private static OrderWrapper.OrderOriginData buildOrderOriginData(Object rawValue) {
+        if (!(rawValue instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        Map<String, Object> rawMap = (Map<String, Object>) rawValue;
+        OrderWrapper.OrderOriginData orderOriginData = new OrderWrapper.OrderOriginData();
+        orderOriginData.toCreateToken = toBooleanValue(rawMap.get('toCreateToken'));
+        return orderOriginData;
+    }
+
+    private static OrderWrapper.CatalogCurrency buildCatalogCurrency(Object rawValue) {
+        if (!(rawValue instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        Map<String, Object> rawMap = (Map<String, Object>) rawValue;
+        OrderWrapper.CatalogCurrency catalogCurrency = new OrderWrapper.CatalogCurrency();
+        catalogCurrency.currencyCode = toStringValue(rawMap.get('currencyCode'));
+        catalogCurrency.symbol = toStringValue(rawMap.get('symbol'));
+        catalogCurrency.fractionDigit = toIntegerValue(rawMap.get('fractionDigit'));
+        catalogCurrency.minAmount = toDecimalValue(rawMap.get('minAmount'));
+        return catalogCurrency;
     }
 
     private static void validatePayload(OrderWrapper orderWrapper) {
@@ -147,14 +285,16 @@ global without sharing class OrderRestResource {
 
     private static Order buildOrder(OrderWrapper orderWrapper) {
         OrderWrapper.OrderDetailsData details = orderWrapper.payload.orderDetailsData;
+        Map<String, Object> rawDetails = rawOrderDetails(orderWrapper);
         String contactReference = firstContactReference(details);
-        Id accountId = createFallbackAccount(details, contactReference).Id;
+        Id contactId = resolveContactId(orderWrapper);
 
         Order orderRecord = new Order();
-        orderRecord.AccountId = accountId;
         orderRecord.EffectiveDate = resolveEffectiveDate(details);
         orderRecord.Status = DEFAULT_ORDER_STATUS;
         orderRecord.Description = buildDescription(orderWrapper);
+        orderRecord.BillToContactId = contactId;
+        orderRecord.ShipToContactId = contactId;
         setCustomField(orderRecord, 'Order_Id__c', truncateValue(details.orderId == null ? null : String.valueOf(details.orderId), 30));
         setCustomField(orderRecord, 'Order_Secret_Id__c', truncateValue(details.orderSecretId, 255));
         setCustomField(orderRecord, 'Order_State__c', truncateValue(details.orderState, 40));
@@ -174,38 +314,49 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Reservation_Amount__c', details.reservationAmount);
         setCustomField(orderRecord, 'Option_Amount__c', details.optionAmount);
         setCustomField(orderRecord, 'Waiting_Account_Balance_Amount__c', details.waitingAccountBalanceAmount);
-        setCustomField(orderRecord, 'Operation_Datas__c', serializeRawValue(details.operationDatas, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Movement_Datas__c', serializeRawValue(details.movementDatas, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Movement_Ticket_Datas__c', serializeRawValue(details.movementTicketDatas, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Sales_Channel_Name__c', serializeRawValue(details.salesChannelName, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Generated_Contiguities__c', serializeRawValue(details.generatedContiguities, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Order_Origin_Data__c', serializeRawValue(details.orderOriginData, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Order_Installments__c', serializeRawValue(details.orderInstallmentsToCreate, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Catalog_Currency__c', serializeRawValue(details.catalogCurrency, MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Organization_Name__c', serializeRawValue(details.organizationName, MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Operation_Datas__c', serializeRawValue(rawDetails.get('operationDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Movement_Datas__c', serializeRawValue(rawDetails.get('movementDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Movement_Ticket_Datas__c', serializeRawValue(rawDetails.get('movementTicketDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Sales_Channel_Name__c', serializeRawValue(rawDetails.get('salesChannelName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Generated_Contiguities__c', serializeRawValue(rawDetails.get('generatedContiguities'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Order_Origin_Data__c', serializeRawValue(rawDetails.get('orderOriginData'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Order_Installments__c', serializeRawValue(rawDetails.get('orderInstallmentsToCreate'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Catalog_Currency__c', serializeRawValue(rawDetails.get('catalogCurrency'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'Organization_Name__c', serializeRawValue(rawDetails.get('organizationName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
 
         return orderRecord;
     }
 
-    private static Account createFallbackAccount(OrderWrapper.OrderDetailsData details, String contactReference) {
-        Account fallbackAccount = new Account(
-            Name = buildFallbackAccountName(details, contactReference)
-        );
-        insert fallbackAccount;
-        return fallbackAccount;
+    private static Id resolveContactId(OrderWrapper orderWrapper) {
+        String contactNumber = firstResolvedContactNumber(orderWrapper);
+        if (String.isBlank(contactNumber)) {
+            return null;
+        }
+
+        List<Contact> contacts = [
+            SELECT Id
+            FROM Contact
+            WHERE Contact_Number__c = :contactNumber
+            LIMIT 2
+        ];
+
+        if (contacts.size() > 1) {
+            throw new OrderWebhookException('Multiple contacts found for contactNumber ' + contactNumber + '.');
+        }
+
+        return contacts.isEmpty() ? null : contacts[0].Id;
     }
 
-    private static String buildFallbackAccountName(OrderWrapper.OrderDetailsData details, String contactReference) {
-        List<String> parts = new List<String>();
-        if (!String.isBlank(contactReference)) {
-            parts.add('Contact ' + contactReference);
-        }
-        if (details != null && details.orderId != null) {
-            parts.add('Order ' + String.valueOf(details.orderId));
+    private static String firstResolvedContactNumber(OrderWrapper orderWrapper) {
+        String shipmentContactNumber = firstShipmentContactNumber(orderWrapper);
+        if (!String.isBlank(shipmentContactNumber)) {
+            return shipmentContactNumber;
         }
 
-        String baseName = parts.isEmpty() ? 'Secutix Order' : String.join(parts, ' ');
-        return ('Secutix - ' + baseName).left(255);
+        OrderWrapper.OrderDetailsData details = orderWrapper == null || orderWrapper.payload == null
+            ? null
+            : orderWrapper.payload.orderDetailsData;
+        return firstContactReference(details);
     }
 
     private static String firstContactReference(OrderWrapper.OrderDetailsData details) {
@@ -222,6 +373,25 @@ global without sharing class OrderRestResource {
                 if (movement != null && !String.isBlank(movement.contactReference)) {
                     return movement.contactReference;
                 }
+            }
+        }
+
+        return null;
+    }
+
+    private static String firstShipmentContactNumber(OrderWrapper orderWrapper) {
+        if (orderWrapper == null || orderWrapper.rawPayload == null) {
+            return null;
+        }
+
+        for (Object shipmentItem : toObjectList(orderWrapper.rawPayload.get('shipments'))) {
+            if (!(shipmentItem instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            String contactNumber = toStringValue(((Map<String, Object>) shipmentItem).get('contactNumber'));
+            if (!String.isBlank(contactNumber)) {
+                return contactNumber;
             }
         }
 
@@ -292,6 +462,105 @@ global without sharing class OrderRestResource {
         }
 
         return lines.isEmpty() ? null : String.join(lines, '\n');
+    }
+
+    private static Map<String, Object> rawOrderDetails(OrderWrapper orderWrapper) {
+        if (orderWrapper == null || orderWrapper.rawPayload == null) {
+            return new Map<String, Object>();
+        }
+
+        Object rawDetails = orderWrapper.rawPayload.get('orderDetailsData');
+        return rawDetails instanceof Map<String, Object> ? (Map<String, Object>) rawDetails : new Map<String, Object>();
+    }
+
+    private static String toStringValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        return value instanceof String ? (String) value : String.valueOf(value);
+    }
+
+    private static Decimal toDecimalValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Decimal) {
+            return (Decimal) value;
+        }
+        if (value instanceof Integer) {
+            return Decimal.valueOf(String.valueOf((Integer) value));
+        }
+        if (value instanceof Long) {
+            return Decimal.valueOf(String.valueOf((Long) value));
+        }
+        if (value instanceof Double) {
+            return Decimal.valueOf(String.valueOf((Double) value));
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return Decimal.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Long toLongValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+        if (value instanceof Integer) {
+            return Long.valueOf(String.valueOf((Integer) value));
+        }
+        if (value instanceof Decimal) {
+            return Long.valueOf(String.valueOf(((Decimal) value).longValue()));
+        }
+        if (value instanceof Double) {
+            return Long.valueOf(String.valueOf(((Double) value).longValue()));
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return Long.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Integer toIntegerValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof Long) {
+            return Integer.valueOf(String.valueOf((Long) value));
+        }
+        if (value instanceof Decimal) {
+            return ((Decimal) value).intValue();
+        }
+        if (value instanceof Double) {
+            return ((Double) value).intValue();
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return Integer.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Boolean toBooleanValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return 'true'.equalsIgnoreCase((String) value);
+        }
+        return null;
+    }
+
+    private static List<Object> toObjectList(Object value) {
+        return value instanceof List<Object> ? (List<Object>) value : new List<Object>();
     }
 
     private static void addLabelValue(List<String> values, String label, String value) {

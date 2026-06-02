@@ -114,10 +114,28 @@ global without sharing class AccessControlRestResource {
             throw new AccessControlWebhookException('Each access payload must be a valid JSON object.');
         }
 
-        return (AccessControlWrapper) JSON.deserialize(
-            JSON.serialize(rawPayload),
-            AccessControlWrapper.class
-        );
+        return buildWrapperFromMap((Map<String, Object>) rawPayload);
+    }
+
+    private static AccessControlWrapper buildWrapperFromMap(Map<String, Object> rawPayload) {
+        AccessControlWrapper wrapper = new AccessControlWrapper();
+        wrapper.barcode = toStringValue(rawPayload.get('barcode'));
+        wrapper.ticketId = toLongValue(rawPayload.get('ticketId'));
+        wrapper.ticketState = toStringValue(rawPayload.get('ticketState'));
+        wrapper.cancellationCause = toStringValue(rawPayload.get('cancellationCause'));
+        wrapper.tariffCode = toStringValue(rawPayload.get('tariffCode'));
+        wrapper.productId = toLongValue(rawPayload.get('productId'));
+        wrapper.productCode = toStringValue(rawPayload.get('productCode'));
+        wrapper.validityStartTime = toStringValue(rawPayload.get('validityStartTime'));
+        wrapper.culturalContactNumber = toStringValue(rawPayload.get('culturalContactNumber'));
+        wrapper.holderInfo = toMapValue(rawPayload.get('holderInfo'));
+        wrapper.validityEndTime = toStringValue(rawPayload.get('validityEndTime'));
+        wrapper.salesChannelCodeMapping = toStringValue(rawPayload.get('salesChannelCodeMapping'));
+        wrapper.orderId = toLongValue(rawPayload.get('orderId'));
+        wrapper.creationDate = toStringValue(rawPayload.get('creationDate'));
+        wrapper.groupSize = toIntegerValue(rawPayload.get('groupSize'));
+        wrapper.price = toDecimalValue(rawPayload.get('price'));
+        return wrapper;
     }
 
     private static void validatePayload(AccessControlWrapper accessControlWrapper) {
@@ -259,6 +277,83 @@ global without sharing class AccessControlRestResource {
         }
 
         return value;
+    }
+
+    private static String toStringValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        return value instanceof String ? (String) value : String.valueOf(value);
+    }
+
+    private static Long toLongValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+        if (value instanceof Integer) {
+            return Long.valueOf(String.valueOf((Integer) value));
+        }
+        if (value instanceof Decimal) {
+            return Long.valueOf(String.valueOf(((Decimal) value).longValue()));
+        }
+        if (value instanceof Double) {
+            return Long.valueOf(String.valueOf(((Double) value).longValue()));
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return Long.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Integer toIntegerValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof Long) {
+            return Integer.valueOf(String.valueOf((Long) value));
+        }
+        if (value instanceof Decimal) {
+            return ((Decimal) value).intValue();
+        }
+        if (value instanceof Double) {
+            return ((Double) value).intValue();
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return Integer.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Decimal toDecimalValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Decimal) {
+            return (Decimal) value;
+        }
+        if (value instanceof Integer) {
+            return Decimal.valueOf(String.valueOf((Integer) value));
+        }
+        if (value instanceof Long) {
+            return Decimal.valueOf(String.valueOf((Long) value));
+        }
+        if (value instanceof Double) {
+            return Decimal.valueOf(String.valueOf((Double) value));
+        }
+        if (value instanceof String && !String.isBlank((String) value)) {
+            return Decimal.valueOf((String) value);
+        }
+        return null;
+    }
+
+    private static Map<String, Object> toMapValue(Object value) {
+        return value instanceof Map<String, Object> ? (Map<String, Object>) value : null;
     }
 
     private static String serializeRawValue(Object value, Integer maxLength) {
