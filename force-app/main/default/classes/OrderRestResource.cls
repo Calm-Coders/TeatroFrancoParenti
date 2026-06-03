@@ -4,6 +4,7 @@ global without sharing class OrderRestResource {
     private static final Integer MAX_SECUTIX_LONG_TEXT_LENGTH = 32768;
     private static final String FLOW_NAME = 'OrderRestResource.receiveOrder';
     private static final String DEFAULT_ORDER_STATUS = 'Draft';
+    private static final String FALLBACK_ACCOUNT_RECORD_TYPE = 'Fallback_Account';
 
     @HttpPost
     global static void receiveOrder() {
@@ -287,14 +288,16 @@ global without sharing class OrderRestResource {
         OrderWrapper.OrderDetailsData details = orderWrapper.payload.orderDetailsData;
         Map<String, Object> rawDetails = rawOrderDetails(orderWrapper);
         String contactReference = firstContactReference(details);
-        Id contactId = resolveContactId(orderWrapper);
+        ResolvedContact resolvedContact = resolveContact(orderWrapper);
+        Id accountId = resolveOrderAccountId(resolvedContact);
 
         Order orderRecord = new Order();
         orderRecord.EffectiveDate = resolveEffectiveDate(details);
         orderRecord.Status = DEFAULT_ORDER_STATUS;
         orderRecord.Description = buildDescription(orderWrapper);
-        orderRecord.BillToContactId = contactId;
-        orderRecord.ShipToContactId = contactId;
+        orderRecord.AccountId = accountId;
+        orderRecord.BillToContactId = resolvedContact == null ? null : resolvedContact.contactId;
+        orderRecord.ShipToContactId = resolvedContact == null ? null : resolvedContact.contactId;
         setCustomField(orderRecord, 'Order_Id__c', truncateValue(details.orderId == null ? null : String.valueOf(details.orderId), 30));
         setCustomField(orderRecord, 'Order_Secret_Id__c', truncateValue(details.orderSecretId, 255));
         setCustomField(orderRecord, 'Order_State__c', truncateValue(details.orderState, 40));
@@ -327,14 +330,31 @@ global without sharing class OrderRestResource {
         return orderRecord;
     }
 
-    private static Id resolveContactId(OrderWrapper orderWrapper) {
+    private static Id resolveOrderAccountId(ResolvedContact resolvedContact) {
+        if (resolvedContact != null && resolvedContact.accountId != null) {
+            return resolvedContact.accountId;
+        }
+
+        Id fallbackAccountId = resolveFallbackAccountId();
+        if (fallbackAccountId == null) {
+            throw new OrderWebhookException(
+                'No matching contact/account found and no fallback account is configured for record type ' +
+                FALLBACK_ACCOUNT_RECORD_TYPE +
+                '.'
+            );
+        }
+
+        return fallbackAccountId;
+    }
+
+    private static ResolvedContact resolveContact(OrderWrapper orderWrapper) {
         String contactNumber = firstResolvedContactNumber(orderWrapper);
         if (String.isBlank(contactNumber)) {
             return null;
         }
 
         List<Contact> contacts = [
-            SELECT Id
+            SELECT Id, AccountId
             FROM Contact
             WHERE Contact_Number__c = :contactNumber
             LIMIT 2
@@ -344,7 +364,22 @@ global without sharing class OrderRestResource {
             throw new OrderWebhookException('Multiple contacts found for contactNumber ' + contactNumber + '.');
         }
 
-        return contacts.isEmpty() ? null : contacts[0].Id;
+        if (contacts.isEmpty()) {
+            return null;
+        }
+
+        return new ResolvedContact(contacts[0].Id, contacts[0].AccountId);
+    }
+
+    private static Id resolveFallbackAccountId() {
+        List<Account> fallbackAccounts = [
+            SELECT Id
+            FROM Account
+            WHERE RecordType.DeveloperName = :FALLBACK_ACCOUNT_RECORD_TYPE
+            LIMIT 1
+        ];
+
+        return fallbackAccounts.isEmpty() ? null : fallbackAccounts[0].Id;
     }
 
     private static String firstResolvedContactNumber(OrderWrapper orderWrapper) {
@@ -633,5 +668,15 @@ global without sharing class OrderRestResource {
     }
 
     global class OrderWebhookException extends Exception {
+    }
+
+    private class ResolvedContact {
+        private Id contactId;
+        private Id accountId;
+
+        private ResolvedContact(Id contactId, Id accountId) {
+            this.contactId = contactId;
+            this.accountId = accountId;
+        }
     }
 }

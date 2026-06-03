@@ -2,6 +2,8 @@
 private class OrderRestResourceTest {
     @IsTest
     static void receiveOrder_acceptsSinglePayload() {
+        Account fallbackAccount = createFallbackAccount();
+
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/v1/order';
         req.resourcePath = '/v1/order';
@@ -28,12 +30,14 @@ private class OrderRestResourceTest {
         System.assertEquals(1, ((List<Object>) resp.get('contactReferences')).size());
 
         Order insertedOrder = [
-            SELECT Id, AccountId, Status, EffectiveDate, Description
+            SELECT Id, AccountId, BillToContactId, ShipToContactId, Status, EffectiveDate, Description
             FROM Order
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(null, insertedOrder.AccountId);
+        System.assertEquals(fallbackAccount.Id, insertedOrder.AccountId);
+        System.assertEquals(null, insertedOrder.BillToContactId);
+        System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals('Draft', insertedOrder.Status);
         System.assert(insertedOrder.Description.contains('Secutix orderId: 10000418846'));
         System.assert(insertedOrder.Description.contains('Secutix orderSecretId: 33e1993b-7e31-4c44-8b8b-2ac646d258a0_10000418846'));
@@ -77,6 +81,8 @@ private class OrderRestResourceTest {
 
     @IsTest
     static void receiveOrder_acceptsExtendedPayloadShape() {
+        Account fallbackAccount = createFallbackAccount();
+
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/v1/order';
         req.resourcePath = '/v1/order';
@@ -103,11 +109,14 @@ private class OrderRestResourceTest {
         System.assertEquals(1, ((List<Object>) resp.get('contactReferences')).size());
 
         Order insertedOrder = [
-            SELECT EffectiveDate, Description, Operation_Datas__c, Movement_Datas__c
+            SELECT AccountId, BillToContactId, ShipToContactId, EffectiveDate, Description, Operation_Datas__c, Movement_Datas__c
             FROM Order
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
+        System.assertEquals(fallbackAccount.Id, insertedOrder.AccountId);
+        System.assertEquals(null, insertedOrder.BillToContactId);
+        System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals(Date.newInstance(2026, 5, 20), insertedOrder.EffectiveDate);
         System.assert(insertedOrder.Description.contains('Secutix orderId: 454129'));
         System.assert(insertedOrder.Description.contains('First operation product: LE VACANZE DEI SIGNORI LAGONIA'));
@@ -153,7 +162,7 @@ private class OrderRestResourceTest {
 
         Map<String, Order> ordersByExternalId = new Map<String, Order>();
         for (Order orderRecord : [
-            SELECT Order_Id__c, BillToContactId, ShipToContactId
+            SELECT Order_Id__c, AccountId, BillToContactId, ShipToContactId
             FROM Order
             WHERE Order_Id__c IN ('555001', '555002')
         ]) {
@@ -161,8 +170,10 @@ private class OrderRestResourceTest {
         }
 
         System.assertEquals(2, ordersByExternalId.size());
+        System.assertEquals(accountRecord.Id, ordersByExternalId.get('555001').AccountId);
         System.assertEquals(shipmentContactRecord.Id, ordersByExternalId.get('555001').BillToContactId);
         System.assertEquals(shipmentContactRecord.Id, ordersByExternalId.get('555001').ShipToContactId);
+        System.assertEquals(accountRecord.Id, ordersByExternalId.get('555002').AccountId);
         System.assertEquals(referenceContactRecord.Id, ordersByExternalId.get('555002').BillToContactId);
         System.assertEquals(referenceContactRecord.Id, ordersByExternalId.get('555002').ShipToContactId);
 
@@ -172,5 +183,29 @@ private class OrderRestResourceTest {
         System.assertEquals(true, resp.get('success'));
         System.assertEquals(2, ((List<Object>) resp.get('recordIds')).size());
         System.assertEquals(2, ((List<Object>) resp.get('orderIds')).size());
+    }
+
+    private static Account createFallbackAccount() {
+        Id fallbackRecordTypeId = getFallbackAccountRecordTypeId();
+        Account fallbackAccount = new Account(
+            Name = 'Test Fallback Account',
+            RecordTypeId = fallbackRecordTypeId
+        );
+        insert fallbackAccount;
+        return fallbackAccount;
+    }
+
+    private static Id getFallbackAccountRecordTypeId() {
+        Map<String, Schema.RecordTypeInfo> recordTypesByDeveloperName =
+            Account.SObjectType.getDescribe().getRecordTypeInfosByDeveloperName();
+        Schema.RecordTypeInfo fallbackRecordType = recordTypesByDeveloperName.get('Fallback_Account');
+
+        System.assertNotEquals(
+            null,
+            fallbackRecordType,
+            'Account record type Fallback_Account must exist for OrderRestResource tests.'
+        );
+
+        return fallbackRecordType.getRecordTypeId();
     }
 }
