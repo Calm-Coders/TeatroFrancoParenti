@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Individual_Req_Acc_Ver_Email__c</fullName>
     <defaultValue>false</defaultValue>
-    <label>Individual Required Account Verification Email</label>
+    <label>Individual Req Acc Ver Email</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

@@ -37,8 +37,7 @@ private class ContactRestResourceTest {
                 Individual_Address_Salutation__c, Individual_Letter_Salutation__c,
                 Individual_Confidentiality_Level__c, Individual_Cell_Phone__c, Individual_Cell_Phone_Verified__c,
                 Individual_Blocked__c, Individual_Role__c, Individual_Verified_Email__c,
-                Individual_Req_Acc_Ver_Email__c, Individual_Guest__c, Individual_Alt_Emails__c,
-                RecordTypeId
+                Individual_Req_Acc_Ver_Email__c, Individual_Guest__c, Individual_Alt_Emails__c
             FROM Account
             WHERE Contact_Number__c = 'C-1001'
             LIMIT 1
