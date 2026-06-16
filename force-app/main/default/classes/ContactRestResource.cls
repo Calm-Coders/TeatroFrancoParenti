@@ -33,7 +33,6 @@ global without sharing class ContactRestResource {
         'Individual_Address_Salutation__c',
         'Individual_Alt_Emails__c',
         'Individual_Blocked__c',
-        'Individual_Cell_Phone__c',
         'Individual_Cell_Phone_Verified__c',
         'Individual_Confidentiality_Level__c',
         'Individual_Contact_Number__c',
@@ -367,7 +366,6 @@ global without sharing class ContactRestResource {
             accountRecord.BillingCountry = primaryAddress.countryCode;
         }
 
-        accountRecord.Phone = deriveAccountPhone(payload);
         accountRecord.Description = buildAccountDescription(payload, primaryAddress);
 
         ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
@@ -377,7 +375,6 @@ global without sharing class ContactRestResource {
         setSObjectField(accountRecord, 'Individual_Title__c', truncateValue(individual == null ? null : individual.individualTitle, 80));
         setSObjectField(accountRecord, 'Email__c', deriveEmail(payload));
         setSObjectField(accountRecord, 'Mobile_Phone__c', deriveMobilePhone(payload));
-        setSObjectField(accountRecord, 'Individual_Cell_Phone__c', truncateValue(individual == null ? null : individual.cellPhoneNumber, 40));
         setSObjectField(accountRecord, 'Active__c', individual == null ? null : individual.active);
 
         Date birthdate = parseDate(individual == null ? null : individual.individualBirthdate);
@@ -700,22 +697,6 @@ global without sharing class ContactRestResource {
         }
 
         return nameParts.isEmpty() ? null : truncateValue(String.join(nameParts, ' '), 255);
-    }
-
-    private static String deriveAccountPhone(ContactWrapper.Payload payload) {
-        List<String> candidates = new List<String>();
-        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
-        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
-
-        if (structure != null) {
-            addDistinctValue(candidates, structure.cellPhoneNumber);
-        }
-
-        if (individual != null) {
-            addDistinctValue(candidates, individual.cellPhoneNumber);
-        }
-
-        return firstNonBlankValue(candidates);
     }
 
     private static ContactWrapper.AddressPayload selectPrimaryAddress(List<ContactWrapper.AddressPayload> addresses) {

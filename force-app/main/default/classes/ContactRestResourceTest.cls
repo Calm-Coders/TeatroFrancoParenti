@@ -26,7 +26,7 @@ private class ContactRestResourceTest {
         System.assertEquals(1, ((List<Object>) resp.get('externalContactNumbers')).size());
 
         Account createdAccount = [
-            SELECT Name, Phone, BillingStreet, BillingCity, BillingPostalCode, BillingCountry,
+            SELECT Name, BillingStreet, BillingCity, BillingPostalCode, BillingCountry,
                 Contact_Number__c, Contact_Id__c, State__c, Type__c, Country_Code__c,
                 Email__c, Mobile_Phone__c, Individual_Firstname__c, Individual_Lastname__c,
                 Individual_Title__c, Birthdate__c, Active__c, Description, Individual_Contact__c,
@@ -35,7 +35,7 @@ private class ContactRestResourceTest {
                 Individual_Prospect__c, Individual_Country_Code__c, Individual_Email_Ver_Status__c,
                 Individual_End_Validity_Date__c, Individual_Handicap_Type__c,
                 Individual_Address_Salutation__c, Individual_Letter_Salutation__c,
-                Individual_Confidentiality_Level__c, Individual_Cell_Phone__c, Individual_Cell_Phone_Verified__c,
+                Individual_Confidentiality_Level__c, Individual_Cell_Phone_Verified__c,
                 Individual_Blocked__c, Individual_Role__c, Individual_Verified_Email__c,
                 Individual_Req_Acc_Ver_Email__c, Individual_Guest__c, Individual_Alt_Emails__c
             FROM Account
@@ -43,7 +43,6 @@ private class ContactRestResourceTest {
             LIMIT 1
         ];
         System.assertEquals('Teatro Demo SRL', createdAccount.Name);
-        System.assertEquals('+3902123456', createdAccount.Phone);
         System.assertEquals('Via Roma 1', createdAccount.BillingStreet);
         System.assertEquals('Milano', createdAccount.BillingCity);
         System.assertEquals('20100', createdAccount.BillingPostalCode);
@@ -76,7 +75,6 @@ private class ContactRestResourceTest {
         System.assertEquals('Gent.le', createdAccount.Individual_Address_Salutation__c);
         System.assertEquals('Egr. Sig.', createdAccount.Individual_Letter_Salutation__c);
         System.assertEquals('FREE', createdAccount.Individual_Confidentiality_Level__c);
-        System.assertEquals('+393331234567', createdAccount.Individual_Cell_Phone__c);
         System.assertEquals(true, createdAccount.Individual_Cell_Phone_Verified__c);
         System.assertEquals(false, createdAccount.Individual_Blocked__c);
         System.assertEquals('PUBLIC', createdAccount.Individual_Role__c);
