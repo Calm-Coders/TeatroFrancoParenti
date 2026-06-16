@@ -7,7 +7,7 @@ private class ContactRestResourceTest {
         req.resourcePath = '/v1/contacts';
         req.httpMethod = 'POST';
         req.requestBody = Blob.valueOf(
-            '{"contactId":1001,"contactNumber":"C-1001","type":"STRUCTURE","state":"ACTIVE","individualContact":{"individualFirstname":"Mario","individualLastname":"Rossi","email":"mario.rossi@example.com","cellPhoneNumber":"+393331234567","individualTitle":"Sig.","individualBirthdate":"1980-02-03","active":true},"structureContact":{"companyName":"Teatro Demo SRL","email":"info@demo.it","cellPhoneNumber":"+3902123456"},"addresses":[{"main":true,"countryCode":"IT","line1":"Via Roma 1","town":"Milano","zipCode":"20100"}]}'
+            '{"bucket":[{"contactId":1001,"contactNumber":"C-1001","type":"STRUCTURE","state":"ACTIVE","contactOrigin":{"code":"I_BOXOFFICE","translations":{"it":"Biglietteria"}},"individualContact":{"contactNumber":"IC-1001","individualFirstname":"Mario","individualLastname":"Rossi","email":"mario.rossi@example.com","alternativeEmails":["mario.alt@example.com"],"cellPhoneNumber":"+393331234567","individualTitle":"Sig.","individualBirthdate":"1980-02-03","active":true,"login":"mario.rossi@example.com","individualPreferredLanguage":"it","prospect":true,"countryCode":"IT","email1VerificationStatus":"VERIFIED","endValidityDate":"2099-12-31T00:00:00.000+01:00","handicapType":"NONE","addressSalutation":"Gent.le","letterSalutation":"Egr. Sig.","confidentialityLevelEnum":"FREE","cellPhoneNumberVerified":true,"blocked":false,"role":"PUBLIC","verifiedEmail":true,"requiredAccountVerificationEmail":false,"guest":false,"zipCode":"20100"},"structureContact":{"companyName":"Teatro Demo SRL","name":"Teatro Demo","structureName":"Sala Demo","organizationName":"TFP","legalName":"Teatro Demo SRL","displayName":"Teatro Demo Display","email":"info@demo.it","alternativeEmails":["alt@demo.it"],"cellPhoneNumber":"+3902123456","prospect":true,"community":false,"addressSalutation":"Spett.le","letterSalutation":"Alla cortese attenzione","confidentialityLevelEnum":"FREE","email1VerificationStatus":"UNVERIFIED","role":"PUBLIC","verifiedEmail":false,"requiredAccountVerificationEmail":true},"addresses":[{"contactAddressId":98765,"name":"Sede principale","main":true,"billingAddress":true,"shippingAddress":true,"countryCode":"IT","line1":"Via Roma 1","line2":"Scala A","line3":"Interno 2","street1":"Via Roma 1","street2":"Scala A","street3":"Interno 2","town":"Milano","zipCode":"20100","formattedAddress":"Via Roma 1\\n20100 Milano","documentFormattedAddress":"Gent.le Mario Rossi\\nVia Roma 1\\n20100 Milano","normalizationState":"NORMALIZED","normalizationRating":"HIGH","localityCriteriaElements":["MI"]}]}]}'
         );
         RestContext.request = req;
         RestContext.response = new RestResponse();
@@ -30,7 +30,15 @@ private class ContactRestResourceTest {
                 Contact_Number__c, Contact_Id__c, State__c, Type__c, Country_Code__c,
                 Email__c, Mobile_Phone__c, Individual_Firstname__c, Individual_Lastname__c,
                 Individual_Title__c, Birthdate__c, Active__c, Description, Individual_Contact__c,
-                Structure_Contact__c, Addresses__c, RecordTypeId
+                Structure_Contact__c, Addresses__c, RecordTypeId, Contact_Origin_Translations__c,
+                Individual_Contact_Number__c, Individual_Login__c, Individual_Preferred_Language__c,
+                Individual_Prospect__c, Individual_Country_Code__c, Individual_Email_Ver_Status__c,
+                Individual_End_Validity_Date__c, Individual_Handicap_Type__c,
+                Individual_Address_Salutation__c, Individual_Letter_Salutation__c,
+                Individual_Confidentiality_Level__c, Individual_Cell_Phone__c, Individual_Cell_Phone_Verified__c,
+                Individual_Blocked__c, Individual_Role__c, Individual_Verified_Email__c,
+                Individual_Req_Acc_Ver_Email__c, Individual_Guest__c, Individual_Alt_Emails__c,
+                RecordTypeId
             FROM Account
             WHERE Contact_Number__c = 'C-1001'
             LIMIT 1
@@ -57,6 +65,26 @@ private class ContactRestResourceTest {
         System.assert(createdAccount.Individual_Contact__c.contains('"individualFirstname":"Mario"'));
         System.assert(createdAccount.Structure_Contact__c.contains('"companyName":"Teatro Demo SRL"'));
         System.assert(createdAccount.Addresses__c.contains('"town":"Milano"'));
+        System.assert(createdAccount.Contact_Origin_Translations__c.contains('"it":"Biglietteria"'));
+        System.assertEquals('IC-1001', createdAccount.Individual_Contact_Number__c);
+        System.assertEquals('mario.rossi@example.com', createdAccount.Individual_Login__c);
+        System.assertEquals('it', createdAccount.Individual_Preferred_Language__c);
+        System.assertEquals(true, createdAccount.Individual_Prospect__c);
+        System.assertEquals('IT', createdAccount.Individual_Country_Code__c);
+        System.assertEquals('VERIFIED', createdAccount.Individual_Email_Ver_Status__c);
+        System.assertEquals('2099-12-31T00:00:00.000+01:00', createdAccount.Individual_End_Validity_Date__c);
+        System.assertEquals('NONE', createdAccount.Individual_Handicap_Type__c);
+        System.assertEquals('Gent.le', createdAccount.Individual_Address_Salutation__c);
+        System.assertEquals('Egr. Sig.', createdAccount.Individual_Letter_Salutation__c);
+        System.assertEquals('FREE', createdAccount.Individual_Confidentiality_Level__c);
+        System.assertEquals('+393331234567', createdAccount.Individual_Cell_Phone__c);
+        System.assertEquals(true, createdAccount.Individual_Cell_Phone_Verified__c);
+        System.assertEquals(false, createdAccount.Individual_Blocked__c);
+        System.assertEquals('PUBLIC', createdAccount.Individual_Role__c);
+        System.assertEquals(true, createdAccount.Individual_Verified_Email__c);
+        System.assertEquals(false, createdAccount.Individual_Req_Acc_Ver_Email__c);
+        System.assertEquals(false, createdAccount.Individual_Guest__c);
+        System.assert(createdAccount.Individual_Alt_Emails__c.contains('mario.alt@example.com'));
         assertNonFallbackRecordType(createdAccount.RecordTypeId);
 
         System.assertEquals(0, [SELECT COUNT() FROM Contact]);

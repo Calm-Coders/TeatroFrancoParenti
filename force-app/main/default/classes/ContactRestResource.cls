@@ -16,6 +16,7 @@ global without sharing class ContactRestResource {
         'Contact_Id__c',
         'Contact_Number__c',
         'Contact_Origin__c',
+        'Contact_Origin_Translations__c',
         'Contact_Origin_Detail__c',
         'Contact_Permission__c',
         'Contact_Qualities__c',
@@ -29,10 +30,29 @@ global without sharing class ContactRestResource {
         'Has_Advantages__c',
         'Has_Warning__c',
         'Indicators__c',
+        'Individual_Address_Salutation__c',
+        'Individual_Alt_Emails__c',
+        'Individual_Blocked__c',
+        'Individual_Cell_Phone__c',
+        'Individual_Cell_Phone_Verified__c',
+        'Individual_Confidentiality_Level__c',
+        'Individual_Contact_Number__c',
         'Individual_Contact__c',
+        'Individual_Country_Code__c',
+        'Individual_Email_Ver_Status__c',
+        'Individual_End_Validity_Date__c',
         'Individual_Firstname__c',
+        'Individual_Guest__c',
+        'Individual_Handicap_Type__c',
         'Individual_Lastname__c',
+        'Individual_Letter_Salutation__c',
+        'Individual_Login__c',
+        'Individual_Preferred_Language__c',
+        'Individual_Prospect__c',
+        'Individual_Req_Acc_Ver_Email__c',
+        'Individual_Role__c',
         'Individual_Title__c',
+        'Individual_Verified_Email__c',
         'Invalidated_Contact_Qualities__c',
         'Login__c',
         'Login_Last_Update_Time__c',
@@ -208,13 +228,19 @@ global without sharing class ContactRestResource {
 
             Map<String, Object> rawAddressMap = (Map<String, Object>) rawAddress;
             ContactWrapper.AddressPayload address = new ContactWrapper.AddressPayload();
+            address.contactAddressId = asLong(rawAddressMap.get('contactAddressId'));
             address.billingAddress = asBoolean(rawAddressMap.get('billingAddress'));
             address.countryCode = asString(rawAddressMap.get('countryCode'));
+            address.documentFormattedAddress = asString(rawAddressMap.get('documentFormattedAddress'));
             address.formattedAddress = asString(rawAddressMap.get('formattedAddress'));
             address.line1 = asString(rawAddressMap.get('line1'));
             address.line2 = asString(rawAddressMap.get('line2'));
             address.line3 = asString(rawAddressMap.get('line3'));
+            address.localityCriteriaElements = asObjectList(rawAddressMap.get('localityCriteriaElements'));
             address.main = asBoolean(rawAddressMap.get('main'));
+            address.name = asString(rawAddressMap.get('name'));
+            address.normalizationRating = asString(rawAddressMap.get('normalizationRating'));
+            address.normalizationState = asString(rawAddressMap.get('normalizationState'));
             address.shippingAddress = asBoolean(rawAddressMap.get('shippingAddress'));
             address.street1 = asString(rawAddressMap.get('street1'));
             address.street2 = asString(rawAddressMap.get('street2'));
@@ -235,6 +261,9 @@ global without sharing class ContactRestResource {
         Map<String, Object> rawContactOriginMap = (Map<String, Object>) rawContactOrigin;
         ContactWrapper.ContactOriginPayload contactOrigin = new ContactWrapper.ContactOriginPayload();
         contactOrigin.code = asString(rawContactOriginMap.get('code'));
+        contactOrigin.translations = rawContactOriginMap.get('translations') instanceof Map<String, Object>
+            ? (Map<String, Object>) rawContactOriginMap.get('translations')
+            : null;
         return contactOrigin;
     }
 
@@ -246,13 +275,31 @@ global without sharing class ContactRestResource {
         Map<String, Object> rawIndividualMap = (Map<String, Object>) rawIndividualContact;
         ContactWrapper.IndividualContactPayload individual = new ContactWrapper.IndividualContactPayload();
         individual.active = asBoolean(rawIndividualMap.get('active'));
+        individual.addressSalutation = asString(rawIndividualMap.get('addressSalutation'));
         individual.alternativeEmails = asStringList(rawIndividualMap.get('alternativeEmails'));
+        individual.blocked = asBoolean(rawIndividualMap.get('blocked'));
         individual.cellPhoneNumber = asString(rawIndividualMap.get('cellPhoneNumber'));
+        individual.cellPhoneNumberVerified = asBoolean(rawIndividualMap.get('cellPhoneNumberVerified'));
+        individual.confidentialityLevelEnum = asString(rawIndividualMap.get('confidentialityLevelEnum'));
+        individual.contactNumber = asString(rawIndividualMap.get('contactNumber'));
+        individual.countryCode = asString(rawIndividualMap.get('countryCode'));
         individual.email = asString(rawIndividualMap.get('email'));
+        individual.email1VerificationStatus = asString(rawIndividualMap.get('email1VerificationStatus'));
+        individual.endValidityDate = asString(rawIndividualMap.get('endValidityDate'));
+        individual.guest = asBoolean(rawIndividualMap.get('guest'));
+        individual.handicapType = asString(rawIndividualMap.get('handicapType'));
         individual.individualBirthdate = asString(rawIndividualMap.get('individualBirthdate'));
         individual.individualFirstname = asString(rawIndividualMap.get('individualFirstname'));
         individual.individualLastname = asString(rawIndividualMap.get('individualLastname'));
+        individual.individualPreferredLanguage = asString(rawIndividualMap.get('individualPreferredLanguage'));
         individual.individualTitle = asString(rawIndividualMap.get('individualTitle'));
+        individual.letterSalutation = asString(rawIndividualMap.get('letterSalutation'));
+        individual.login = asString(rawIndividualMap.get('login'));
+        individual.prospect = asBoolean(rawIndividualMap.get('prospect'));
+        individual.requiredAccountVerificationEmail = asBoolean(rawIndividualMap.get('requiredAccountVerificationEmail'));
+        individual.role = asString(rawIndividualMap.get('role'));
+        individual.verifiedEmail = asBoolean(rawIndividualMap.get('verifiedEmail'));
+        individual.zipCode = asString(rawIndividualMap.get('zipCode'));
         return individual;
     }
 
@@ -263,15 +310,24 @@ global without sharing class ContactRestResource {
 
         Map<String, Object> rawStructureMap = (Map<String, Object>) rawStructureContact;
         ContactWrapper.StructureContactPayload structure = new ContactWrapper.StructureContactPayload();
+        structure.addressSalutation = asString(rawStructureMap.get('addressSalutation'));
         structure.alternativeEmails = asStringList(rawStructureMap.get('alternativeEmails'));
         structure.companyName = asString(rawStructureMap.get('companyName'));
         structure.cellPhoneNumber = asString(rawStructureMap.get('cellPhoneNumber'));
+        structure.community = asBoolean(rawStructureMap.get('community'));
+        structure.confidentialityLevelEnum = asString(rawStructureMap.get('confidentialityLevelEnum'));
         structure.displayName = asString(rawStructureMap.get('displayName'));
         structure.email = asString(rawStructureMap.get('email'));
+        structure.email1VerificationStatus = asString(rawStructureMap.get('email1VerificationStatus'));
         structure.legalName = asString(rawStructureMap.get('legalName'));
+        structure.letterSalutation = asString(rawStructureMap.get('letterSalutation'));
         structure.name = asString(rawStructureMap.get('name'));
         structure.organizationName = asString(rawStructureMap.get('organizationName'));
+        structure.prospect = asBoolean(rawStructureMap.get('prospect'));
+        structure.requiredAccountVerificationEmail = asBoolean(rawStructureMap.get('requiredAccountVerificationEmail'));
+        structure.role = asString(rawStructureMap.get('role'));
         structure.structureName = asString(rawStructureMap.get('structureName'));
+        structure.verifiedEmail = asBoolean(rawStructureMap.get('verifiedEmail'));
         return structure;
     }
 
@@ -315,11 +371,13 @@ global without sharing class ContactRestResource {
         accountRecord.Description = buildAccountDescription(payload, primaryAddress);
 
         ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
         setSObjectField(accountRecord, 'Individual_Firstname__c', truncateValue(individual == null ? null : individual.individualFirstname, 80));
         setSObjectField(accountRecord, 'Individual_Lastname__c', truncateValue(deriveLastName(payload), 80));
         setSObjectField(accountRecord, 'Individual_Title__c', truncateValue(individual == null ? null : individual.individualTitle, 80));
         setSObjectField(accountRecord, 'Email__c', deriveEmail(payload));
         setSObjectField(accountRecord, 'Mobile_Phone__c', deriveMobilePhone(payload));
+        setSObjectField(accountRecord, 'Individual_Cell_Phone__c', truncateValue(individual == null ? null : individual.cellPhoneNumber, 40));
         setSObjectField(accountRecord, 'Active__c', individual == null ? null : individual.active);
 
         Date birthdate = parseDate(individual == null ? null : individual.individualBirthdate);
@@ -337,6 +395,11 @@ global without sharing class ContactRestResource {
             accountRecord,
             'Contact_Origin__c',
             truncateValue(payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.code, 80)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Origin_Translations__c',
+            serializeRawValue(payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.translations, MAX_SECUTIX_LONG_TEXT_LENGTH)
         );
         setSObjectField(accountRecord, 'State__c', truncateValue(payload == null ? null : payload.state, 40));
         setSObjectField(accountRecord, 'Type__c', truncateValue(payload == null ? null : payload.type, 40));
@@ -430,6 +493,72 @@ global without sharing class ContactRestResource {
         setSObjectField(accountRecord, 'Login_Last_Update_Time__c', truncateValue(payload == null ? null : payload.loginLastUpdateTime, 40));
         setSObjectField(accountRecord, 'Login_Last_Update_User__c', truncateValue(payload == null ? null : payload.loginLastUpdateUser, 80));
         setSObjectField(accountRecord, 'Role__c', truncateValue(payload == null ? null : payload.role, 40));
+        setSObjectField(
+            accountRecord,
+            'Individual_Contact_Number__c',
+            truncateValue(individual == null ? null : individual.contactNumber, 80)
+        );
+        setSObjectField(accountRecord, 'Individual_Login__c', truncateValue(individual == null ? null : individual.login, 255));
+        setSObjectField(
+            accountRecord,
+            'Individual_Preferred_Language__c',
+            truncateValue(individual == null ? null : individual.individualPreferredLanguage, 40)
+        );
+        setSObjectField(accountRecord, 'Individual_Prospect__c', individual == null ? null : individual.prospect);
+        setSObjectField(
+            accountRecord,
+            'Individual_Country_Code__c',
+            truncateValue(individual == null ? null : individual.countryCode, 10)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Email_Ver_Status__c',
+            truncateValue(individual == null ? null : individual.email1VerificationStatus, 80)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_End_Validity_Date__c',
+            truncateValue(individual == null ? null : individual.endValidityDate, 40)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Handicap_Type__c',
+            truncateValue(individual == null ? null : individual.handicapType, 255)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Address_Salutation__c',
+            truncateValue(individual == null ? null : individual.addressSalutation, 255)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Letter_Salutation__c',
+            truncateValue(individual == null ? null : individual.letterSalutation, 255)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Confidentiality_Level__c',
+            truncateValue(individual == null ? null : individual.confidentialityLevelEnum, 80)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Cell_Phone_Verified__c',
+            individual == null ? null : individual.cellPhoneNumberVerified
+        );
+        setSObjectField(accountRecord, 'Individual_Blocked__c', individual == null ? null : individual.blocked);
+        setSObjectField(accountRecord, 'Individual_Role__c', truncateValue(individual == null ? null : individual.role, 40));
+        setSObjectField(accountRecord, 'Individual_Verified_Email__c', individual == null ? null : individual.verifiedEmail);
+        setSObjectField(
+            accountRecord,
+            'Individual_Req_Acc_Ver_Email__c',
+            individual == null ? null : individual.requiredAccountVerificationEmail
+        );
+        setSObjectField(accountRecord, 'Individual_Guest__c', individual == null ? null : individual.guest);
+        setSObjectField(
+            accountRecord,
+            'Individual_Alt_Emails__c',
+            serializeRawValue(individual == null ? null : individual.alternativeEmails, MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
         return accountRecord;
     }
 
@@ -833,6 +962,10 @@ global without sharing class ContactRestResource {
         }
 
         return values;
+    }
+
+    private static List<Object> asObjectList(Object value) {
+        return value instanceof List<Object> ? (List<Object>) value : new List<Object>();
     }
 
     private static String truncateValue(String value, Integer maxLength) {

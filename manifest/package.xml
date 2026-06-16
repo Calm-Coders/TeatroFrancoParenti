@@ -1,4 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>ContactRestResource</members>
+        <members>ContactRestResourceTest</members>
+        <members>ContactWrapper</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Account.Contact_Origin_Translations__c</members>
+        <members>Account.Individual_Address_Salutation__c</members>
+        <members>Account.Individual_Alt_Emails__c</members>
+        <members>Account.Individual_Blocked__c</members>
+        <members>Account.Individual_Cell_Phone__c</members>
+        <members>Account.Individual_Cell_Phone_Verified__c</members>
+        <members>Account.Individual_Confidentiality_Level__c</members>
+        <members>Account.Individual_Contact_Number__c</members>
+        <members>Account.Individual_Country_Code__c</members>
+        <members>Account.Individual_Email_Ver_Status__c</members>
+        <members>Account.Individual_End_Validity_Date__c</members>
+        <members>Account.Individual_Guest__c</members>
+        <members>Account.Individual_Handicap_Type__c</members>
+        <members>Account.Individual_Letter_Salutation__c</members>
+        <members>Account.Individual_Login__c</members>
+        <members>Account.Individual_Preferred_Language__c</members>
+        <members>Account.Individual_Prospect__c</members>
+        <members>Account.Individual_Req_Acc_Ver_Email__c</members>
+        <members>Account.Individual_Role__c</members>
+        <members>Account.Individual_Verified_Email__c</members>
+        <name>CustomField</name>
+    </types>
     <version>65.0</version>
 </Package>
