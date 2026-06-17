@@ -3,6 +3,11 @@ private class OrderRestResourceTest {
     @IsTest
     static void receiveOrder_acceptsSinglePayload() {
         Account fallbackAccount = createFallbackAccount();
+        Account directMatchAccount = new Account(
+            Name = 'Direct Match Account',
+            Contact_Number__c = '5442'
+        );
+        insert directMatchAccount;
 
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/v1/order';
@@ -35,7 +40,7 @@ private class OrderRestResourceTest {
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(fallbackAccount.Id, insertedOrder.AccountId);
+        System.assertEquals(directMatchAccount.Id, insertedOrder.AccountId);
         System.assertEquals(null, insertedOrder.BillToContactId);
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals('Draft', insertedOrder.Status);
@@ -128,6 +133,11 @@ private class OrderRestResourceTest {
     static void receiveOrder_linksMatchingContactByShipmentContactNumberAndContactReference() {
         Account accountRecord = new Account(Name = 'Test Contact Account');
         insert accountRecord;
+        Account directMatchAccount = new Account(
+            Name = 'Reference Match Account',
+            Contact_Number__c = '10287'
+        );
+        insert directMatchAccount;
 
         Contact shipmentContactRecord = new Contact(
             LastName = 'Linked Contact',
@@ -173,7 +183,7 @@ private class OrderRestResourceTest {
         System.assertEquals(accountRecord.Id, ordersByExternalId.get('555001').AccountId);
         System.assertEquals(shipmentContactRecord.Id, ordersByExternalId.get('555001').BillToContactId);
         System.assertEquals(shipmentContactRecord.Id, ordersByExternalId.get('555001').ShipToContactId);
-        System.assertEquals(accountRecord.Id, ordersByExternalId.get('555002').AccountId);
+        System.assertEquals(directMatchAccount.Id, ordersByExternalId.get('555002').AccountId);
         System.assertEquals(referenceContactRecord.Id, ordersByExternalId.get('555002').BillToContactId);
         System.assertEquals(referenceContactRecord.Id, ordersByExternalId.get('555002').ShipToContactId);
 
@@ -183,6 +193,171 @@ private class OrderRestResourceTest {
         System.assertEquals(true, resp.get('success'));
         System.assertEquals(2, ((List<Object>) resp.get('recordIds')).size());
         System.assertEquals(2, ((List<Object>) resp.get('orderIds')).size());
+    }
+
+    @IsTest
+    static void receiveOrder_updatesExistingOrderWhenExternalIdentifiersMatch() {
+        Account fallbackAccount = createFallbackAccount();
+        Account directMatchAccount = new Account(
+            Name = 'Upsert Match Account',
+            Contact_Number__c = '10286'
+        );
+        insert directMatchAccount;
+        Order existingOrder = new Order(
+            AccountId = fallbackAccount.Id,
+            EffectiveDate = Date.newInstance(2026, 5, 19),
+            Status = 'Draft',
+            Order_Id__c = '454129',
+            Order_Secret_Id__c = 'ba455548-3309-49fe-9880-eb6c94159e65_454129',
+            Description = 'Original description'
+        );
+        insert existingOrder;
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454129,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","expirationDate":"2026-05-20T00:00:00.000Z","saleAmount":0,"preSaleAmount":0,"reservationAmount":50000,"optionAmount":0,"waitingAccountBalanceAmount":0,"operationDatas":[{"operationId":10229250965773,"kind":"SINGLE_ENTRY","type":"RESERVATION","product":"LE VACANZE DEI SIGNORI LAGONIA","site":"Teatro Franco Parenti","performanceDate":"2026-05-20T20:15:00.000+02:00"}],"movementDatas":[{"movementId":10229250966107,"operationId":10229250965773,"type":"SEAT","contactReference":"10286","row":"C","seatNumber":"7"}],"movementTicketDatas":[],"contactReference":"10286","orderType":"RESERVATION","orderSecretId":"ba455548-3309-49fe-9880-eb6c94159e65_454129","orderOriginator":"SALE","salesChannelCode":"BO","salesChannelType":"BOXOFFICE","organizationCode":"TFP"},"shipments":[{"id":10229250907470,"contactNumber":"10286"}]}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+        System.assertEquals(1, [SELECT COUNT() FROM Order WHERE Order_Id__c = '454129']);
+
+        Order updatedOrder = [
+            SELECT Id, Status, EffectiveDate, Description, Reservation_Amount__c, Contact_Reference__c, Product_Id__c, AccountId
+            FROM Order
+            WHERE Id = :existingOrder.Id
+        ];
+        System.assertEquals(existingOrder.Id, updatedOrder.Id);
+        System.assertEquals('Draft', updatedOrder.Status);
+        System.assertEquals(Date.newInstance(2026, 5, 20), updatedOrder.EffectiveDate);
+        System.assertEquals(50000, updatedOrder.Reservation_Amount__c);
+        System.assertEquals('10286', updatedOrder.Contact_Reference__c);
+        System.assertEquals(null, updatedOrder.Product_Id__c);
+        System.assertEquals(directMatchAccount.Id, updatedOrder.AccountId);
+        System.assert(updatedOrder.Description.contains('Secutix orderId: 454129'));
+    }
+
+    @IsTest
+    static void receiveOrder_accountLookupUsesMovementContactReferenceInsteadOfTopLevelContactReference() {
+        Account fallbackAccount = createFallbackAccount();
+        Account movementMatchAccount = new Account(
+            Name = 'Movement Match Account',
+            Contact_Number__c = '102'
+        );
+        Account topLevelOnlyAccount = new Account(
+            Name = 'Top Level Only Account',
+            Contact_Number__c = '10286'
+        );
+        insert new List<Account>{ movementMatchAccount, topLevelOnlyAccount };
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454132,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","operationDatas":[{"operationId":10229250965773,"kind":"SINGLE_ENTRY","type":"RESERVATION","productId":10228638592050,"product":"LE VACANZE DEI SIGNORI LAGONIA","site":"Teatro Franco Parenti","performanceDate":"2026-05-20T20:15:00.000+02:00"}],"movementDatas":[{"movementId":10229250966107,"operationId":10229250965773,"type":"SEAT","contactReference":"102"}],"movementTicketDatas":[],"contactReference":"10286","orderType":"RESERVATION","orderSecretId":"secret_454132"},"shipments":[{"id":10229250907470,"contactNumber":"10286"}]}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+
+        Order insertedOrder = [
+            SELECT AccountId, Contact_Reference__c
+            FROM Order
+            WHERE Order_Id__c = '454132'
+            LIMIT 1
+        ];
+        System.assertEquals(movementMatchAccount.Id, insertedOrder.AccountId);
+        System.assertEquals('102', insertedOrder.Contact_Reference__c);
+    }
+
+    @IsTest
+    static void receiveOrder_linksInventoryByOperationProductId() {
+        Account fallbackAccount = createFallbackAccount();
+        Inventory__c inventoryRecord = new Inventory__c(
+            Name = 'LE VACANZE DEI SIGNORI LAGONIA',
+            Inventory_Id__c = 10228638592050L
+        );
+        insert inventoryRecord;
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454130,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","operationDatas":[{"operationId":10229250965773,"kind":"SINGLE_ENTRY","type":"RESERVATION","productId":10228638592050,"product":"LE VACANZE DEI SIGNORI LAGONIA","site":"Teatro Franco Parenti","performanceDate":"2026-05-20T20:15:00.000+02:00"},{"operationId":10229250965774,"kind":"CHARGES","type":"RESERVATION","productId":10228635445372,"product":"Prevendita"}],"movementDatas":[{"movementId":10229250966107,"operationId":10229250965773,"type":"SEAT","contactReference":"10286"}],"movementTicketDatas":[],"contactReference":"10286","orderType":"RESERVATION","orderSecretId":"secret_454130"},"shipments":[{"id":10229250907470,"contactNumber":"10286"}]}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+
+        Order insertedOrder = [
+            SELECT Id, Inventory__c, Order_Id__c, Product_Id__c
+            FROM Order
+            WHERE Order_Id__c = '454130'
+            LIMIT 1
+        ];
+        System.assertEquals(inventoryRecord.Id, insertedOrder.Inventory__c);
+        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(insertedOrder.Product_Id__c)));
+    }
+
+    @IsTest
+    static void receiveOrder_usesNewestInventoryWhenDuplicatesExist() {
+        Account fallbackAccount = createFallbackAccount();
+        Inventory__c olderInventory = new Inventory__c(
+            Name = 'Older Inventory',
+            Inventory_Id__c = 10228638592050L
+        );
+        insert olderInventory;
+
+        Inventory__c newerInventory = new Inventory__c(
+            Name = 'Newer Inventory',
+            Inventory_Id__c = 10228638592050L
+        );
+        insert newerInventory;
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454131,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","operationDatas":[{"operationId":10229250965773,"kind":"SINGLE_ENTRY","type":"RESERVATION","productId":10228638592050,"product":"LE VACANZE DEI SIGNORI LAGONIA","site":"Teatro Franco Parenti","performanceDate":"2026-05-20T20:15:00.000+02:00"}],"movementDatas":[{"movementId":10229250966107,"operationId":10229250965773,"type":"SEAT","contactReference":"10286"}],"movementTicketDatas":[],"contactReference":"10286","orderType":"RESERVATION","orderSecretId":"secret_454131"},"shipments":[{"id":10229250907470,"contactNumber":"10286"}]}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+
+        Order insertedOrder = [
+            SELECT Id, Inventory__c, Product_Id__c
+            FROM Order
+            WHERE Order_Id__c = '454131'
+            LIMIT 1
+        ];
+        System.assertEquals(newerInventory.Id, insertedOrder.Inventory__c);
+        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(insertedOrder.Product_Id__c)));
     }
 
     private static Account createFallbackAccount() {

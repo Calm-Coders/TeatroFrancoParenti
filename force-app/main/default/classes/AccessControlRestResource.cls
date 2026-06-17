@@ -36,14 +36,15 @@ global without sharing class AccessControlRestResource {
                 return;
             }
 
-            List<Access_Control__c> recordsToInsert = new List<Access_Control__c>();
             List<String> barcodes = new List<String>();
             List<String> ticketIds = new List<String>();
             List<String> orderIds = new List<String>();
+            List<String> recordIds = new List<String>();
 
             for (AccessControlWrapper accessControlWrapper : tickets) {
                 validatePayload(accessControlWrapper);
-                recordsToInsert.add(buildAccessControlRecord(accessControlWrapper));
+                Access_Control__c recordItem = saveAccessControlRecord(accessControlWrapper);
+                recordIds.add(recordItem.Id);
 
                 if (!String.isBlank(accessControlWrapper.barcode)) {
                     barcodes.add(accessControlWrapper.barcode);
@@ -56,13 +57,6 @@ global without sharing class AccessControlRestResource {
                 if (accessControlWrapper.orderId != null) {
                     orderIds.add(String.valueOf(accessControlWrapper.orderId));
                 }
-            }
-
-            insert recordsToInsert;
-
-            List<String> recordIds = new List<String>();
-            for (Access_Control__c recordItem : recordsToInsert) {
-                recordIds.add(recordItem.Id);
             }
 
             setResponse(200, new Map<String, Object>{
@@ -144,10 +138,24 @@ global without sharing class AccessControlRestResource {
         }
     }
 
-    private static Access_Control__c buildAccessControlRecord(AccessControlWrapper accessControlWrapper) {
+    private static Access_Control__c saveAccessControlRecord(AccessControlWrapper accessControlWrapper) {
+        Id existingRecordId = resolveExistingAccessControlId(accessControlWrapper);
+        Access_Control__c recordItem = buildAccessControlRecord(accessControlWrapper, existingRecordId);
+        if (existingRecordId == null) {
+            insert recordItem;
+        } else {
+            update recordItem;
+        }
+        return recordItem;
+    }
+
+    private static Access_Control__c buildAccessControlRecord(AccessControlWrapper accessControlWrapper, Id existingRecordId) {
         Access_Control__c recordItem = new Access_Control__c(
             Name = buildRecordName(accessControlWrapper)
         );
+        if (existingRecordId != null) {
+            recordItem.Id = existingRecordId;
+        }
 
         setCustomField(recordItem, 'Barcode__c', truncateValue(accessControlWrapper.barcode, 255));
         setCustomField(recordItem, 'Ticket_Id__c', accessControlWrapper.ticketId);
@@ -155,6 +163,7 @@ global without sharing class AccessControlRestResource {
         setCustomField(recordItem, 'Cancellation_Cause__c', truncateValue(accessControlWrapper.cancellationCause, 80));
         setCustomField(recordItem, 'Tariff_Code__c', truncateValue(accessControlWrapper.tariffCode, 80));
         setCustomField(recordItem, 'Product_Id__c', accessControlWrapper.productId);
+        setCustomField(recordItem, 'Inventory__c', resolveInventoryLookupId(accessControlWrapper.productId));
         setCustomField(recordItem, 'Product_Code__c', truncateValue(accessControlWrapper.productCode, 80));
         setCustomField(recordItem, 'Validity_Start_Time__c', truncateValue(accessControlWrapper.validityStartTime, 40));
         setCustomField(recordItem, 'Cultural_Contact_Number__c', truncateValue(accessControlWrapper.culturalContactNumber, 80));
@@ -162,11 +171,29 @@ global without sharing class AccessControlRestResource {
         setCustomField(recordItem, 'Validity_End_Time__c', truncateValue(accessControlWrapper.validityEndTime, 40));
         setCustomField(recordItem, 'Sales_Channel_Code_Mapping__c', truncateValue(accessControlWrapper.salesChannelCodeMapping, 40));
         setCustomField(recordItem, 'Order_Id__c', accessControlWrapper.orderId);
+        setCustomField(recordItem, 'Order__c', resolveOrderLookupId(accessControlWrapper.orderId));
         setCustomField(recordItem, 'Creation_Date__c', truncateValue(accessControlWrapper.creationDate, 40));
         setCustomField(recordItem, 'Group_Size__c', accessControlWrapper.groupSize);
         setCustomField(recordItem, 'Price__c', accessControlWrapper.price);
 
         return recordItem;
+    }
+
+    private static Id resolveExistingAccessControlId(AccessControlWrapper accessControlWrapper) {
+        String barcode = truncateValue(accessControlWrapper == null ? null : accessControlWrapper.barcode, 255);
+        if (String.isBlank(barcode)) {
+            return null;
+        }
+
+        List<Access_Control__c> matchingRecords = [
+            SELECT Id
+            FROM Access_Control__c
+            WHERE Barcode__c = :barcode
+            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
+            LIMIT 1
+        ];
+
+        return matchingRecords.isEmpty() ? null : matchingRecords[0].Id;
     }
 
     private static String buildRecordName(AccessControlWrapper accessControlWrapper) {
@@ -183,6 +210,40 @@ global without sharing class AccessControlRestResource {
         }
 
         return 'Access Control';
+    }
+
+    private static Id resolveOrderLookupId(Long externalOrderId) {
+        if (externalOrderId == null) {
+            return null;
+        }
+
+        String orderIdValue = String.valueOf(externalOrderId);
+        List<Order> matchingOrders = [
+            SELECT Id
+            FROM Order
+            WHERE Order_Id__c = :orderIdValue
+            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
+            LIMIT 1
+        ];
+
+        return matchingOrders.isEmpty() ? null : matchingOrders[0].Id;
+    }
+
+    private static Id resolveInventoryLookupId(Long externalProductId) {
+        if (externalProductId == null) {
+            return null;
+        }
+
+        Decimal productIdValue = Decimal.valueOf(String.valueOf(externalProductId));
+        List<Inventory__c> matchingInventories = [
+            SELECT Id
+            FROM Inventory__c
+            WHERE Inventory_Id__c = :productIdValue
+            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
+            LIMIT 1
+        ];
+
+        return matchingInventories.isEmpty() ? null : matchingInventories[0].Id;
     }
 
     private static void setCustomField(SObject recordItem, String fieldApiName, Object value) {

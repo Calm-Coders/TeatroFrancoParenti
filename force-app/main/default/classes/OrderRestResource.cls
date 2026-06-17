@@ -182,6 +182,9 @@ global without sharing class OrderRestResource {
 
             Map<String, Object> rawOperation = (Map<String, Object>) item;
             OrderWrapper.OperationData operation = new OrderWrapper.OperationData();
+            operation.kind = toStringValue(rawOperation.get('kind'));
+            operation.type = toStringValue(rawOperation.get('type'));
+            operation.productId = toLongValue(rawOperation.get('productId'));
             operation.product = toStringValue(rawOperation.get('product'));
             operation.site = toStringValue(rawOperation.get('site'));
             operation.itemDate = toStringValue(rawOperation.get('itemDate'));
@@ -278,26 +281,40 @@ global without sharing class OrderRestResource {
     }
 
     private static Order createOrder(OrderWrapper orderWrapper) {
-        OrderWrapper.OrderDetailsData details = orderWrapper.payload.orderDetailsData;
-        Order orderRecord = buildOrder(orderWrapper);
-        insert orderRecord;
+        Id existingOrderId = resolveExistingOrderId(orderWrapper);
+        Order orderRecord = buildOrder(orderWrapper, existingOrderId);
+        if (existingOrderId == null) {
+            insert orderRecord;
+        } else {
+            update orderRecord;
+        }
         return orderRecord;
     }
 
-    private static Order buildOrder(OrderWrapper orderWrapper) {
+    private static Order buildOrder(OrderWrapper orderWrapper, Id existingOrderId) {
         OrderWrapper.OrderDetailsData details = orderWrapper.payload.orderDetailsData;
         Map<String, Object> rawDetails = rawOrderDetails(orderWrapper);
         String contactReference = firstContactReference(details);
         ResolvedContact resolvedContact = resolveContact(orderWrapper);
-        Id accountId = resolveOrderAccountId(resolvedContact);
+        Id accountId = resolveOrderAccountId(details, resolvedContact);
 
         Order orderRecord = new Order();
+        if (existingOrderId != null) {
+            orderRecord.Id = existingOrderId;
+        }
         orderRecord.EffectiveDate = resolveEffectiveDate(details);
         orderRecord.Status = DEFAULT_ORDER_STATUS;
         orderRecord.Description = buildDescription(orderWrapper);
         orderRecord.AccountId = accountId;
         orderRecord.BillToContactId = resolvedContact == null ? null : resolvedContact.contactId;
         orderRecord.ShipToContactId = resolvedContact == null ? null : resolvedContact.contactId;
+        Long productId = firstInventoryProductId(details);
+        setCustomField(
+            orderRecord,
+            'Product_Id__c',
+            productId == null ? null : Decimal.valueOf(String.valueOf(productId))
+        );
+        setCustomField(orderRecord, 'Inventory__c', resolveInventoryLookupId(details));
         setCustomField(orderRecord, 'Order_Id__c', truncateValue(details.orderId == null ? null : String.valueOf(details.orderId), 30));
         setCustomField(orderRecord, 'Order_Secret_Id__c', truncateValue(details.orderSecretId, 255));
         setCustomField(orderRecord, 'Order_State__c', truncateValue(details.orderState, 40));
@@ -330,7 +347,126 @@ global without sharing class OrderRestResource {
         return orderRecord;
     }
 
-    private static Id resolveOrderAccountId(ResolvedContact resolvedContact) {
+    private static Id resolveExistingOrderId(OrderWrapper orderWrapper) {
+        OrderWrapper.OrderDetailsData details = orderWrapper == null || orderWrapper.payload == null
+            ? null
+            : orderWrapper.payload.orderDetailsData;
+
+        String externalOrderId = truncateValue(details == null || details.orderId == null ? null : String.valueOf(details.orderId), 30);
+        String externalOrderSecretId = truncateValue(details == null ? null : details.orderSecretId, 255);
+
+        if (String.isBlank(externalOrderId) && String.isBlank(externalOrderSecretId)) {
+            return null;
+        }
+
+        List<Order> matchingOrders;
+        if (!String.isBlank(externalOrderId) && !String.isBlank(externalOrderSecretId)) {
+            matchingOrders = [
+                SELECT Id, Order_Id__c, Order_Secret_Id__c
+                FROM Order
+                WHERE Order_Id__c = :externalOrderId
+                   OR Order_Secret_Id__c = :externalOrderSecretId
+                LIMIT 3
+            ];
+        } else if (!String.isBlank(externalOrderId)) {
+            matchingOrders = [
+                SELECT Id, Order_Id__c, Order_Secret_Id__c
+                FROM Order
+                WHERE Order_Id__c = :externalOrderId
+                LIMIT 3
+            ];
+        } else {
+            matchingOrders = [
+                SELECT Id, Order_Id__c, Order_Secret_Id__c
+                FROM Order
+                WHERE Order_Secret_Id__c = :externalOrderSecretId
+                LIMIT 3
+            ];
+        }
+
+        if (matchingOrders.isEmpty()) {
+            return null;
+        }
+
+        Set<Id> matchingOrderIds = new Set<Id>();
+        for (Order orderRecord : matchingOrders) {
+            matchingOrderIds.add(orderRecord.Id);
+        }
+
+        if (matchingOrderIds.size() > 1) {
+            throw new OrderWebhookException(
+                'Multiple existing orders found for orderId ' + externalOrderId +
+                ' / orderSecretId ' + externalOrderSecretId + '.'
+            );
+        }
+
+        return matchingOrders[0].Id;
+    }
+
+    private static Id resolveInventoryLookupId(OrderWrapper.OrderDetailsData details) {
+        Long productId = firstInventoryProductId(details);
+        if (productId == null) {
+            return null;
+        }
+
+        List<Inventory__c> matchingInventories = [
+            SELECT Id
+            FROM Inventory__c
+            WHERE Inventory_Id__c = :productId
+            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
+            LIMIT 1
+        ];
+
+        if (matchingInventories.isEmpty()) {
+            return null;
+        }
+
+        return matchingInventories[0].Id;
+    }
+
+    private static String firstMovementContactReference(OrderWrapper.OrderDetailsData details) {
+        if (details == null || details.movementDatas == null) {
+            return null;
+        }
+
+        for (OrderWrapper.MovementData movement : details.movementDatas) {
+            if (movement != null && !String.isBlank(movement.contactReference)) {
+                return movement.contactReference;
+            }
+        }
+
+        return null;
+    }
+
+    private static Long firstInventoryProductId(OrderWrapper.OrderDetailsData details) {
+        if (details == null || details.operationDatas == null) {
+            return null;
+        }
+
+        Long fallbackProductId;
+        for (OrderWrapper.OperationData operation : details.operationDatas) {
+            if (operation == null || operation.productId == null) {
+                continue;
+            }
+
+            if (fallbackProductId == null) {
+                fallbackProductId = operation.productId;
+            }
+
+            if (!'CHARGES'.equalsIgnoreCase(operation.kind)) {
+                return operation.productId;
+            }
+        }
+
+        return fallbackProductId;
+    }
+
+    private static Id resolveOrderAccountId(OrderWrapper.OrderDetailsData details, ResolvedContact resolvedContact) {
+        Id movementAccountId = resolveAccountIdByContactNumber(firstMovementContactReference(details));
+        if (movementAccountId != null) {
+            return movementAccountId;
+        }
+
         if (resolvedContact != null && resolvedContact.accountId != null) {
             return resolvedContact.accountId;
         }
@@ -345,6 +481,23 @@ global without sharing class OrderRestResource {
         }
 
         return fallbackAccountId;
+    }
+
+    private static Id resolveAccountIdByContactNumber(String contactNumber) {
+        String normalizedContactNumber = truncateValue(contactNumber, 80);
+        if (String.isBlank(normalizedContactNumber)) {
+            return null;
+        }
+
+        List<Account> matchingAccounts = [
+            SELECT Id
+            FROM Account
+            WHERE Contact_Number__c = :normalizedContactNumber
+            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
+            LIMIT 1
+        ];
+
+        return matchingAccounts.isEmpty() ? null : matchingAccounts[0].Id;
     }
 
     private static ResolvedContact resolveContact(OrderWrapper orderWrapper) {
@@ -399,16 +552,16 @@ global without sharing class OrderRestResource {
             return null;
         }
 
-        if (!String.isBlank(details.contactReference)) {
-            return details.contactReference;
-        }
-
         if (details.movementDatas != null) {
             for (OrderWrapper.MovementData movement : details.movementDatas) {
                 if (movement != null && !String.isBlank(movement.contactReference)) {
                     return movement.contactReference;
                 }
             }
+        }
+
+        if (!String.isBlank(details.contactReference)) {
+            return details.contactReference;
         }
 
         return null;
