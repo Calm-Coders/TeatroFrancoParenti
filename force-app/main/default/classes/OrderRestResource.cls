@@ -304,7 +304,6 @@ global without sharing class OrderRestResource {
         }
         orderRecord.EffectiveDate = resolveEffectiveDate(details);
         orderRecord.Status = DEFAULT_ORDER_STATUS;
-        orderRecord.Description = buildDescription(orderWrapper);
         orderRecord.AccountId = accountId;
         orderRecord.BillToContactId = resolvedContact == null ? null : resolvedContact.contactId;
         orderRecord.ShipToContactId = resolvedContact == null ? null : resolvedContact.contactId;
@@ -621,37 +620,6 @@ global without sharing class OrderRestResource {
         }
     }
 
-    private static String buildDescription(OrderWrapper orderWrapper) {
-        OrderWrapper.OrderDetailsData details = orderWrapper == null || orderWrapper.payload == null ? null : orderWrapper.payload.orderDetailsData;
-        if (details == null) {
-            return null;
-        }
-
-        List<String> lines = new List<String>();
-        addLabelValue(lines, 'Secutix orderId', details.orderId == null ? null : String.valueOf(details.orderId));
-        addLabelValue(lines, 'Secutix orderSecretId', details.orderSecretId);
-        addLabelValue(lines, 'Secutix orderState', details.orderState);
-        addLabelValue(lines, 'Secutix orderType', details.orderType);
-        addLabelValue(lines, 'Secutix contactReference', firstContactReference(details));
-        addLabelValue(lines, 'Secutix orderDetailGranularity', orderWrapper.payload.orderDetailGranularity);
-        addLabelValue(lines, 'Secutix creationDateTime', details.creationDateTime);
-        addLabelValue(lines, 'Secutix referenceDate', details.referenceDate);
-        addLabelValue(lines, 'Secutix expirationDate', details.expirationDate);
-        addLabelValue(lines, 'Secutix saleAmount', details.saleAmount == null ? null : String.valueOf(details.saleAmount));
-        addLabelValue(lines, 'Secutix preSaleAmount', details.preSaleAmount == null ? null : String.valueOf(details.preSaleAmount));
-        addLabelValue(lines, 'Secutix salesChannelCode', details.salesChannelCode);
-        addLabelValue(lines, 'Secutix orderOriginator', details.orderOriginator);
-
-        if (details.operationDatas != null && !details.operationDatas.isEmpty()) {
-            OrderWrapper.OperationData firstOperation = details.operationDatas[0];
-            addLabelValue(lines, 'First operation product', firstOperation == null ? null : firstOperation.product);
-            addLabelValue(lines, 'First operation site', firstOperation == null ? null : firstOperation.site);
-            addLabelValue(lines, 'First operation itemDate', firstOperation == null ? null : firstOperation.itemDate);
-        }
-
-        return lines.isEmpty() ? null : String.join(lines, '\n');
-    }
-
     private static Map<String, Object> rawOrderDetails(OrderWrapper orderWrapper) {
         if (orderWrapper == null || orderWrapper.rawPayload == null) {
             return new Map<String, Object>();
@@ -749,12 +717,6 @@ global without sharing class OrderRestResource {
 
     private static List<Object> toObjectList(Object value) {
         return value instanceof List<Object> ? (List<Object>) value : new List<Object>();
-    }
-
-    private static void addLabelValue(List<String> values, String label, String value) {
-        if (!String.isBlank(value)) {
-            values.add(label + ': ' + value);
-        }
     }
 
     private static void setCustomField(SObject recordItem, String fieldApiName, Object value) {

@@ -29,7 +29,7 @@ private class ContactRestResourceTest {
             SELECT Name, BillingStreet, BillingCity, BillingPostalCode, BillingCountry,
                 Contact_Number__c, Contact_Id__c, State__c, Type__c, Country_Code__c,
                 Email__c, Mobile_Phone__c, Individual_Firstname__c, Individual_Lastname__c,
-                Individual_Title__c, Birthdate__c, Active__c, Description, Individual_Contact__c,
+                Individual_Title__c, Birthdate__c, Active__c, Individual_Contact__c,
                 Structure_Contact__c, Addresses__c, RecordTypeId, Contact_Origin_Translations__c,
                 Individual_Contact_Number__c, Individual_Login__c, Individual_Preferred_Language__c,
                 Individual_Prospect__c, Individual_Country_Code__c, Individual_Email_Ver_Status__c,
@@ -59,7 +59,6 @@ private class ContactRestResourceTest {
         System.assertEquals('Sig.', createdAccount.Individual_Title__c);
         System.assertEquals(Date.newInstance(1980, 2, 3), createdAccount.Birthdate__c);
         System.assertEquals(true, createdAccount.Active__c);
-        System.assert(createdAccount.Description.contains('Secutix firstName: Mario'));
         System.assert(createdAccount.Individual_Contact__c.contains('"individualFirstname":"Mario"'));
         System.assert(createdAccount.Structure_Contact__c.contains('"companyName":"Teatro Demo SRL"'));
         System.assert(createdAccount.Addresses__c.contains('"town":"Milano"'));

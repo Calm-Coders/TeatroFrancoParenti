@@ -44,9 +44,7 @@ private class OrderRestResourceTest {
         System.assertEquals(null, insertedOrder.BillToContactId);
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals('Draft', insertedOrder.Status);
-        System.assert(insertedOrder.Description.contains('Secutix orderId: 10000418846'));
-        System.assert(insertedOrder.Description.contains('Secutix orderSecretId: 33e1993b-7e31-4c44-8b8b-2ac646d258a0_10000418846'));
-        System.assert(insertedOrder.Description.contains('Secutix contactReference: 5442'));
+        System.assertEquals(null, insertedOrder.Description);
 
         Integration_Log__c logRec = [
             SELECT Flow_Name__c, Integration_Type__c, Is_Error__c, Request_Endpoint__c, Response_State__c
@@ -123,8 +121,7 @@ private class OrderRestResourceTest {
         System.assertEquals(null, insertedOrder.BillToContactId);
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals(Date.newInstance(2026, 5, 20), insertedOrder.EffectiveDate);
-        System.assert(insertedOrder.Description.contains('Secutix orderId: 454129'));
-        System.assert(insertedOrder.Description.contains('First operation product: LE VACANZE DEI SIGNORI LAGONIA'));
+        System.assertEquals(null, insertedOrder.Description);
         System.assert(insertedOrder.Operation_Datas__c.contains('"performanceDate":"2026-05-20T20:15:00.000+02:00"'));
         System.assert(insertedOrder.Movement_Datas__c.contains('"contactReference":"10286"'));
     }
@@ -242,7 +239,7 @@ private class OrderRestResourceTest {
         System.assertEquals('10286', updatedOrder.Contact_Reference__c);
         System.assertEquals(null, updatedOrder.Product_Id__c);
         System.assertEquals(directMatchAccount.Id, updatedOrder.AccountId);
-        System.assert(updatedOrder.Description.contains('Secutix orderId: 454129'));
+        System.assertEquals('Original description', updatedOrder.Description);
     }
 
     @IsTest

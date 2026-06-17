@@ -366,8 +366,6 @@ global without sharing class ContactRestResource {
             accountRecord.BillingCountry = primaryAddress.countryCode;
         }
 
-        accountRecord.Description = buildAccountDescription(payload, primaryAddress);
-
         ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
         ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
         setSObjectField(accountRecord, 'Individual_Firstname__c', truncateValue(individual == null ? null : individual.individualFirstname, 80));
