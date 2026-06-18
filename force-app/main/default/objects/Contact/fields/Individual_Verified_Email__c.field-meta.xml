@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Has_Advantages__c</fullName>
+    <fullName>Individual_Verified_Email__c</fullName>
     <defaultValue>false</defaultValue>
-    <label>Has Advantages</label>
+    <label>Individual Verified Email</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

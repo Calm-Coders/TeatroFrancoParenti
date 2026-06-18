@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Contact_Qualities__c</fullName>
-    <label>Contact Qualities</label>
+    <fullName>Structure_Alt_Emails__c</fullName>
+    <label>Structure Alt Emails</label>
     <length>32768</length>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>

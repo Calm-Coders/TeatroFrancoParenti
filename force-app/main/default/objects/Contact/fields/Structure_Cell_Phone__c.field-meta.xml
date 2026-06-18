@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Contact_Origin__c</fullName>
+    <fullName>Structure_Cell_Phone__c</fullName>
     <externalId>false</externalId>
-    <label>Contact Origin</label>
-    <length>80</length>
+    <label>Structure Cell Phone</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
-    <type>Text</type>
-    <unique>false</unique>
+    <type>Phone</type>
 </CustomField>

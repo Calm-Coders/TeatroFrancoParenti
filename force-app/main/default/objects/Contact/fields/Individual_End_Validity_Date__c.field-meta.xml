@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Login_Last_Update_Time__c</fullName>
-    <externalId>false</externalId>
-    <label>Login Last Update Time</label>
+    <fullName>Individual_End_Validity_Date__c</fullName>
+    <label>Individual End Validity Date</label>
     <length>40</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>
-    <unique>false</unique>
 </CustomField>
