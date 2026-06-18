@@ -4,8 +4,8 @@
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Inventory</label>
     <referenceTo>Inventory__c</referenceTo>
-    <relationshipLabel>Orders</relationshipLabel>
-    <relationshipName>Orders</relationshipName>
+    <relationshipLabel>Order Operation Data</relationshipLabel>
+    <relationshipName>OrderOperationDatas</relationshipName>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>

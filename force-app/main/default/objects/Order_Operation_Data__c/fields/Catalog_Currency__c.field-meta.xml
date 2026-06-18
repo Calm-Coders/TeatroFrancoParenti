@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Operation_Datas__c</fullName>
-    <label>Operation Datas</label>
+    <fullName>Catalog_Currency__c</fullName>
+    <label>Catalog Currency</label>
     <length>32768</length>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>

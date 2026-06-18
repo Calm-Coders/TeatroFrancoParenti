@@ -40,7 +40,7 @@ private class OrderRestResourceTest {
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(directMatchAccount.Id, insertedOrder.AccountId);
+        System.assertEquals(fallbackAccount.Id, insertedOrder.AccountId);
         System.assertEquals(null, insertedOrder.BillToContactId);
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals('Draft', insertedOrder.Status);
@@ -112,7 +112,7 @@ private class OrderRestResourceTest {
         System.assertEquals(1, ((List<Object>) resp.get('contactReferences')).size());
 
         Order insertedOrder = [
-            SELECT AccountId, BillToContactId, ShipToContactId, EffectiveDate, Description, Operation_Datas__c, Movement_Datas__c
+            SELECT Id, AccountId, BillToContactId, ShipToContactId, EffectiveDate, Description
             FROM Order
             ORDER BY CreatedDate DESC
             LIMIT 1
@@ -122,12 +122,32 @@ private class OrderRestResourceTest {
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals(Date.newInstance(2026, 5, 20), insertedOrder.EffectiveDate);
         System.assertEquals(null, insertedOrder.Description);
-        System.assert(insertedOrder.Operation_Datas__c.contains('"performanceDate":"2026-05-20T20:15:00.000+02:00"'));
-        System.assert(insertedOrder.Movement_Datas__c.contains('"contactReference":"10286"'));
+        System.assertEquals(2, countRows('Order_Operation_Data__c', 'Order__c = \'' + insertedOrder.Id + '\''));
+        System.assertEquals(2, countRows('Order_Movement_Data__c', 'Order__c = \'' + insertedOrder.Id + '\''));
+
+        SObject operationRecord = Database.query(
+            'SELECT Operation_Id__c, Performance_Date__c ' +
+            'FROM Order_Operation_Data__c ' +
+            'WHERE Order__c = \'' + insertedOrder.Id + '\' ' +
+            'ORDER BY CreatedDate ASC LIMIT 1'
+        );
+        System.assertEquals('10229250965773', (String) operationRecord.get('Operation_Id__c'));
+        System.assertEquals('2026-05-20T20:15:00.000+02:00', (String) operationRecord.get('Performance_Date__c'));
+
+        SObject movementRecord = Database.query(
+            'SELECT Contact_Reference__c, Operation_Id__c, Account__c ' +
+            'FROM Order_Movement_Data__c ' +
+            'WHERE Order__c = \'' + insertedOrder.Id + '\' ' +
+            'ORDER BY CreatedDate ASC LIMIT 1'
+        );
+        System.assertEquals('10286', (String) movementRecord.get('Contact_Reference__c'));
+        System.assertNotEquals(null, movementRecord.get('Operation_Id__c'));
+        System.assertEquals(fallbackAccount.Id, insertedOrder.AccountId);
     }
 
     @IsTest
     static void receiveOrder_linksMatchingContactByShipmentContactNumberAndContactReference() {
+        Account fallbackAccount = createFallbackAccount();
         Account accountRecord = new Account(Name = 'Test Contact Account');
         insert accountRecord;
         Account directMatchAccount = new Account(
@@ -177,12 +197,18 @@ private class OrderRestResourceTest {
         }
 
         System.assertEquals(2, ordersByExternalId.size());
-        System.assertEquals(accountRecord.Id, ordersByExternalId.get('555001').AccountId);
+        System.assertEquals(fallbackAccount.Id, ordersByExternalId.get('555001').AccountId);
         System.assertEquals(shipmentContactRecord.Id, ordersByExternalId.get('555001').BillToContactId);
         System.assertEquals(shipmentContactRecord.Id, ordersByExternalId.get('555001').ShipToContactId);
         System.assertEquals(directMatchAccount.Id, ordersByExternalId.get('555002').AccountId);
         System.assertEquals(referenceContactRecord.Id, ordersByExternalId.get('555002').BillToContactId);
         System.assertEquals(referenceContactRecord.Id, ordersByExternalId.get('555002').ShipToContactId);
+
+        SObject movementRecord = Database.query(
+            'SELECT Account__c FROM Order_Movement_Data__c ' +
+            'WHERE Order__c IN (SELECT Id FROM Order WHERE Order_Id__c = \'555002\') LIMIT 1'
+        );
+        System.assertEquals(directMatchAccount.Id, (Id) movementRecord.get('Account__c'));
 
         Map<String, Object> resp = (Map<String, Object>) JSON.deserializeUntyped(
             RestContext.response.responseBody.toString()
@@ -240,6 +266,8 @@ private class OrderRestResourceTest {
         System.assertEquals(null, updatedOrder.Product_Id__c);
         System.assertEquals(directMatchAccount.Id, updatedOrder.AccountId);
         System.assertEquals('Original description', updatedOrder.Description);
+        System.assertEquals(1, countRows('Order_Operation_Data__c', 'Order__c = \'' + existingOrder.Id + '\''));
+        System.assertEquals(1, countRows('Order_Movement_Data__c', 'Order__c = \'' + existingOrder.Id + '\''));
     }
 
     @IsTest
@@ -272,13 +300,18 @@ private class OrderRestResourceTest {
         System.assertEquals(200, RestContext.response.statusCode);
 
         Order insertedOrder = [
-            SELECT AccountId, Contact_Reference__c
+            SELECT Id, AccountId, Contact_Reference__c
             FROM Order
             WHERE Order_Id__c = '454132'
             LIMIT 1
         ];
-        System.assertEquals(movementMatchAccount.Id, insertedOrder.AccountId);
+        System.assertEquals(topLevelOnlyAccount.Id, insertedOrder.AccountId);
         System.assertEquals('102', insertedOrder.Contact_Reference__c);
+
+        SObject movementRecord = Database.query(
+            'SELECT Account__c FROM Order_Movement_Data__c WHERE Order__c = \'' + insertedOrder.Id + '\' LIMIT 1'
+        );
+        System.assertEquals(movementMatchAccount.Id, (Id) movementRecord.get('Account__c'));
     }
 
     @IsTest
@@ -306,14 +339,13 @@ private class OrderRestResourceTest {
 
         System.assertEquals(200, RestContext.response.statusCode);
 
-        Order insertedOrder = [
-            SELECT Id, Inventory__c, Order_Id__c, Product_Id__c
-            FROM Order
-            WHERE Order_Id__c = '454130'
-            LIMIT 1
-        ];
-        System.assertEquals(inventoryRecord.Id, insertedOrder.Inventory__c);
-        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(insertedOrder.Product_Id__c)));
+        SObject operationRecord = Database.query(
+            'SELECT Inventory__c, Product_Id__c FROM Order_Operation_Data__c ' +
+            'WHERE Order__c IN (SELECT Id FROM Order WHERE Order_Id__c = \'454130\') ' +
+            'AND Operation_Id__c = \'10229250965773\' LIMIT 1'
+        );
+        System.assertEquals(inventoryRecord.Id, (Id) operationRecord.get('Inventory__c'));
+        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(operationRecord.get('Product_Id__c'))));
     }
 
     @IsTest
@@ -347,14 +379,13 @@ private class OrderRestResourceTest {
 
         System.assertEquals(200, RestContext.response.statusCode);
 
-        Order insertedOrder = [
-            SELECT Id, Inventory__c, Product_Id__c
-            FROM Order
-            WHERE Order_Id__c = '454131'
-            LIMIT 1
-        ];
-        System.assertEquals(newerInventory.Id, insertedOrder.Inventory__c);
-        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(insertedOrder.Product_Id__c)));
+        SObject operationRecord = Database.query(
+            'SELECT Inventory__c, Product_Id__c FROM Order_Operation_Data__c ' +
+            'WHERE Order__c IN (SELECT Id FROM Order WHERE Order_Id__c = \'454131\') ' +
+            'AND Operation_Id__c = \'10229250965773\' LIMIT 1'
+        );
+        System.assertEquals(newerInventory.Id, (Id) operationRecord.get('Inventory__c'));
+        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(operationRecord.get('Product_Id__c'))));
     }
 
     private static Account createFallbackAccount() {
@@ -379,5 +410,12 @@ private class OrderRestResourceTest {
         );
 
         return fallbackRecordType.getRecordTypeId();
+    }
+
+    private static Integer countRows(String objectApiName, String whereClause) {
+        AggregateResult[] results = Database.query(
+            'SELECT COUNT(Id) rowCount FROM ' + objectApiName + ' WHERE ' + whereClause
+        );
+        return Integer.valueOf(String.valueOf(results[0].get('rowCount')));
     }
 }

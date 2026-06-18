@@ -5,6 +5,8 @@ global without sharing class OrderRestResource {
     private static final String FLOW_NAME = 'OrderRestResource.receiveOrder';
     private static final String DEFAULT_ORDER_STATUS = 'Draft';
     private static final String FALLBACK_ACCOUNT_RECORD_TYPE = 'Fallback_Account';
+    private static final String ORDER_OPERATION_OBJECT = 'Order_Operation_Data__c';
+    private static final String ORDER_MOVEMENT_OBJECT = 'Order_Movement_Data__c';
 
     @HttpPost
     global static void receiveOrder() {
@@ -182,11 +184,54 @@ global without sharing class OrderRestResource {
 
             Map<String, Object> rawOperation = (Map<String, Object>) item;
             OrderWrapper.OperationData operation = new OrderWrapper.OperationData();
+            operation.operationId = toLongValue(rawOperation.get('operationId'));
+            operation.parentOperationId = toLongValue(rawOperation.get('parentOperationId'));
+            operation.parentOperationLinkType = toStringValue(rawOperation.get('parentOperationLinkType'));
             operation.kind = toStringValue(rawOperation.get('kind'));
             operation.type = toStringValue(rawOperation.get('type'));
+            operation.quantity = toDecimalValue(rawOperation.get('quantity'));
+            operation.basePrice = toDecimalValue(rawOperation.get('basePrice'));
+            operation.unitPrice = toDecimalValue(rawOperation.get('unitPrice'));
+            operation.withoutVatTotalAmount = toDecimalValue(rawOperation.get('withoutVatTotalAmount'));
+            operation.totalAmount = toDecimalValue(rawOperation.get('totalAmount'));
             operation.productId = toLongValue(rawOperation.get('productId'));
             operation.product = toStringValue(rawOperation.get('product'));
+            operation.productCode = toStringValue(rawOperation.get('productCode'));
+            operation.itemId = toLongValue(rawOperation.get('itemId'));
+            operation.performanceId = toLongValue(rawOperation.get('performanceId'));
+            operation.performance = toStringValue(rawOperation.get('performance'));
+            operation.siteId = toLongValue(rawOperation.get('siteId'));
             operation.site = toStringValue(rawOperation.get('site'));
+            operation.siteAddress = buildSiteAddress(rawOperation.get('siteAddress'));
+            operation.space = toStringValue(rawOperation.get('space'));
+            operation.contingentId = toLongValue(rawOperation.get('contingentId'));
+            operation.contingent = toStringValue(rawOperation.get('contingent'));
+            operation.numbered = toBooleanValue(rawOperation.get('numbered'));
+            operation.seatCategoryId = toLongValue(rawOperation.get('seatCategoryId'));
+            operation.seatCategory = toStringValue(rawOperation.get('seatCategory'));
+            operation.audienceSubCategoryId = toLongValue(rawOperation.get('audienceSubCategoryId'));
+            operation.audienceSubCategory = toStringValue(rawOperation.get('audienceSubCategory'));
+            operation.vatRate = toDecimalValue(rawOperation.get('vatRate'));
+            operation.vatCountryCode = toStringValue(rawOperation.get('vatCountryCode'));
+            operation.selfPaidVat = toBooleanValue(rawOperation.get('selfPaidVat'));
+            operation.operationNumber = toIntegerValue(rawOperation.get('operationNumber'));
+            operation.productFamilyType = toStringValue(rawOperation.get('productFamilyType'));
+            operation.productFamilySubType = toStringValue(rawOperation.get('productFamilySubType'));
+            operation.locations = buildLocationDatas(rawOperation.get('locations'));
+            operation.fileId = toLongValue(rawOperation.get('fileId'));
+            operation.waitingAccountBalance = toDecimalValue(rawOperation.get('waitingAccountBalance'));
+            operation.season = toStringValue(rawOperation.get('season'));
+            operation.crossSellParentOperationIds = toObjectList(rawOperation.get('crossSellParentOperationIds'));
+            operation.comfortVariableValues = toObjectMap(rawOperation.get('comfortVariableValues'));
+            operation.exchangeable = toBooleanValue(rawOperation.get('exchangeable'));
+            operation.catalogCurrency = buildCatalogCurrency(rawOperation.get('catalogCurrency'));
+            operation.expirationDate = toStringValue(rawOperation.get('expirationDate'));
+            operation.championshipSeasonticket = toBooleanValue(rawOperation.get('championshipSeasonticket'));
+            operation.fixedSeatSeasonticket = toBooleanValue(rawOperation.get('fixedSeatSeasonticket'));
+            operation.allSeasonTicketLinesCompetition = toBooleanValue(rawOperation.get('allSeasonTicketLinesCompetition'));
+            operation.insuredOperationIds = toObjectList(rawOperation.get('insuredOperationIds'));
+            operation.isNominative = toBooleanValue(rawOperation.get('isNominative'));
+            operation.priceComponentData = toObjectMap(rawOperation.get('priceComponentData'));
             operation.itemDate = toStringValue(rawOperation.get('itemDate'));
             if (String.isBlank(operation.itemDate)) {
                 operation.itemDate = toStringValue(rawOperation.get('performanceDate'));
@@ -205,10 +250,66 @@ global without sharing class OrderRestResource {
 
             Map<String, Object> rawMovement = (Map<String, Object>) item;
             OrderWrapper.MovementData movement = new OrderWrapper.MovementData();
+            movement.movementId = toLongValue(rawMovement.get('movementId'));
+            movement.operationId = toLongValue(rawMovement.get('operationId'));
+            movement.type = toStringValue(rawMovement.get('type'));
+            movement.seatId = toLongValue(rawMovement.get('seatId'));
+            movement.saleSeatId = toLongValue(rawMovement.get('saleSeatId'));
+            movement.seatCategoryId = toLongValue(rawMovement.get('seatCategoryId'));
+            movement.seatCategory = toStringValue(rawMovement.get('seatCategory'));
+            movement.areaId = toLongValue(rawMovement.get('areaId'));
+            movement.area = toStringValue(rawMovement.get('area'));
+            movement.entranceId = toLongValue(rawMovement.get('entranceId'));
+            movement.entrance = toStringValue(rawMovement.get('entrance'));
+            movement.entranceCode = toStringValue(rawMovement.get('entranceCode'));
+            movement.row = toStringValue(rawMovement.get('row'));
+            movement.seatNumber = toStringValue(rawMovement.get('seatNumber'));
+            movement.contingentId = toLongValue(rawMovement.get('contingentId'));
+            movement.contingent = toStringValue(rawMovement.get('contingent'));
             movement.contactReference = toStringValue(rawMovement.get('contactReference'));
+            movement.seatOrientation = toIntegerValue(rawMovement.get('seatOrientation'));
+            movement.instanceNumber = toIntegerValue(rawMovement.get('instanceNumber'));
+            movement.stageVisibility = toStringValue(rawMovement.get('stageVisibility'));
+            movement.areaKind = toStringValue(rawMovement.get('areaKind'));
+            movement.resumed = toBooleanValue(rawMovement.get('resumed'));
+            movement.attributionMatch = toStringValue(rawMovement.get('attributionMatch'));
+            movement.transferable = toBooleanValue(rawMovement.get('transferable'));
             movements.add(movement);
         }
         return movements;
+    }
+
+    private static OrderWrapper.SiteAddress buildSiteAddress(Object rawValue) {
+        if (!(rawValue instanceof Map<String, Object>)) {
+            return null;
+        }
+
+        Map<String, Object> rawMap = (Map<String, Object>) rawValue;
+        OrderWrapper.SiteAddress siteAddress = new OrderWrapper.SiteAddress();
+        siteAddress.firstAddressLine = toStringValue(rawMap.get('firstAddressLine'));
+        siteAddress.zipCode = toStringValue(rawMap.get('zipCode'));
+        siteAddress.locality = toStringValue(rawMap.get('locality'));
+        siteAddress.countryCode = toStringValue(rawMap.get('countryCode'));
+        return siteAddress;
+    }
+
+    private static List<OrderWrapper.LocationData> buildLocationDatas(Object rawValue) {
+        List<OrderWrapper.LocationData> locations = new List<OrderWrapper.LocationData>();
+        for (Object item : toObjectList(rawValue)) {
+            if (!(item instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            Map<String, Object> rawLocation = (Map<String, Object>) item;
+            OrderWrapper.LocationData location = new OrderWrapper.LocationData();
+            location.spaceCode = toStringValue(rawLocation.get('spaceCode'));
+            location.siteCode = toStringValue(rawLocation.get('siteCode'));
+            location.spaceExternalName = buildTranslationContainer(rawLocation.get('spaceExternalName'));
+            location.siteExternalName = buildTranslationContainer(rawLocation.get('siteExternalName'));
+            location.siteAddress = buildSiteAddress(rawLocation.get('siteAddress'));
+            locations.add(location);
+        }
+        return locations;
     }
 
     private static List<OrderWrapper.MovementTicketData> buildMovementTicketDatas(Object rawValue) {
@@ -288,6 +389,7 @@ global without sharing class OrderRestResource {
         } else {
             update orderRecord;
         }
+        syncOrderChildren(orderWrapper, orderRecord.Id);
         return orderRecord;
     }
 
@@ -296,7 +398,7 @@ global without sharing class OrderRestResource {
         Map<String, Object> rawDetails = rawOrderDetails(orderWrapper);
         String contactReference = firstContactReference(details);
         ResolvedContact resolvedContact = resolveContact(orderWrapper);
-        Id accountId = resolveOrderAccountId(details, resolvedContact);
+        Id accountId = resolveOrderAccountId(details);
 
         Order orderRecord = new Order();
         if (existingOrderId != null) {
@@ -313,7 +415,6 @@ global without sharing class OrderRestResource {
             'Product_Id__c',
             productId == null ? null : Decimal.valueOf(String.valueOf(productId))
         );
-        setCustomField(orderRecord, 'Inventory__c', resolveInventoryLookupId(details));
         setCustomField(orderRecord, 'Order_Id__c', truncateValue(details.orderId == null ? null : String.valueOf(details.orderId), 30));
         setCustomField(orderRecord, 'Order_Secret_Id__c', truncateValue(details.orderSecretId, 255));
         setCustomField(orderRecord, 'Order_State__c', truncateValue(details.orderState, 40));
@@ -333,8 +434,6 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Reservation_Amount__c', details.reservationAmount);
         setCustomField(orderRecord, 'Option_Amount__c', details.optionAmount);
         setCustomField(orderRecord, 'Waiting_Account_Balance_Amount__c', details.waitingAccountBalanceAmount);
-        setCustomField(orderRecord, 'Operation_Datas__c', serializeRawValue(rawDetails.get('operationDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Movement_Datas__c', serializeRawValue(rawDetails.get('movementDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Movement_Ticket_Datas__c', serializeRawValue(rawDetails.get('movementTicketDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Sales_Channel_Name__c', serializeRawValue(rawDetails.get('salesChannelName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Generated_Contiguities__c', serializeRawValue(rawDetails.get('generatedContiguities'), MAX_SECUTIX_LONG_TEXT_LENGTH));
@@ -344,6 +443,179 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Organization_Name__c', serializeRawValue(rawDetails.get('organizationName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
 
         return orderRecord;
+    }
+
+    private static void syncOrderChildren(OrderWrapper orderWrapper, Id orderId) {
+        if (orderId == null) {
+            return;
+        }
+
+        deleteExistingOrderChildren(orderId);
+
+        OrderWrapper.OrderDetailsData details = orderWrapper == null || orderWrapper.payload == null
+            ? null
+            : orderWrapper.payload.orderDetailsData;
+        Map<String, Object> rawDetails = rawOrderDetails(orderWrapper);
+
+        List<SObject> operationRecords = buildOperationRecords(orderId, details, rawDetails);
+        if (!operationRecords.isEmpty()) {
+            insert operationRecords;
+        }
+
+        Map<String, Id> operationRecordIdsByExternalId = new Map<String, Id>();
+        List<SObject> operationsToUpdate = new List<SObject>();
+        for (SObject operationRecord : operationRecords) {
+            String operationExternalId = (String) operationRecord.get('Operation_Id__c');
+            if (!String.isBlank(operationExternalId)) {
+                operationRecordIdsByExternalId.put(operationExternalId, (Id) operationRecord.get('Id'));
+            }
+        }
+
+        for (SObject operationRecord : operationRecords) {
+            String parentOperationExternalId = (String) operationRecord.get('Parent_Operation_Id__c');
+            if (String.isBlank(parentOperationExternalId)) {
+                continue;
+            }
+
+            Id parentOperationRecordId = operationRecordIdsByExternalId.get(parentOperationExternalId);
+            if (parentOperationRecordId == null) {
+                continue;
+            }
+
+            operationRecord.put('Parent_Operation__c', parentOperationRecordId);
+            operationsToUpdate.add(operationRecord);
+        }
+
+        if (!operationsToUpdate.isEmpty()) {
+            update operationsToUpdate;
+        }
+
+        List<SObject> movementRecords = buildMovementRecords(orderId, details, rawDetails, operationRecordIdsByExternalId);
+        if (!movementRecords.isEmpty()) {
+            insert movementRecords;
+        }
+    }
+
+    private static void deleteExistingOrderChildren(Id orderId) {
+        List<SObject> movementRecords = Database.query(
+            'SELECT Id FROM ' + ORDER_MOVEMENT_OBJECT + ' WHERE Order__c = :orderId'
+        );
+        if (!movementRecords.isEmpty()) {
+            delete movementRecords;
+        }
+
+        List<SObject> operationRecords = Database.query(
+            'SELECT Id FROM ' + ORDER_OPERATION_OBJECT + ' WHERE Order__c = :orderId'
+        );
+        if (!operationRecords.isEmpty()) {
+            delete operationRecords;
+        }
+    }
+
+    private static List<SObject> buildOperationRecords(
+        Id orderId,
+        OrderWrapper.OrderDetailsData details,
+        Map<String, Object> rawDetails
+    ) {
+        List<SObject> operationRecords = new List<SObject>();
+        List<OrderWrapper.OperationData> operations = details == null ? null : details.operationDatas;
+        List<Object> rawOperations = toObjectList(rawDetails.get('operationDatas'));
+        Integer operationCount = operations == null ? 0 : operations.size();
+
+        for (Integer i = 0; i < operationCount; i++) {
+            OrderWrapper.OperationData operation = operations[i];
+            Map<String, Object> rawOperation = i < rawOperations.size() && rawOperations[i] instanceof Map<String, Object>
+                ? (Map<String, Object>) rawOperations[i]
+                : new Map<String, Object>();
+            SObject operationRecord = instantiateSObject(ORDER_OPERATION_OBJECT);
+
+            setCustomField(operationRecord, 'Order__c', orderId);
+            setCustomField(operationRecord, 'Inventory__c', resolveInventoryLookupId(operation == null ? null : operation.productId));
+            setCustomField(operationRecord, 'Operation_Id__c', stringifyLong(operation == null ? null : operation.operationId));
+            setCustomField(operationRecord, 'Parent_Operation_Id__c', stringifyLong(operation == null ? null : operation.parentOperationId));
+            setCustomField(operationRecord, 'Parent_Operation_Link_Type__c', truncateValue(operation == null ? null : operation.parentOperationLinkType, 80));
+            setCustomField(operationRecord, 'Kind__c', truncateValue(operation == null ? null : operation.kind, 80));
+            setCustomField(operationRecord, 'Type__c', truncateValue(operation == null ? null : operation.type, 80));
+            setCustomField(operationRecord, 'Quantity__c', operation == null ? null : operation.quantity);
+            setCustomField(operationRecord, 'Base_Price__c', operation == null ? null : operation.basePrice);
+            setCustomField(operationRecord, 'Unit_Price__c', operation == null ? null : operation.unitPrice);
+            setCustomField(operationRecord, 'Without_Vat_Total_Amount__c', operation == null ? null : operation.withoutVatTotalAmount);
+            setCustomField(operationRecord, 'Total_Amount__c', operation == null ? null : operation.totalAmount);
+            setCustomField(operationRecord, 'Product_Id__c', decimalFromLong(operation == null ? null : operation.productId));
+            setCustomField(operationRecord, 'Product__c', truncateValue(operation == null ? null : operation.product, 255));
+            setCustomField(operationRecord, 'Product_Code__c', truncateValue(operation == null ? null : operation.productCode, 80));
+            setCustomField(operationRecord, 'Item_Id__c', decimalFromLong(operation == null ? null : operation.itemId));
+            setCustomField(operationRecord, 'Performance_Id__c', decimalFromLong(operation == null ? null : operation.performanceId));
+            setCustomField(operationRecord, 'Performance__c', truncateValue(operation == null ? null : operation.performance, 255));
+            setCustomField(operationRecord, 'Site_Id__c', decimalFromLong(operation == null ? null : operation.siteId));
+            setCustomField(operationRecord, 'Site__c', truncateValue(operation == null ? null : operation.site, 255));
+            setCustomField(operationRecord, 'Space__c', truncateValue(operation == null ? null : operation.space, 255));
+            setCustomField(operationRecord, 'Seat_Category_Id__c', decimalFromLong(operation == null ? null : operation.seatCategoryId));
+            setCustomField(operationRecord, 'Seat_Category__c', truncateValue(operation == null ? null : operation.seatCategory, 255));
+            setCustomField(operationRecord, 'Audience_SubCategory_Id__c', decimalFromLong(operation == null ? null : operation.audienceSubCategoryId));
+            setCustomField(operationRecord, 'Audience_SubCategory__c', truncateValue(operation == null ? null : operation.audienceSubCategory, 255));
+            setCustomField(operationRecord, 'Vat_Rate__c', operation == null ? null : operation.vatRate);
+            setCustomField(operationRecord, 'Vat_Country_Code__c', truncateValue(operation == null ? null : operation.vatCountryCode, 10));
+            setCustomField(operationRecord, 'Self_Paid_Vat__c', operation == null ? null : operation.selfPaidVat);
+            setCustomField(operationRecord, 'Operation_Number__c', operation == null || operation.operationNumber == null ? null : Decimal.valueOf(String.valueOf(operation.operationNumber)));
+            setCustomField(operationRecord, 'Product_Family_Type__c', truncateValue(operation == null ? null : operation.productFamilyType, 80));
+            setCustomField(operationRecord, 'Product_Family_SubType__c', truncateValue(operation == null ? null : operation.productFamilySubType, 80));
+            setCustomField(operationRecord, 'Performance_Date__c', truncateValue(operation == null ? null : operation.itemDate, 40));
+            setCustomField(operationRecord, 'Expiration_Date__c', truncateValue(operation == null ? null : operation.expirationDate, 40));
+            setCustomField(operationRecord, 'Waiting_Account_Balance__c', operation == null ? null : operation.waitingAccountBalance);
+            setCustomField(operationRecord, 'Season__c', truncateValue(operation == null ? null : operation.season, 255));
+            setCustomField(operationRecord, 'Catalog_Currency__c', serializeRawValue(rawOperation.get('catalogCurrency'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            setCustomField(operationRecord, 'Site_Address__c', serializeRawValue(rawOperation.get('siteAddress'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            setCustomField(operationRecord, 'Locations__c', serializeRawValue(rawOperation.get('locations'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            operationRecords.add(operationRecord);
+        }
+
+        return operationRecords;
+    }
+
+    private static List<SObject> buildMovementRecords(
+        Id orderId,
+        OrderWrapper.OrderDetailsData details,
+        Map<String, Object> rawDetails,
+        Map<String, Id> operationRecordIdsByExternalId
+    ) {
+        List<SObject> movementRecords = new List<SObject>();
+        List<OrderWrapper.MovementData> movements = details == null ? null : details.movementDatas;
+        List<Object> rawMovements = toObjectList(rawDetails.get('movementDatas'));
+        Integer movementCount = movements == null ? 0 : movements.size();
+
+        for (Integer i = 0; i < movementCount; i++) {
+            OrderWrapper.MovementData movement = movements[i];
+            Map<String, Object> rawMovement = i < rawMovements.size() && rawMovements[i] instanceof Map<String, Object>
+                ? (Map<String, Object>) rawMovements[i]
+                : new Map<String, Object>();
+            SObject movementRecord = instantiateSObject(ORDER_MOVEMENT_OBJECT);
+            String operationExternalId = stringifyLong(movement == null ? null : movement.operationId);
+
+            setCustomField(movementRecord, 'Order__c', orderId);
+            setCustomField(movementRecord, 'Account__c', resolveAccountIdByContactNumber(movement == null ? null : movement.contactReference));
+            setCustomField(movementRecord, 'Order_Operation_Data__c', operationRecordIdsByExternalId.get(operationExternalId));
+            setCustomField(movementRecord, 'Movement_Id__c', stringifyLong(movement == null ? null : movement.movementId));
+            setCustomField(movementRecord, 'Operation_Id__c', operationExternalId);
+            setCustomField(movementRecord, 'Type__c', truncateValue(movement == null ? null : movement.type, 80));
+            setCustomField(movementRecord, 'Seat_Id__c', decimalFromLong(movement == null ? null : movement.seatId));
+            setCustomField(movementRecord, 'Sale_Seat_Id__c', decimalFromLong(movement == null ? null : movement.saleSeatId));
+            setCustomField(movementRecord, 'Seat_Category_Id__c', decimalFromLong(movement == null ? null : movement.seatCategoryId));
+            setCustomField(movementRecord, 'Seat_Category__c', truncateValue(movement == null ? null : movement.seatCategory, 255));
+            setCustomField(movementRecord, 'Area_Id__c', decimalFromLong(movement == null ? null : movement.areaId));
+            setCustomField(movementRecord, 'Area__c', truncateValue(movement == null ? null : movement.area, 255));
+            setCustomField(movementRecord, 'Entrance_Id__c', decimalFromLong(movement == null ? null : movement.entranceId));
+            setCustomField(movementRecord, 'Entrance__c', truncateValue(movement == null ? null : movement.entrance, 255));
+            setCustomField(movementRecord, 'Entrance_Code__c', truncateValue(movement == null ? null : movement.entranceCode, 80));
+            setCustomField(movementRecord, 'Row__c', truncateValue(movement == null ? null : movement.row, 80));
+            setCustomField(movementRecord, 'Seat_Number__c', truncateValue(movement == null ? null : movement.seatNumber, 80));
+            setCustomField(movementRecord, 'Contact_Reference__c', truncateValue(movement == null ? null : movement.contactReference, 80));
+            setCustomField(movementRecord, 'Resumed__c', movement == null ? null : movement.resumed);
+            setCustomField(movementRecord, 'Attribution_Match__c', truncateValue(movement == null ? null : movement.attributionMatch, 80));
+            movementRecords.add(movementRecord);
+        }
+
+        return movementRecords;
     }
 
     private static Id resolveExistingOrderId(OrderWrapper orderWrapper) {
@@ -402,8 +674,7 @@ global without sharing class OrderRestResource {
         return matchingOrders[0].Id;
     }
 
-    private static Id resolveInventoryLookupId(OrderWrapper.OrderDetailsData details) {
-        Long productId = firstInventoryProductId(details);
+    private static Id resolveInventoryLookupId(Long productId) {
         if (productId == null) {
             return null;
         }
@@ -421,20 +692,6 @@ global without sharing class OrderRestResource {
         }
 
         return matchingInventories[0].Id;
-    }
-
-    private static String firstMovementContactReference(OrderWrapper.OrderDetailsData details) {
-        if (details == null || details.movementDatas == null) {
-            return null;
-        }
-
-        for (OrderWrapper.MovementData movement : details.movementDatas) {
-            if (movement != null && !String.isBlank(movement.contactReference)) {
-                return movement.contactReference;
-            }
-        }
-
-        return null;
     }
 
     private static Long firstInventoryProductId(OrderWrapper.OrderDetailsData details) {
@@ -460,20 +717,20 @@ global without sharing class OrderRestResource {
         return fallbackProductId;
     }
 
-    private static Id resolveOrderAccountId(OrderWrapper.OrderDetailsData details, ResolvedContact resolvedContact) {
-        Id movementAccountId = resolveAccountIdByContactNumber(firstMovementContactReference(details));
-        if (movementAccountId != null) {
-            return movementAccountId;
+    private static Id resolveOrderAccountId(OrderWrapper.OrderDetailsData details) {
+        Id topLevelContactAccountId = resolveAccountIdByContactNumber(orderLevelContactReference(details));
+        if (topLevelContactAccountId != null) {
+            return topLevelContactAccountId;
         }
 
-        if (resolvedContact != null && resolvedContact.accountId != null) {
-            return resolvedContact.accountId;
-        }
+        return resolveFallbackOrderAccountId();
+    }
 
+    private static Id resolveFallbackOrderAccountId() {
         Id fallbackAccountId = resolveFallbackAccountId();
         if (fallbackAccountId == null) {
             throw new OrderWebhookException(
-                'No matching contact/account found and no fallback account is configured for record type ' +
+                'No fallback account is configured for record type ' +
                 FALLBACK_ACCOUNT_RECORD_TYPE +
                 '.'
             );
@@ -544,6 +801,10 @@ global without sharing class OrderRestResource {
             ? null
             : orderWrapper.payload.orderDetailsData;
         return firstContactReference(details);
+    }
+
+    private static String orderLevelContactReference(OrderWrapper.OrderDetailsData details) {
+        return details == null ? null : details.contactReference;
     }
 
     private static String firstContactReference(OrderWrapper.OrderDetailsData details) {
@@ -719,6 +980,19 @@ global without sharing class OrderRestResource {
         return value instanceof List<Object> ? (List<Object>) value : new List<Object>();
     }
 
+    private static Map<String, Object> toObjectMap(Object value) {
+        return value instanceof Map<String, Object> ? (Map<String, Object>) value : null;
+    }
+
+    private static SObject instantiateSObject(String objectApiName) {
+        Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectApiName);
+        if (objectType == null) {
+            throw new OrderWebhookException('Missing required object metadata: ' + objectApiName + '.');
+        }
+
+        return objectType.newSObject();
+    }
+
     private static void setCustomField(SObject recordItem, String fieldApiName, Object value) {
         if (recordItem == null || String.isBlank(fieldApiName) || value == null) {
             return;
@@ -744,6 +1018,14 @@ global without sharing class OrderRestResource {
         }
 
         return value.substring(0, maxLength);
+    }
+
+    private static String stringifyLong(Long value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static Decimal decimalFromLong(Long value) {
+        return value == null ? null : Decimal.valueOf(String.valueOf(value));
     }
 
     private static void setResponse( Integer statusCode, Map<String, Object> payload,Integration_Log__c logRec, Boolean isError) {

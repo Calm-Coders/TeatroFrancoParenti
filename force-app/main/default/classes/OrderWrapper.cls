@@ -39,6 +39,8 @@ global class OrderWrapper {
 
     global class OperationData {
         public Long operationId;
+        public Long parentOperationId;
+        public String parentOperationLinkType;
         public String kind;
         public String type;
         public Decimal quantity;
@@ -50,12 +52,17 @@ global class OrderWrapper {
         public String product;
         public String productCode;
         public Long itemId;
+        public Long performanceId;
+        public String performance;
         public Long siteId;
         public String site;
         public SiteAddress siteAddress;
+        public String space;
         public Long contingentId;
         public String contingent;
         public Boolean numbered;
+        public Long seatCategoryId;
+        public String seatCategory;
         public Long audienceSubCategoryId;
         public String audienceSubCategory;
         public Integer audienceSubCategoryRank;
@@ -79,23 +86,40 @@ global class OrderWrapper {
         public Boolean exchangeable;
         public CatalogCurrency catalogCurrency;
         public String itemDate;
+        public String expirationDate;
         public Long timeslotId;
         public Integer timeslotDuration;
         public Boolean championshipSeasonticket;
+        public Boolean fixedSeatSeasonticket;
         public Boolean allSeasonTicketLinesCompetition;
         public VisitGroupData visitGroupData;
         public List<Object> insuredOperationIds;
         public Boolean isNominative;
+        public Map<String, Object> priceComponentData;
     }
 
     global class MovementData {
         public Long movementId;
         public Long operationId;
         public String type;
+        public Long seatId;
+        public Long saleSeatId;
+        public Long seatCategoryId;
+        public String seatCategory;
+        public Long areaId;
+        public String area;
+        public Long entranceId;
+        public String entrance;
+        public String entranceCode;
+        public String row;
+        public String seatNumber;
         public Long contingentId;
         public String contingent;
         public String contactReference;
+        public Integer seatOrientation;
         public Integer instanceNumber;
+        public String stageVisibility;
+        public String areaKind;
         public Boolean resumed;
         public String attributionMatch;
         public Boolean transferable;
