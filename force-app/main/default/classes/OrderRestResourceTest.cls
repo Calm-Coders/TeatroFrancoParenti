@@ -388,10 +388,46 @@ private class OrderRestResourceTest {
         System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(operationRecord.get('Product_Id__c'))));
     }
 
+    @IsTest
+    static void receiveOrder_createsMonthlyAnonymousFallbackAccountWhenMissing() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454133,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","operationDatas":[],"movementDatas":[],"movementTicketDatas":[],"contactReference":"99999","orderType":"RESERVATION","orderSecretId":"secret_454133"}}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+
+        String expectedFallbackName = monthlyFallbackAccountName();
+        List<Account> fallbackAccounts = [
+            SELECT Id, Name
+            FROM Account
+            WHERE RecordTypeId = :getFallbackAccountRecordTypeId()
+              AND Name = :expectedFallbackName
+        ];
+        System.assertEquals(1, fallbackAccounts.size());
+
+        Order insertedOrder = [
+            SELECT Id, AccountId
+            FROM Order
+            WHERE Order_Id__c = '454133'
+            LIMIT 1
+        ];
+        System.assertEquals(fallbackAccounts[0].Id, insertedOrder.AccountId);
+    }
+
     private static Account createFallbackAccount() {
         Id fallbackRecordTypeId = getFallbackAccountRecordTypeId();
         Account fallbackAccount = new Account(
-            Name = 'Test Fallback Account',
+            Name = monthlyFallbackAccountName(),
             RecordTypeId = fallbackRecordTypeId
         );
         insert fallbackAccount;
@@ -417,5 +453,10 @@ private class OrderRestResourceTest {
             'SELECT COUNT(Id) rowCount FROM ' + objectApiName + ' WHERE ' + whereClause
         );
         return Integer.valueOf(String.valueOf(results[0].get('rowCount')));
+    }
+
+    private static String monthlyFallbackAccountName() {
+        Date today = Date.today();
+        return 'Anonymous Secutix Account ' + String.valueOf(today.month()).leftPad(2, '0') + ' - ' + String.valueOf(today.year());
     }
 }

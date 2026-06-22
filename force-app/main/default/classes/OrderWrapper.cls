@@ -79,6 +79,8 @@ global class OrderWrapper {
         public Long fileId;
         public Decimal waitingAccountBalance;
         public String season;
+        public String seasonCode;
+        public Long seasonId;
         public List<Object> crossSellParentOperationIds;
         public Map<String, Object> comfortVariableValues;
         public Boolean includedInShipmentFee;
@@ -113,6 +115,11 @@ global class OrderWrapper {
         public String entranceCode;
         public String row;
         public String seatNumber;
+        public Long seatQualityId;
+        public String seatQuality;
+        public String seatQualityCode;
+        public Integer yCoordinate;
+        public Integer xCoordinate;
         public Long contingentId;
         public String contingent;
         public String contactReference;

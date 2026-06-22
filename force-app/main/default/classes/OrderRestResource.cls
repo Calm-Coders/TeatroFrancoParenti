@@ -5,6 +5,7 @@ global without sharing class OrderRestResource {
     private static final String FLOW_NAME = 'OrderRestResource.receiveOrder';
     private static final String DEFAULT_ORDER_STATUS = 'Draft';
     private static final String FALLBACK_ACCOUNT_RECORD_TYPE = 'Fallback_Account';
+    private static final String FALLBACK_ACCOUNT_NAME_PREFIX = 'Anonymous Secutix Account ';
     private static final String ORDER_OPERATION_OBJECT = 'Order_Operation_Data__c';
     private static final String ORDER_MOVEMENT_OBJECT = 'Order_Movement_Data__c';
 
@@ -221,6 +222,8 @@ global without sharing class OrderRestResource {
             operation.fileId = toLongValue(rawOperation.get('fileId'));
             operation.waitingAccountBalance = toDecimalValue(rawOperation.get('waitingAccountBalance'));
             operation.season = toStringValue(rawOperation.get('season'));
+            operation.seasonCode = toStringValue(rawOperation.get('seasonCode'));
+            operation.seasonId = toLongValue(rawOperation.get('seasonId'));
             operation.crossSellParentOperationIds = toObjectList(rawOperation.get('crossSellParentOperationIds'));
             operation.comfortVariableValues = toObjectMap(rawOperation.get('comfortVariableValues'));
             operation.exchangeable = toBooleanValue(rawOperation.get('exchangeable'));
@@ -264,6 +267,11 @@ global without sharing class OrderRestResource {
             movement.entranceCode = toStringValue(rawMovement.get('entranceCode'));
             movement.row = toStringValue(rawMovement.get('row'));
             movement.seatNumber = toStringValue(rawMovement.get('seatNumber'));
+            movement.seatQualityId = toLongValue(rawMovement.get('seatQualityId'));
+            movement.seatQuality = toStringValue(rawMovement.get('seatQuality'));
+            movement.seatQualityCode = toStringValue(rawMovement.get('seatQualityCode'));
+            movement.yCoordinate = toIntegerValue(rawMovement.get('yCoordinate'));
+            movement.xCoordinate = toIntegerValue(rawMovement.get('xCoordinate'));
             movement.contingentId = toLongValue(rawMovement.get('contingentId'));
             movement.contingent = toStringValue(rawMovement.get('contingent'));
             movement.contactReference = toStringValue(rawMovement.get('contactReference'));
@@ -564,6 +572,8 @@ global without sharing class OrderRestResource {
             setCustomField(operationRecord, 'Expiration_Date__c', truncateValue(operation == null ? null : operation.expirationDate, 40));
             setCustomField(operationRecord, 'Waiting_Account_Balance__c', operation == null ? null : operation.waitingAccountBalance);
             setCustomField(operationRecord, 'Season__c', truncateValue(operation == null ? null : operation.season, 255));
+            setCustomField(operationRecord, 'Season_Code__c', truncateValue(operation == null ? null : operation.seasonCode, 80));
+            setCustomField(operationRecord, 'Season_Id__c', decimalFromLong(operation == null ? null : operation.seasonId));
             setCustomField(operationRecord, 'Catalog_Currency__c', serializeRawValue(rawOperation.get('catalogCurrency'), MAX_SECUTIX_LONG_TEXT_LENGTH));
             setCustomField(operationRecord, 'Site_Address__c', serializeRawValue(rawOperation.get('siteAddress'), MAX_SECUTIX_LONG_TEXT_LENGTH));
             setCustomField(operationRecord, 'Locations__c', serializeRawValue(rawOperation.get('locations'), MAX_SECUTIX_LONG_TEXT_LENGTH));
@@ -609,7 +619,14 @@ global without sharing class OrderRestResource {
             setCustomField(movementRecord, 'Entrance_Code__c', truncateValue(movement == null ? null : movement.entranceCode, 80));
             setCustomField(movementRecord, 'Row__c', truncateValue(movement == null ? null : movement.row, 80));
             setCustomField(movementRecord, 'Seat_Number__c', truncateValue(movement == null ? null : movement.seatNumber, 80));
+            setCustomField(movementRecord, 'Seat_Quality_Id__c', decimalFromLong(movement == null ? null : movement.seatQualityId));
+            setCustomField(movementRecord, 'Seat_Quality__c', truncateValue(movement == null ? null : movement.seatQuality, 255));
+            setCustomField(movementRecord, 'Seat_Quality_Code__c', truncateValue(movement == null ? null : movement.seatQualityCode, 80));
+            setCustomField(movementRecord, 'Y_Coordinate__c', movement == null || movement.yCoordinate == null ? null : Decimal.valueOf(String.valueOf(movement.yCoordinate)));
+            setCustomField(movementRecord, 'X_Coordinate__c', movement == null || movement.xCoordinate == null ? null : Decimal.valueOf(String.valueOf(movement.xCoordinate)));
             setCustomField(movementRecord, 'Contact_Reference__c', truncateValue(movement == null ? null : movement.contactReference, 80));
+            setCustomField(movementRecord, 'Stage_Visibility__c', truncateValue(movement == null ? null : movement.stageVisibility, 80));
+            setCustomField(movementRecord, 'Area_Kind__c', truncateValue(movement == null ? null : movement.areaKind, 80));
             setCustomField(movementRecord, 'Resumed__c', movement == null ? null : movement.resumed);
             setCustomField(movementRecord, 'Attribution_Match__c', truncateValue(movement == null ? null : movement.attributionMatch, 80));
             movementRecords.add(movementRecord);
@@ -781,14 +798,46 @@ global without sharing class OrderRestResource {
     }
 
     private static Id resolveFallbackAccountId() {
+        Id fallbackRecordTypeId = fallbackAccountRecordTypeId();
+        if (fallbackRecordTypeId == null) {
+            return null;
+        }
+
+        String fallbackAccountName = fallbackAccountNameForDate(Date.today());
         List<Account> fallbackAccounts = [
             SELECT Id
             FROM Account
-            WHERE RecordType.DeveloperName = :FALLBACK_ACCOUNT_RECORD_TYPE
+            WHERE RecordTypeId = :fallbackRecordTypeId
+              AND Name = :fallbackAccountName
+            ORDER BY CreatedDate DESC, Id DESC
             LIMIT 1
         ];
 
-        return fallbackAccounts.isEmpty() ? null : fallbackAccounts[0].Id;
+        if (!fallbackAccounts.isEmpty()) {
+            return fallbackAccounts[0].Id;
+        }
+
+        Account fallbackAccount = new Account(
+            Name = fallbackAccountName,
+            RecordTypeId = fallbackRecordTypeId
+        );
+        insert fallbackAccount;
+        return fallbackAccount.Id;
+    }
+
+    private static Id fallbackAccountRecordTypeId() {
+        Map<String, Schema.RecordTypeInfo> recordTypesByDeveloperName =
+            Account.SObjectType.getDescribe().getRecordTypeInfosByDeveloperName();
+        Schema.RecordTypeInfo fallbackRecordType = recordTypesByDeveloperName.get(FALLBACK_ACCOUNT_RECORD_TYPE);
+        return fallbackRecordType == null ? null : fallbackRecordType.getRecordTypeId();
+    }
+
+    private static String fallbackAccountNameForDate(Date targetDate) {
+        Date normalizedDate = targetDate == null ? Date.today() : targetDate;
+        String monthValue = normalizedDate.month() == null
+            ? '00'
+            : String.valueOf(normalizedDate.month()).leftPad(2, '0');
+        return FALLBACK_ACCOUNT_NAME_PREFIX + monthValue + ' - ' + String.valueOf(normalizedDate.year());
     }
 
     private static String firstResolvedContactNumber(OrderWrapper orderWrapper) {
