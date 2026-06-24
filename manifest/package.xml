@@ -90,7 +90,6 @@
         <members>Account.Social_Connections__c</members>
         <members>Account.State__c</members>
         <members>Account.Structure_Contact__c</members>
-        <members>Account.Type__c</members>
         <members>Contact.Active__c</members>
         <members>Contact.Birthdate__c</members>
         <members>Contact.Contact_Number__c</members>
@@ -204,9 +203,12 @@
         <members>Order.Order_Origin_Data__c</members>
         <members>Order.Order_Secret_Id__c</members>
         <members>Order.Order_State__c</members>
-        <members>Order.Order_Type__c</members>
         <members>Order.Organization_Code__c</members>
         <members>Order.Organization_Name__c</members>
+        <members>Order.Point_Of_Sales_Code__c</members>
+        <members>Order.Point_Of_Sales_Id__c</members>
+        <members>Order.Point_Of_Sales_Name__c</members>
+        <members>Order.Pos_Num__c</members>
         <members>Order.Pre_Sale_Amount__c</members>
         <members>Order.Product_Id__c</members>
         <members>Order.Reference_Date__c</members>
@@ -215,6 +217,9 @@
         <members>Order.Sales_Channel_Name__c</members>
         <members>Order.Sales_Channel_Type__c</members>
         <members>Order.Sale_Amount__c</members>
+        <members>Order.Shipments__c</members>
+        <members>Order.User_Inserted__c</members>
+        <members>Order.User_Updated__c</members>
         <members>Order.Waiting_Account_Balance_Amount__c</members>
         <members>Order_Movement_Data__c.Account__c</members>
         <members>Order_Movement_Data__c.Area_Id__c</members>
@@ -237,14 +242,36 @@
         <members>Order_Movement_Data__c.Seat_Number__c</members>
         <members>Order_Movement_Data__c.Type__c</members>
         <members>Order_Operation_Data__c.Audience_SubCategory_Id__c</members>
+        <members>Order_Operation_Data__c.Audience_SubCategory_Rank__c</members>
+        <members>Order_Operation_Data__c.Audience_SubCategory_Require_Attachment__c</members>
         <members>Order_Operation_Data__c.Audience_SubCategory__c</members>
+        <members>Order_Operation_Data__c.Activity_Code__c</members>
+        <members>Order_Operation_Data__c.Activity_Id__c</members>
+        <members>Order_Operation_Data__c.Activity_Name__c</members>
+        <members>Order_Operation_Data__c.Activity_Type__c</members>
+        <members>Order_Operation_Data__c.All_Season_Ticket_Lines_Competition__c</members>
+        <members>Order_Operation_Data__c.Audience_Cat_Id__c</members>
         <members>Order_Operation_Data__c.Base_Price__c</members>
         <members>Order_Operation_Data__c.Catalog_Currency__c</members>
+        <members>Order_Operation_Data__c.Championship_Seasonticket__c</members>
+        <members>Order_Operation_Data__c.Comfort_Variable_Values__c</members>
+        <members>Order_Operation_Data__c.Contingent__c</members>
+        <members>Order_Operation_Data__c.Cross_Sell_Parent_Operation_Ids__c</members>
+        <members>Order_Operation_Data__c.Event_Id__c</members>
+        <members>Order_Operation_Data__c.Exchangeable__c</members>
         <members>Order_Operation_Data__c.Expiration_Date__c</members>
+        <members>Order_Operation_Data__c.File_Id__c</members>
+        <members>Order_Operation_Data__c.Fixed_Seat_Seasonticket__c</members>
         <members>Order_Operation_Data__c.Inventory__c</members>
+        <members>Order_Operation_Data__c.Included_In_Shipment_Fee__c</members>
+        <members>Order_Operation_Data__c.Insured_Operation_Ids__c</members>
+        <members>Order_Operation_Data__c.Is_Nominative__c</members>
         <members>Order_Operation_Data__c.Item_Id__c</members>
+        <members>Order_Operation_Data__c.Item_Display_External_Designation__c</members>
         <members>Order_Operation_Data__c.Kind__c</members>
         <members>Order_Operation_Data__c.Locations__c</members>
+        <members>Order_Operation_Data__c.Nominative__c</members>
+        <members>Order_Operation_Data__c.Numbered__c</members>
         <members>Order_Operation_Data__c.Operation_Id__c</members>
         <members>Order_Operation_Data__c.Operation_Number__c</members>
         <members>Order_Operation_Data__c.Order__c</members>
@@ -252,16 +279,21 @@
         <members>Order_Operation_Data__c.Parent_Operation_Link_Type__c</members>
         <members>Order_Operation_Data__c.Parent_Operation__c</members>
         <members>Order_Operation_Data__c.Performance_Date__c</members>
+        <members>Order_Operation_Data__c.Performance_Duration__c</members>
+        <members>Order_Operation_Data__c.Performance_Code__c</members>
         <members>Order_Operation_Data__c.Performance_Id__c</members>
         <members>Order_Operation_Data__c.Performance__c</members>
+        <members>Order_Operation_Data__c.Physical_Configuration_Id__c</members>
         <members>Order_Operation_Data__c.Product_Code__c</members>
         <members>Order_Operation_Data__c.Product_Family_SubType__c</members>
         <members>Order_Operation_Data__c.Product_Family_Type__c</members>
         <members>Order_Operation_Data__c.Product_Id__c</members>
         <members>Order_Operation_Data__c.Product__c</members>
         <members>Order_Operation_Data__c.Quantity__c</members>
+        <members>Order_Operation_Data__c.Resale__c</members>
         <members>Order_Operation_Data__c.Season__c</members>
         <members>Order_Operation_Data__c.Seat_Category_Id__c</members>
+        <members>Order_Operation_Data__c.Seat_Category_Rank__c</members>
         <members>Order_Operation_Data__c.Seat_Category__c</members>
         <members>Order_Operation_Data__c.Self_Paid_Vat__c</members>
         <members>Order_Operation_Data__c.Site_Address__c</members>

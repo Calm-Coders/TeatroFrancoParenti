@@ -173,6 +173,12 @@ global without sharing class OrderRestResource {
         details.organizationCode = toStringValue(rawDetailsMap.get('organizationCode'));
         details.organizationName = buildTranslationContainer(rawDetailsMap.get('organizationName'));
         details.multicurrency = toBooleanValue(rawDetailsMap.get('multicurrency'));
+        details.userInserted = toStringValue(rawDetailsMap.get('userInserted'));
+        details.userUpdated = toStringValue(rawDetailsMap.get('userUpdated'));
+        details.posNum = toStringValue(rawDetailsMap.get('posNum'));
+        details.pointOfSalesId = toLongValue(rawDetailsMap.get('pointOfSalesId'));
+        details.pointOfSalesCode = toStringValue(rawDetailsMap.get('pointOfSalesCode'));
+        details.pointOfSalesName = toStringValue(rawDetailsMap.get('pointOfSalesName'));
         return details;
     }
 
@@ -201,6 +207,8 @@ global without sharing class OrderRestResource {
             operation.itemId = toLongValue(rawOperation.get('itemId'));
             operation.performanceId = toLongValue(rawOperation.get('performanceId'));
             operation.performance = toStringValue(rawOperation.get('performance'));
+            operation.eventId = toLongValue(rawOperation.get('eventId'));
+            operation.physicalConfigurationId = toLongValue(rawOperation.get('physicalConfigurationId'));
             operation.siteId = toLongValue(rawOperation.get('siteId'));
             operation.site = toStringValue(rawOperation.get('site'));
             operation.siteAddress = buildSiteAddress(rawOperation.get('siteAddress'));
@@ -210,14 +218,20 @@ global without sharing class OrderRestResource {
             operation.numbered = toBooleanValue(rawOperation.get('numbered'));
             operation.seatCategoryId = toLongValue(rawOperation.get('seatCategoryId'));
             operation.seatCategory = toStringValue(rawOperation.get('seatCategory'));
+            operation.seatCategoryRank = toIntegerValue(rawOperation.get('seatCategoryRank'));
             operation.audienceSubCategoryId = toLongValue(rawOperation.get('audienceSubCategoryId'));
             operation.audienceSubCategory = toStringValue(rawOperation.get('audienceSubCategory'));
+            operation.audienceSubCategoryRank = toIntegerValue(rawOperation.get('audienceSubCategoryRank'));
+            operation.audienceSubCategoryRequireAttachment = toBooleanValue(rawOperation.get('audienceSubCategoryRequireAttachment'));
             operation.vatRate = toDecimalValue(rawOperation.get('vatRate'));
             operation.vatCountryCode = toStringValue(rawOperation.get('vatCountryCode'));
             operation.selfPaidVat = toBooleanValue(rawOperation.get('selfPaidVat'));
             operation.operationNumber = toIntegerValue(rawOperation.get('operationNumber'));
             operation.productFamilyType = toStringValue(rawOperation.get('productFamilyType'));
             operation.productFamilySubType = toStringValue(rawOperation.get('productFamilySubType'));
+            operation.activityType = toStringValue(rawOperation.get('activityType'));
+            operation.performanceDuration = toIntegerValue(rawOperation.get('performanceDuration'));
+            operation.itemDisplayExternalDesignation = toStringValue(rawOperation.get('itemDisplayExternalDesignation'));
             operation.locations = buildLocationDatas(rawOperation.get('locations'));
             operation.fileId = toLongValue(rawOperation.get('fileId'));
             operation.waitingAccountBalance = toDecimalValue(rawOperation.get('waitingAccountBalance'));
@@ -226,14 +240,22 @@ global without sharing class OrderRestResource {
             operation.seasonId = toLongValue(rawOperation.get('seasonId'));
             operation.crossSellParentOperationIds = toObjectList(rawOperation.get('crossSellParentOperationIds'));
             operation.comfortVariableValues = toObjectMap(rawOperation.get('comfortVariableValues'));
+            operation.includedInShipmentFee = toBooleanValue(rawOperation.get('includedInShipmentFee'));
+            operation.performanceCode = toStringValue(rawOperation.get('performanceCode'));
+            operation.audienceCatId = toLongValue(rawOperation.get('audienceCatId'));
             operation.exchangeable = toBooleanValue(rawOperation.get('exchangeable'));
+            operation.activityId = toLongValue(rawOperation.get('activityId'));
+            operation.activityName = toStringValue(rawOperation.get('activityName'));
+            operation.activityCode = toStringValue(rawOperation.get('activityCode'));
             operation.catalogCurrency = buildCatalogCurrency(rawOperation.get('catalogCurrency'));
             operation.expirationDate = toStringValue(rawOperation.get('expirationDate'));
             operation.championshipSeasonticket = toBooleanValue(rawOperation.get('championshipSeasonticket'));
             operation.fixedSeatSeasonticket = toBooleanValue(rawOperation.get('fixedSeatSeasonticket'));
             operation.allSeasonTicketLinesCompetition = toBooleanValue(rawOperation.get('allSeasonTicketLinesCompetition'));
             operation.insuredOperationIds = toObjectList(rawOperation.get('insuredOperationIds'));
+            operation.resale = toBooleanValue(rawOperation.get('resale'));
             operation.isNominative = toBooleanValue(rawOperation.get('isNominative'));
+            operation.nominative = toBooleanValue(rawOperation.get('nominative'));
             operation.priceComponentData = toObjectMap(rawOperation.get('priceComponentData'));
             operation.itemDate = toStringValue(rawOperation.get('itemDate'));
             if (String.isBlank(operation.itemDate)) {
@@ -417,6 +439,7 @@ global without sharing class OrderRestResource {
         orderRecord.AccountId = accountId;
         orderRecord.BillToContactId = resolvedContact == null ? null : resolvedContact.contactId;
         orderRecord.ShipToContactId = resolvedContact == null ? null : resolvedContact.contactId;
+        orderRecord.Type = truncateValue(details.orderType, 40);
         Long productId = firstInventoryProductId(details);
         setCustomField(
             orderRecord,
@@ -426,7 +449,6 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Order_Id__c', truncateValue(details.orderId == null ? null : String.valueOf(details.orderId), 30));
         setCustomField(orderRecord, 'Order_Secret_Id__c', truncateValue(details.orderSecretId, 255));
         setCustomField(orderRecord, 'Order_State__c', truncateValue(details.orderState, 40));
-        setCustomField(orderRecord, 'Order_Type__c', truncateValue(details.orderType, 40));
         setCustomField(orderRecord, 'Contact_Reference__c', truncateValue(contactReference, 80));
         setCustomField(orderRecord, 'Order_Detail_Granularity__c', truncateValue(orderWrapper.payload.orderDetailGranularity, 40));
         setCustomField(orderRecord, 'Creation_Date_Time__c', truncateValue(details.creationDateTime, 40));
@@ -449,6 +471,13 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Order_Installments__c', serializeRawValue(rawDetails.get('orderInstallmentsToCreate'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Catalog_Currency__c', serializeRawValue(rawDetails.get('catalogCurrency'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Organization_Name__c', serializeRawValue(rawDetails.get('organizationName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(orderRecord, 'User_Inserted__c', truncateValue(details.userInserted, 80));
+        setCustomField(orderRecord, 'User_Updated__c', truncateValue(details.userUpdated, 80));
+        setCustomField(orderRecord, 'Pos_Num__c', truncateValue(details.posNum, 40));
+        setCustomField(orderRecord, 'Point_Of_Sales_Id__c', decimalFromLong(details.pointOfSalesId));
+        setCustomField(orderRecord, 'Point_Of_Sales_Code__c', truncateValue(details.pointOfSalesCode, 80));
+        setCustomField(orderRecord, 'Point_Of_Sales_Name__c', truncateValue(details.pointOfSalesName, 255));
+        setCustomField(orderRecord, 'Shipments__c', serializeRawValue(orderWrapper.rawPayload.get('shipments'), MAX_SECUTIX_LONG_TEXT_LENGTH));
 
         return orderRecord;
     }
@@ -555,26 +584,53 @@ global without sharing class OrderRestResource {
             setCustomField(operationRecord, 'Item_Id__c', decimalFromLong(operation == null ? null : operation.itemId));
             setCustomField(operationRecord, 'Performance_Id__c', decimalFromLong(operation == null ? null : operation.performanceId));
             setCustomField(operationRecord, 'Performance__c', truncateValue(operation == null ? null : operation.performance, 255));
+            setCustomField(operationRecord, 'Event_Id__c', decimalFromLong(operation == null ? null : operation.eventId));
+            setCustomField(operationRecord, 'Physical_Configuration_Id__c', decimalFromLong(operation == null ? null : operation.physicalConfigurationId));
             setCustomField(operationRecord, 'Site_Id__c', decimalFromLong(operation == null ? null : operation.siteId));
             setCustomField(operationRecord, 'Site__c', truncateValue(operation == null ? null : operation.site, 255));
             setCustomField(operationRecord, 'Space__c', truncateValue(operation == null ? null : operation.space, 255));
+            setCustomField(operationRecord, 'Contingent__c', truncateValue(operation == null ? null : operation.contingent, 255));
+            setCustomField(operationRecord, 'Numbered__c', operation == null ? null : operation.numbered);
             setCustomField(operationRecord, 'Seat_Category_Id__c', decimalFromLong(operation == null ? null : operation.seatCategoryId));
             setCustomField(operationRecord, 'Seat_Category__c', truncateValue(operation == null ? null : operation.seatCategory, 255));
+            setCustomField(operationRecord, 'Seat_Category_Rank__c', operation == null || operation.seatCategoryRank == null ? null : Decimal.valueOf(String.valueOf(operation.seatCategoryRank)));
             setCustomField(operationRecord, 'Audience_SubCategory_Id__c', decimalFromLong(operation == null ? null : operation.audienceSubCategoryId));
             setCustomField(operationRecord, 'Audience_SubCategory__c', truncateValue(operation == null ? null : operation.audienceSubCategory, 255));
+            setCustomField(operationRecord, 'Audience_SubCategory_Rank__c', operation == null || operation.audienceSubCategoryRank == null ? null : Decimal.valueOf(String.valueOf(operation.audienceSubCategoryRank)));
+            setCustomField(operationRecord, 'Audience_SubCategory_Require_Attachment__c', operation == null ? null : operation.audienceSubCategoryRequireAttachment);
             setCustomField(operationRecord, 'Vat_Rate__c', operation == null ? null : operation.vatRate);
             setCustomField(operationRecord, 'Vat_Country_Code__c', truncateValue(operation == null ? null : operation.vatCountryCode, 10));
             setCustomField(operationRecord, 'Self_Paid_Vat__c', operation == null ? null : operation.selfPaidVat);
             setCustomField(operationRecord, 'Operation_Number__c', operation == null || operation.operationNumber == null ? null : Decimal.valueOf(String.valueOf(operation.operationNumber)));
             setCustomField(operationRecord, 'Product_Family_Type__c', truncateValue(operation == null ? null : operation.productFamilyType, 80));
             setCustomField(operationRecord, 'Product_Family_SubType__c', truncateValue(operation == null ? null : operation.productFamilySubType, 80));
+            setCustomField(operationRecord, 'Activity_Type__c', truncateValue(operation == null ? null : operation.activityType, 80));
             setCustomField(operationRecord, 'Performance_Date__c', truncateValue(operation == null ? null : operation.itemDate, 40));
+            setCustomField(operationRecord, 'Performance_Duration__c', operation == null || operation.performanceDuration == null ? null : Decimal.valueOf(String.valueOf(operation.performanceDuration)));
             setCustomField(operationRecord, 'Expiration_Date__c', truncateValue(operation == null ? null : operation.expirationDate, 40));
+            setCustomField(operationRecord, 'Item_Display_External_Designation__c', truncateValue(operation == null ? null : operation.itemDisplayExternalDesignation, 255));
+            setCustomField(operationRecord, 'File_Id__c', decimalFromLong(operation == null ? null : operation.fileId));
             setCustomField(operationRecord, 'Waiting_Account_Balance__c', operation == null ? null : operation.waitingAccountBalance);
             setCustomField(operationRecord, 'Season__c', truncateValue(operation == null ? null : operation.season, 255));
             setCustomField(operationRecord, 'Season_Code__c', truncateValue(operation == null ? null : operation.seasonCode, 80));
             setCustomField(operationRecord, 'Season_Id__c', decimalFromLong(operation == null ? null : operation.seasonId));
+            setCustomField(operationRecord, 'Cross_Sell_Parent_Operation_Ids__c', serializeRawValue(rawOperation.get('crossSellParentOperationIds'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            setCustomField(operationRecord, 'Comfort_Variable_Values__c', serializeRawValue(rawOperation.get('comfortVariableValues'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            setCustomField(operationRecord, 'Performance_Code__c', truncateValue(operation == null ? null : operation.performanceCode, 80));
+            setCustomField(operationRecord, 'Audience_Cat_Id__c', decimalFromLong(operation == null ? null : operation.audienceCatId));
+            setCustomField(operationRecord, 'Exchangeable__c', operation == null ? null : operation.exchangeable);
+            setCustomField(operationRecord, 'Activity_Id__c', decimalFromLong(operation == null ? null : operation.activityId));
+            setCustomField(operationRecord, 'Activity_Name__c', truncateValue(operation == null ? null : operation.activityName, 255));
+            setCustomField(operationRecord, 'Activity_Code__c', truncateValue(operation == null ? null : operation.activityCode, 80));
+            setCustomField(operationRecord, 'Included_In_Shipment_Fee__c', operation == null ? null : operation.includedInShipmentFee);
             setCustomField(operationRecord, 'Catalog_Currency__c', serializeRawValue(rawOperation.get('catalogCurrency'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            setCustomField(operationRecord, 'Championship_Seasonticket__c', operation == null ? null : operation.championshipSeasonticket);
+            setCustomField(operationRecord, 'Fixed_Seat_Seasonticket__c', operation == null ? null : operation.fixedSeatSeasonticket);
+            setCustomField(operationRecord, 'All_Season_Ticket_Lines_Competition__c', operation == null ? null : operation.allSeasonTicketLinesCompetition);
+            setCustomField(operationRecord, 'Insured_Operation_Ids__c', serializeRawValue(rawOperation.get('insuredOperationIds'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+            setCustomField(operationRecord, 'Resale__c', operation == null ? null : operation.resale);
+            setCustomField(operationRecord, 'Is_Nominative__c', operation == null ? null : operation.isNominative);
+            setCustomField(operationRecord, 'Nominative__c', operation == null ? null : operation.nominative);
             setCustomField(operationRecord, 'Site_Address__c', serializeRawValue(rawOperation.get('siteAddress'), MAX_SECUTIX_LONG_TEXT_LENGTH));
             setCustomField(operationRecord, 'Locations__c', serializeRawValue(rawOperation.get('locations'), MAX_SECUTIX_LONG_TEXT_LENGTH));
             operationRecords.add(operationRecord);

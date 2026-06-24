@@ -35,6 +35,12 @@ global class OrderWrapper {
         public String organizationCode;
         public TranslationContainer organizationName;
         public Boolean multicurrency;
+        public String userInserted;
+        public String userUpdated;
+        public String posNum;
+        public Long pointOfSalesId;
+        public String pointOfSalesCode;
+        public String pointOfSalesName;
     }
 
     global class OperationData {
@@ -54,6 +60,8 @@ global class OrderWrapper {
         public Long itemId;
         public Long performanceId;
         public String performance;
+        public Long eventId;
+        public Long physicalConfigurationId;
         public Long siteId;
         public String site;
         public SiteAddress siteAddress;
@@ -63,6 +71,7 @@ global class OrderWrapper {
         public Boolean numbered;
         public Long seatCategoryId;
         public String seatCategory;
+        public Integer seatCategoryRank;
         public Long audienceSubCategoryId;
         public String audienceSubCategory;
         public Integer audienceSubCategoryRank;
@@ -74,6 +83,8 @@ global class OrderWrapper {
         public Integer operationNumber;
         public String productFamilyType;
         public String productFamilySubType;
+        public String activityType;
+        public Integer performanceDuration;
         public String itemDisplayExternalDesignation;
         public List<LocationData> locations;
         public Long fileId;
@@ -84,8 +95,12 @@ global class OrderWrapper {
         public List<Object> crossSellParentOperationIds;
         public Map<String, Object> comfortVariableValues;
         public Boolean includedInShipmentFee;
+        public String performanceCode;
         public Long audienceCatId;
         public Boolean exchangeable;
+        public Long activityId;
+        public String activityName;
+        public String activityCode;
         public CatalogCurrency catalogCurrency;
         public String itemDate;
         public String expirationDate;
@@ -96,7 +111,9 @@ global class OrderWrapper {
         public Boolean allSeasonTicketLinesCompetition;
         public VisitGroupData visitGroupData;
         public List<Object> insuredOperationIds;
+        public Boolean resale;
         public Boolean isNominative;
+        public Boolean nominative;
         public Map<String, Object> priceComponentData;
     }
 

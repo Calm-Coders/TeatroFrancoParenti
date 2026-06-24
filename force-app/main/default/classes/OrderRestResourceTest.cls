@@ -146,6 +146,106 @@ private class OrderRestResourceTest {
     }
 
     @IsTest
+    static void receiveOrder_persistsExtendedOperationFields() {
+        createFallbackAccount();
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454134,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","operationDatas":[{"operationId":10229250965773,"kind":"SINGLE_ENTRY","type":"RESERVATION","quantity":1,"basePrice":22000,"unitPrice":22000,"withoutVatTotalAmount":20000,"totalAmount":22000,"productId":10228638592050,"product":"LE VACANZE DEI SIGNORI LAGONIA","productCode":"0162","itemId":10228655877095,"performanceId":10228656021092,"performance":"LE VACANZE DEI SIGNORI LAGONIA","eventId":10228638592050,"physicalConfigurationId":10228554659410,"siteId":10228544852613,"site":"Teatro Franco Parenti","performanceDate":"2026-05-20T20:15:00.000+02:00","space":"SALA TRE","contingent":"WEB","numbered":true,"seatCategoryId":10228635451950,"seatCategory":"PLATEA","seatCategoryRank":1,"audienceSubCategoryId":10228635444778,"audienceSubCategory":"INTERO + prev.","audienceSubCategoryRank":1,"audienceSubCategoryRequireAttachment":false,"activityType":"LIVE_SPECT","performanceDuration":5400,"itemDisplayExternalDesignation":"LE VACANZE DEI SIGNORI LAGONIA","fileId":275705,"crossSellParentOperationIds":[],"comfortVariableValues":{"visibility":"full"},"performanceCode":"0162","audienceCatId":15655,"exchangeable":false,"activityId":10228635444869,"activityName":"TEATRO","activityCode":"1","includedInShipmentFee":false,"catalogCurrency":{"currencyCode":"EUR","fractionDigit":2,"minAmount":10,"symbol":"EUR"},"championshipSeasonticket":false,"fixedSeatSeasonticket":false,"allSeasonTicketLinesCompetition":false,"insuredOperationIds":[],"resale":false,"isNominative":false,"nominative":false}],"movementDatas":[{"movementId":10229250966107,"operationId":10229250965773,"type":"SEAT","contactReference":"10286"}],"movementTicketDatas":[],"contactReference":"10286","orderType":"RESERVATION","orderSecretId":"secret_454134"},"shipments":[{"id":10229250907470,"contactNumber":"10286"}]}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+
+        Id orderId = [SELECT Id FROM Order WHERE Order_Id__c = '454134' LIMIT 1].Id;
+        SObject operationRecord = Database.query(
+            'SELECT Event_Id__c, Physical_Configuration_Id__c, Contingent__c, Numbered__c, ' +
+            'Seat_Category_Rank__c, Audience_SubCategory_Rank__c, Audience_SubCategory_Require_Attachment__c, ' +
+            'Activity_Type__c, Performance_Duration__c, Item_Display_External_Designation__c, File_Id__c, ' +
+            'Cross_Sell_Parent_Operation_Ids__c, Comfort_Variable_Values__c, Performance_Code__c, ' +
+            'Audience_Cat_Id__c, Exchangeable__c, Activity_Id__c, Activity_Name__c, Activity_Code__c, ' +
+            'Included_In_Shipment_Fee__c, Championship_Seasonticket__c, Fixed_Seat_Seasonticket__c, ' +
+            'All_Season_Ticket_Lines_Competition__c, Insured_Operation_Ids__c, Resale__c, Is_Nominative__c, Nominative__c ' +
+            'FROM Order_Operation_Data__c ' +
+            'WHERE Order__c = \'' + orderId + '\' LIMIT 1'
+        );
+
+        System.assertEquals(10228638592050L, Long.valueOf(String.valueOf(operationRecord.get('Event_Id__c'))));
+        System.assertEquals(10228554659410L, Long.valueOf(String.valueOf(operationRecord.get('Physical_Configuration_Id__c'))));
+        System.assertEquals('WEB', (String) operationRecord.get('Contingent__c'));
+        System.assertEquals(true, (Boolean) operationRecord.get('Numbered__c'));
+        System.assertEquals(1, Integer.valueOf(String.valueOf(operationRecord.get('Seat_Category_Rank__c'))));
+        System.assertEquals(1, Integer.valueOf(String.valueOf(operationRecord.get('Audience_SubCategory_Rank__c'))));
+        System.assertEquals(false, (Boolean) operationRecord.get('Audience_SubCategory_Require_Attachment__c'));
+        System.assertEquals('LIVE_SPECT', (String) operationRecord.get('Activity_Type__c'));
+        System.assertEquals(5400, Integer.valueOf(String.valueOf(operationRecord.get('Performance_Duration__c'))));
+        System.assertEquals('LE VACANZE DEI SIGNORI LAGONIA', (String) operationRecord.get('Item_Display_External_Designation__c'));
+        System.assertEquals(275705L, Long.valueOf(String.valueOf(operationRecord.get('File_Id__c'))));
+        System.assertEquals('[]', (String) operationRecord.get('Cross_Sell_Parent_Operation_Ids__c'));
+        System.assertEquals('{"visibility":"full"}', (String) operationRecord.get('Comfort_Variable_Values__c'));
+        System.assertEquals('0162', (String) operationRecord.get('Performance_Code__c'));
+        System.assertEquals(15655L, Long.valueOf(String.valueOf(operationRecord.get('Audience_Cat_Id__c'))));
+        System.assertEquals(false, (Boolean) operationRecord.get('Exchangeable__c'));
+        System.assertEquals(10228635444869L, Long.valueOf(String.valueOf(operationRecord.get('Activity_Id__c'))));
+        System.assertEquals('TEATRO', (String) operationRecord.get('Activity_Name__c'));
+        System.assertEquals('1', (String) operationRecord.get('Activity_Code__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('Included_In_Shipment_Fee__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('Championship_Seasonticket__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('Fixed_Seat_Seasonticket__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('All_Season_Ticket_Lines_Competition__c'));
+        System.assertEquals('[]', (String) operationRecord.get('Insured_Operation_Ids__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('Resale__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('Is_Nominative__c'));
+        System.assertEquals(false, (Boolean) operationRecord.get('Nominative__c'));
+    }
+
+    @IsTest
+    static void receiveOrder_persistsOrderTypeAndShipmentPayload() {
+        createFallbackAccount();
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/order';
+        req.resourcePath = '/v1/order';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"orderDetailGranularity":"TICKET","orderDetailsData":{"orderId":454135,"orderState":"CLOSED","creationDateTime":"2026-05-20T16:08:30.858+02:00","referenceDate":"2026-05-20T00:00:00.000Z","operationDatas":[{"operationId":10229250965773,"kind":"SINGLE_ENTRY","type":"RESERVATION","product":"LE VACANZE DEI SIGNORI LAGONIA","performanceDate":"2026-05-20T20:15:00.000+02:00"}],"movementDatas":[{"movementId":10229250966107,"operationId":10229250965773,"type":"SEAT","contactReference":"10286"}],"movementTicketDatas":[],"contactReference":"10286","orderType":"RESERVATION","generatedContiguities":[{"performanceId":10228656021092,"contiguous":false}],"orderSecretId":"secret_454135","userInserted":"STX_MLJ","userUpdated":"STX_MLJ","posNum":"472","pointOfSalesId":10229250866146,"pointOfSalesCode":"PVTFMLJ1","pointOfSalesName":"STX_MLJ"},"shipments":[{"id":10229250907470,"shipmentMode":{"id":10228544271965,"name":"Consegna immediata","type":"HANDED_AT_BO"},"contactNumber":"10286","shipmentSent":false,"shipmentState":"REFERENCE"},{"id":10229250907471,"shipmentMode":{"id":10228466781238,"name":"E-mail (documenti)","idCode":"EMAIL","type":"BY_EMAIL"},"contactNumber":"10286","shipmentSent":true,"shipmentState":"SENT"}]}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        OrderRestResource.receiveOrder();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+
+        Order insertedOrder = [
+            SELECT Id, Type, Generated_Contiguities__c, User_Inserted__c, User_Updated__c,
+                   Pos_Num__c, Point_Of_Sales_Id__c, Point_Of_Sales_Code__c, Point_Of_Sales_Name__c,
+                   Shipments__c
+            FROM Order
+            WHERE Order_Id__c = '454135'
+            LIMIT 1
+        ];
+
+        System.assertEquals('RESERVATION', insertedOrder.Type);
+        System.assertEquals('STX_MLJ', insertedOrder.User_Inserted__c);
+        System.assertEquals('STX_MLJ', insertedOrder.User_Updated__c);
+        System.assertEquals('472', insertedOrder.Pos_Num__c);
+        System.assertEquals(10229250866146L, Long.valueOf(String.valueOf(insertedOrder.Point_Of_Sales_Id__c)));
+        System.assertEquals('PVTFMLJ1', insertedOrder.Point_Of_Sales_Code__c);
+        System.assertEquals('STX_MLJ', insertedOrder.Point_Of_Sales_Name__c);
+    }
+
+    @IsTest
     static void receiveOrder_linksMatchingContactByShipmentContactNumberAndContactReference() {
         Account fallbackAccount = createFallbackAccount();
         Account accountRecord = new Account(Name = 'Test Contact Account');

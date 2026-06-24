@@ -368,12 +368,18 @@ global without sharing class ContactRestResource {
 
         ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
         ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        String resolvedCountryCode = firstNonBlankValue(new List<String>{
+            primaryAddress == null ? null : primaryAddress.countryCode,
+            individual == null ? null : individual.countryCode
+        });
         setSObjectField(accountRecord, 'Individual_Firstname__c', truncateValue(individual == null ? null : individual.individualFirstname, 80));
         setSObjectField(accountRecord, 'Individual_Lastname__c', truncateValue(deriveLastName(payload), 80));
         setSObjectField(accountRecord, 'Individual_Title__c', truncateValue(individual == null ? null : individual.individualTitle, 80));
         setSObjectField(accountRecord, 'Email__c', deriveEmail(payload));
         setSObjectField(accountRecord, 'Mobile_Phone__c', deriveMobilePhone(payload));
         setSObjectField(accountRecord, 'Active__c', individual == null ? null : individual.active);
+        accountRecord.Type = truncateValue(payload == null ? null : payload.type, 40);
+        accountRecord.AccountSource = 'Secutix';
 
         Date birthdate = parseDate(individual == null ? null : individual.individualBirthdate);
         if (birthdate != null) {
@@ -397,11 +403,10 @@ global without sharing class ContactRestResource {
             serializeRawValue(payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.translations, MAX_SECUTIX_LONG_TEXT_LENGTH)
         );
         setSObjectField(accountRecord, 'State__c', truncateValue(payload == null ? null : payload.state, 40));
-        setSObjectField(accountRecord, 'Type__c', truncateValue(payload == null ? null : payload.type, 40));
         setSObjectField(
             accountRecord,
             'Country_Code__c',
-            truncateValue(primaryAddress == null ? null : primaryAddress.countryCode, 10)
+            truncateValue(resolvedCountryCode, 10)
         );
         setSObjectField(
             accountRecord,

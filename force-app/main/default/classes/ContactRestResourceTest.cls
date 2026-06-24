@@ -32,7 +32,7 @@ private class ContactRestResourceTest {
 
             Account createdAccount = [
                 SELECT Name, BillingStreet, BillingCity, BillingPostalCode, BillingCountry,
-                    Contact_Number__c, Contact_Id__c, State__c, Type__c, Country_Code__c,
+                    Contact_Number__c, Contact_Id__c, State__c, Type, Country_Code__c, AccountSource,
                     Email__c, Mobile_Phone__c, Individual_Firstname__c, Individual_Lastname__c,
                     Individual_Title__c, Birthdate__c, Active__c, Individual_Contact__c,
                     Structure_Contact__c, Addresses__c, Contact_Origin_Translations__c,
@@ -54,8 +54,9 @@ private class ContactRestResourceTest {
             System.assertEquals('C-1001', createdAccount.Contact_Number__c);
             System.assertEquals('1001', createdAccount.Contact_Id__c);
             System.assertEquals('ACTIVE', createdAccount.State__c);
-            System.assertEquals('STRUCTURE', createdAccount.Type__c);
+            System.assertEquals('STRUCTURE', createdAccount.Type);
             System.assertEquals('IT', createdAccount.Country_Code__c);
+            System.assertEquals('Secutix', createdAccount.AccountSource);
             System.assertEquals('mario.rossi@example.com', createdAccount.Email__c);
             System.assertEquals('+393331234567', createdAccount.Mobile_Phone__c);
             System.assertEquals('Mario', createdAccount.Individual_Firstname__c);
@@ -149,6 +150,36 @@ private class ContactRestResourceTest {
             System.assertEquals(false, secondVersion.Active__c);
             System.assertEquals(1, [SELECT COUNT() FROM Account WHERE Contact_Number__c = 'C-2001']);
             System.assertEquals(0, [SELECT COUNT() FROM Contact]);
+        }
+    }
+
+    @IsTest
+    static void receiveContact_fallsBackCountryCodeFromIndividualAndSetsAccountSource() {
+        System.runAs(createAdminUser()) {
+            RestRequest req = new RestRequest();
+            req.requestUri = '/services/apexrest/v1/contacts';
+            req.resourcePath = '/v1/contacts';
+            req.httpMethod = 'POST';
+            req.requestBody = Blob.valueOf(
+                '{"contactId":3001,"contactNumber":"C-3001","type":"INDIVIDUAL","state":"VALID","individualContact":{"individualFirstname":"Luca","individualLastname":"Verdi","countryCode":"IT","email":"luca.verdi@example.com","active":true},"addresses":[]}'
+            );
+            RestContext.request = req;
+            RestContext.response = new RestResponse();
+
+            Test.startTest();
+            ContactRestResource.receiveContact();
+            Test.stopTest();
+
+            Account createdAccount = [
+                SELECT Type, Country_Code__c, AccountSource
+                FROM Account
+                WHERE Contact_Number__c = 'C-3001'
+                LIMIT 1
+            ];
+
+            System.assertEquals('INDIVIDUAL', createdAccount.Type);
+            System.assertEquals('IT', createdAccount.Country_Code__c);
+            System.assertEquals('Secutix', createdAccount.AccountSource);
         }
     }
 
