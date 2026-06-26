@@ -4,6 +4,8 @@ global without sharing class ContactRestResource {
     private static final Integer MAX_SECUTIX_LONG_TEXT_LENGTH = 32768;
     private static final String FLOW_NAME = 'ContactRestResource.receiveContact';
     private static final String FALLBACK_ACCOUNT_RECORD_TYPE = 'Fallback_Account';
+    private static final String INDIVIDUAL_ACCOUNT_RECORD_TYPE = 'IndividualAccount';
+    private static final String STRUCTURE_ACCOUNT_RECORD_TYPE = 'StructureAccount';
     private static final Set<String> REQUIRED_ACCOUNT_FIELDS = new Set<String>{
         'Active__c',
         'Addresses__c',
@@ -39,7 +41,6 @@ global without sharing class ContactRestResource {
         'Individual_Contact__c',
         'Individual_Country_Code__c',
         'Individual_Email_Ver_Status__c',
-        'Individual_End_Validity_Date__c',
         'Individual_Firstname__c',
         'Individual_Guest__c',
         'Individual_Handicap_Type__c',
@@ -49,7 +50,6 @@ global without sharing class ContactRestResource {
         'Individual_Preferred_Language__c',
         'Individual_Prospect__c',
         'Individual_Req_Acc_Ver_Email__c',
-        'Individual_Role__c',
         'Individual_Title__c',
         'Individual_Verified_Email__c',
         'Invalidated_Contact_Qualities__c',
@@ -61,7 +61,7 @@ global without sharing class ContactRestResource {
         'Social_Connections__c',
         'State__c',
         'Structure_Contact__c',
-        'Type__c'
+        'Structure_Type_Id__c'
     };
 
     @HttpPost
@@ -103,7 +103,7 @@ global without sharing class ContactRestResource {
             List<String> externalContactNumbers = new List<String>();
 
             try {
-                for (ContactWrapper contactWrapper : payloads) {
+                for (ContactWrapper contactWrapper : prioritizeStructurePayloads(payloads)) {
                     validatePayload(contactWrapper);
                     Id accountId = upsertAccount(contactWrapper);
 
@@ -315,6 +315,7 @@ global without sharing class ContactRestResource {
         structure.cellPhoneNumber = asString(rawStructureMap.get('cellPhoneNumber'));
         structure.community = asBoolean(rawStructureMap.get('community'));
         structure.confidentialityLevelEnum = asString(rawStructureMap.get('confidentialityLevelEnum'));
+        structure.contactNumber = asString(rawStructureMap.get('contactNumber'));
         structure.displayName = asString(rawStructureMap.get('displayName'));
         structure.email = asString(rawStructureMap.get('email'));
         structure.email1VerificationStatus = asString(rawStructureMap.get('email1VerificationStatus'));
@@ -325,7 +326,9 @@ global without sharing class ContactRestResource {
         structure.prospect = asBoolean(rawStructureMap.get('prospect'));
         structure.requiredAccountVerificationEmail = asBoolean(rawStructureMap.get('requiredAccountVerificationEmail'));
         structure.role = asString(rawStructureMap.get('role'));
+        structure.structureOfficialName = asString(rawStructureMap.get('structureOfficialName'));
         structure.structureName = asString(rawStructureMap.get('structureName'));
+        structure.structureTypeId = asLong(rawStructureMap.get('structureTypeId'));
         structure.verifiedEmail = asBoolean(rawStructureMap.get('verifiedEmail'));
         return structure;
     }
@@ -352,11 +355,15 @@ global without sharing class ContactRestResource {
         ContactWrapper.Payload payload = contactWrapper == null ? null : contactWrapper.payload;
         Map<String, Object> rawPayload = contactWrapper == null ? null : contactWrapper.rawPayload;
         Account accountRecord = new Account();
-        Id accountRecordTypeId = getInboundAccountRecordTypeId();
+        Id accountRecordTypeId = getInboundAccountRecordTypeId(payload);
         if (accountRecordTypeId != null) {
             accountRecord.RecordTypeId = accountRecordTypeId;
         }
         accountRecord.Name = deriveAccountName(payload);
+        Id parentStructureAccountId = resolveParentStructureAccountId(payload);
+        if (parentStructureAccountId != null) {
+            accountRecord.ParentId = parentStructureAccountId;
+        }
 
         ContactWrapper.AddressPayload primaryAddress = selectPrimaryAddress(payload == null ? null : payload.addresses);
         if (primaryAddress != null) {
@@ -485,14 +492,15 @@ global without sharing class ContactRestResource {
         );
         setSObjectField(accountRecord, 'Creation_Date__c', truncateValue(payload == null ? null : payload.creationDate, 40));
         setSObjectField(accountRecord, 'Date_Last_Modified__c', truncateValue(payload == null ? null : payload.dateLastModified, 40));
-        setSObjectField(accountRecord, 'End_Validity_Date__c', truncateValue(payload == null ? null : payload.endValidityDate, 40));
+        setSObjectField(accountRecord, 'End_Validity_Date__c', truncateValue(deriveEndValidityDate(payload), 40));
         setSObjectField(accountRecord, 'Has_Advantages__c', payload == null ? null : payload.hasAdvantages);
         setSObjectField(accountRecord, 'Has_Warning__c', payload == null ? null : payload.hasWarning);
         setSObjectField(accountRecord, 'Guest__c', payload == null ? null : payload.guest);
         setSObjectField(accountRecord, 'Login__c', truncateValue(payload == null ? null : payload.login, 255));
         setSObjectField(accountRecord, 'Login_Last_Update_Time__c', truncateValue(payload == null ? null : payload.loginLastUpdateTime, 40));
         setSObjectField(accountRecord, 'Login_Last_Update_User__c', truncateValue(payload == null ? null : payload.loginLastUpdateUser, 80));
-        setSObjectField(accountRecord, 'Role__c', truncateValue(payload == null ? null : payload.role, 40));
+        setSObjectField(accountRecord, 'Role__c', truncateValue(deriveRole(payload), 40));
+        setSObjectField(accountRecord, 'Structure_Type_Id__c', structure == null ? null : structure.structureTypeId);
         setSObjectField(
             accountRecord,
             'Individual_Contact_Number__c',
@@ -514,11 +522,6 @@ global without sharing class ContactRestResource {
             accountRecord,
             'Individual_Email_Ver_Status__c',
             truncateValue(individual == null ? null : individual.email1VerificationStatus, 80)
-        );
-        setSObjectField(
-            accountRecord,
-            'Individual_End_Validity_Date__c',
-            truncateValue(individual == null ? null : individual.endValidityDate, 40)
         );
         setSObjectField(
             accountRecord,
@@ -546,7 +549,6 @@ global without sharing class ContactRestResource {
             individual == null ? null : individual.cellPhoneNumberVerified
         );
         setSObjectField(accountRecord, 'Individual_Blocked__c', individual == null ? null : individual.blocked);
-        setSObjectField(accountRecord, 'Individual_Role__c', truncateValue(individual == null ? null : individual.role, 40));
         setSObjectField(accountRecord, 'Individual_Verified_Email__c', individual == null ? null : individual.verifiedEmail);
         setSObjectField(
             accountRecord,
@@ -580,11 +582,22 @@ global without sharing class ContactRestResource {
         }
     }
 
-    private static Id getInboundAccountRecordTypeId() {
+    private static Id getInboundAccountRecordTypeId(ContactWrapper.Payload payload) {
         Map<String, Schema.RecordTypeInfo> recordTypesByDeveloperName =
             Account.SObjectType.getDescribe().getRecordTypeInfosByDeveloperName();
         if (recordTypesByDeveloperName == null || recordTypesByDeveloperName.isEmpty()) {
             return null;
+        }
+
+        for (String preferredDeveloperName : preferredRecordTypeDeveloperNames(payload)) {
+            Schema.RecordTypeInfo preferredRecordType = recordTypesByDeveloperName.get(preferredDeveloperName);
+            if (
+                preferredRecordType != null &&
+                preferredRecordType.isAvailable() &&
+                preferredDeveloperName != FALLBACK_ACCOUNT_RECORD_TYPE
+            ) {
+                return preferredRecordType.getRecordTypeId();
+            }
         }
 
         for (String developerName : recordTypesByDeveloperName.keySet()) {
@@ -602,6 +615,14 @@ global without sharing class ContactRestResource {
     }
 
     private static String deriveLastName(ContactWrapper.Payload payload) {
+        if (isIndividualPayload(payload)) {
+            ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+            String individualLastName = individual == null ? null : individual.individualLastname;
+            if (!String.isBlank(individualLastName)) {
+                return truncateValue(individualLastName, 80);
+            }
+        }
+
         List<String> candidates = new List<String>();
         ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
         ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
@@ -666,10 +687,32 @@ global without sharing class ContactRestResource {
         return firstNonBlankValue(candidates);
     }
 
+    private static String deriveEndValidityDate(ContactWrapper.Payload payload) {
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+
+        return firstNonBlankValue(new List<String>{
+            payload == null ? null : payload.endValidityDate,
+            individual == null ? null : individual.endValidityDate
+        });
+    }
+
+    private static String deriveRole(ContactWrapper.Payload payload) {
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
+
+        return firstNonBlankValue(new List<String>{
+            payload == null ? null : payload.role,
+            individual == null ? null : individual.role,
+            structure == null ? null : structure.role
+        });
+    }
+
     private static String deriveAccountName(ContactWrapper.Payload payload) {
-        String structureAccountName = deriveStructureAccountName(payload);
-        if (!String.isBlank(structureAccountName)) {
-            return structureAccountName;
+        if (isStructurePayload(payload)) {
+            String structureAccountName = deriveStructureAccountName(payload);
+            if (!String.isBlank(structureAccountName)) {
+                return structureAccountName;
+            }
         }
 
         List<String> nameParts = new List<String>();
@@ -679,10 +722,6 @@ global without sharing class ContactRestResource {
         }
 
         String baseName = nameParts.isEmpty() ? 'Secutix Account' : String.join(nameParts, ' ');
-        if (payload != null && !String.isBlank(payload.contactNumber)) {
-            baseName += ' (' + payload.contactNumber + ')';
-        }
-
         return truncateValue(baseName, 255);
     }
 
@@ -691,6 +730,10 @@ global without sharing class ContactRestResource {
         ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
 
         if (structure != null) {
+            if (!String.isBlank(structure.structureOfficialName)) {
+                return truncateValue(structure.structureOfficialName, 255);
+            }
+
             addDistinctValue(nameParts, structure.name);
             addDistinctValue(nameParts, structure.structureName);
             addDistinctValue(nameParts, structure.companyName);
@@ -700,6 +743,69 @@ global without sharing class ContactRestResource {
         }
 
         return nameParts.isEmpty() ? null : truncateValue(String.join(nameParts, ' '), 255);
+    }
+
+    private static List<ContactWrapper> prioritizeStructurePayloads(List<ContactWrapper> payloads) {
+        List<ContactWrapper> prioritizedPayloads = new List<ContactWrapper>();
+        if (payloads == null || payloads.isEmpty()) {
+            return prioritizedPayloads;
+        }
+
+        for (ContactWrapper payloadWrapper : payloads) {
+            if (isStructurePayload(payloadWrapper == null ? null : payloadWrapper.payload)) {
+                prioritizedPayloads.add(payloadWrapper);
+            }
+        }
+
+        for (ContactWrapper payloadWrapper : payloads) {
+            if (!isStructurePayload(payloadWrapper == null ? null : payloadWrapper.payload)) {
+                prioritizedPayloads.add(payloadWrapper);
+            }
+        }
+
+        return prioritizedPayloads;
+    }
+
+    private static Id resolveParentStructureAccountId(ContactWrapper.Payload payload) {
+        if (!isIndividualPayload(payload)) {
+            return null;
+        }
+
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        String structureContactNumber = structure == null ? null : structure.contactNumber;
+        if (String.isBlank(structureContactNumber)) {
+            return null;
+        }
+
+        List<Account> matchingStructures = [
+            SELECT Id
+            FROM Account
+            WHERE Contact_Number__c = :structureContactNumber
+            ORDER BY LastModifiedDate DESC
+            LIMIT 1
+        ];
+        return matchingStructures.isEmpty() ? null : matchingStructures[0].Id;
+    }
+
+    private static Boolean isStructurePayload(ContactWrapper.Payload payload) {
+        return payload != null && payload.type == 'STRUCTURE';
+    }
+
+    private static Boolean isIndividualPayload(ContactWrapper.Payload payload) {
+        return payload != null && payload.type == 'INDIVIDUAL';
+    }
+
+    private static List<String> preferredRecordTypeDeveloperNames(ContactWrapper.Payload payload) {
+        List<String> developerNames = new List<String>();
+        if (isStructurePayload(payload)) {
+            developerNames.add(STRUCTURE_ACCOUNT_RECORD_TYPE);
+        }
+
+        if (isIndividualPayload(payload)) {
+            developerNames.add(INDIVIDUAL_ACCOUNT_RECORD_TYPE);
+        }
+
+        return developerNames;
     }
 
     private static ContactWrapper.AddressPayload selectPrimaryAddress(List<ContactWrapper.AddressPayload> addresses) {

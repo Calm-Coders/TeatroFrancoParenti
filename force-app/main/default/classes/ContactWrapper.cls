@@ -102,6 +102,7 @@ global class ContactWrapper {
         public String cellPhoneNumber;
         public Boolean community;
         public String confidentialityLevelEnum;
+        public String contactNumber;
         public String displayName;
         public String email;
         public String email1VerificationStatus;
@@ -112,7 +113,9 @@ global class ContactWrapper {
         public Boolean prospect;
         public Boolean requiredAccountVerificationEmail;
         public String role;
+        public String structureOfficialName;
         public String structureName;
+        public Long structureTypeId;
         public Boolean verifiedEmail;
     }
 }
