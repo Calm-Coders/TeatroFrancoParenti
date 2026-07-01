@@ -413,22 +413,30 @@ global without sharing class OrderRestResource {
 
     private static Order createOrder(OrderWrapper orderWrapper) {
         Id existingOrderId = resolveExistingOrderId(orderWrapper);
-        Order orderRecord = buildOrder(orderWrapper, existingOrderId);
+        OrderWrapper.OrderDetailsData details = orderWrapper == null || orderWrapper.payload == null
+            ? null
+            : orderWrapper.payload.orderDetailsData;
+        Map<String, Id> accountIdsByContactNumber = resolveAccountIdsByContactNumber(details);
+        Order orderRecord = buildOrder(orderWrapper, existingOrderId, accountIdsByContactNumber);
         if (existingOrderId == null) {
             insert orderRecord;
         } else {
             update orderRecord;
         }
-        syncOrderChildren(orderWrapper, orderRecord.Id);
+        syncOrderChildren(orderWrapper, orderRecord.Id, accountIdsByContactNumber);
         return orderRecord;
     }
 
-    private static Order buildOrder(OrderWrapper orderWrapper, Id existingOrderId) {
+    private static Order buildOrder(
+        OrderWrapper orderWrapper,
+        Id existingOrderId,
+        Map<String, Id> accountIdsByContactNumber
+    ) {
         OrderWrapper.OrderDetailsData details = orderWrapper.payload.orderDetailsData;
         Map<String, Object> rawDetails = rawOrderDetails(orderWrapper);
         String contactReference = firstContactReference(details);
         ResolvedContact resolvedContact = resolveContact(orderWrapper);
-        Id accountId = resolveOrderAccountId(details);
+        Id accountId = resolveOrderAccountId(details, accountIdsByContactNumber);
 
         Order orderRecord = new Order();
         if (existingOrderId != null) {
@@ -482,7 +490,11 @@ global without sharing class OrderRestResource {
         return orderRecord;
     }
 
-    private static void syncOrderChildren(OrderWrapper orderWrapper, Id orderId) {
+    private static void syncOrderChildren(
+        OrderWrapper orderWrapper,
+        Id orderId,
+        Map<String, Id> accountIdsByContactNumber
+    ) {
         if (orderId == null) {
             return;
         }
@@ -527,7 +539,13 @@ global without sharing class OrderRestResource {
             update operationsToUpdate;
         }
 
-        List<SObject> movementRecords = buildMovementRecords(orderId, details, rawDetails, operationRecordIdsByExternalId);
+        List<SObject> movementRecords = buildMovementRecords(
+            orderId,
+            details,
+            rawDetails,
+            operationRecordIdsByExternalId,
+            accountIdsByContactNumber
+        );
         if (!movementRecords.isEmpty()) {
             insert movementRecords;
         }
@@ -558,6 +576,7 @@ global without sharing class OrderRestResource {
         List<OrderWrapper.OperationData> operations = details == null ? null : details.operationDatas;
         List<Object> rawOperations = toObjectList(rawDetails.get('operationDatas'));
         Integer operationCount = operations == null ? 0 : operations.size();
+        Map<Long, Id> inventoryIdsByProductId = resolveInventoryIdsByProductId(operations);
 
         for (Integer i = 0; i < operationCount; i++) {
             OrderWrapper.OperationData operation = operations[i];
@@ -567,7 +586,11 @@ global without sharing class OrderRestResource {
             SObject operationRecord = instantiateSObject(ORDER_OPERATION_OBJECT);
 
             setCustomField(operationRecord, 'Order__c', orderId);
-            setCustomField(operationRecord, 'Inventory__c', resolveInventoryLookupId(operation == null ? null : operation.productId));
+            setCustomField(
+                operationRecord,
+                'Inventory__c',
+                inventoryIdsByProductId.get(operation == null ? null : operation.productId)
+            );
             setCustomField(operationRecord, 'Operation_Id__c', stringifyLong(operation == null ? null : operation.operationId));
             setCustomField(operationRecord, 'Parent_Operation_Id__c', stringifyLong(operation == null ? null : operation.parentOperationId));
             setCustomField(operationRecord, 'Parent_Operation_Link_Type__c', truncateValue(operation == null ? null : operation.parentOperationLinkType, 80));
@@ -643,7 +666,8 @@ global without sharing class OrderRestResource {
         Id orderId,
         OrderWrapper.OrderDetailsData details,
         Map<String, Object> rawDetails,
-        Map<String, Id> operationRecordIdsByExternalId
+        Map<String, Id> operationRecordIdsByExternalId,
+        Map<String, Id> accountIdsByContactNumber
     ) {
         List<SObject> movementRecords = new List<SObject>();
         List<OrderWrapper.MovementData> movements = details == null ? null : details.movementDatas;
@@ -659,7 +683,14 @@ global without sharing class OrderRestResource {
             String operationExternalId = stringifyLong(movement == null ? null : movement.operationId);
 
             setCustomField(movementRecord, 'Order__c', orderId);
-            setCustomField(movementRecord, 'Account__c', resolveAccountIdByContactNumber(movement == null ? null : movement.contactReference));
+            setCustomField(
+                movementRecord,
+                'Account__c',
+                resolveAccountIdByContactNumber(
+                    movement == null ? null : movement.contactReference,
+                    accountIdsByContactNumber
+                )
+            );
             setCustomField(movementRecord, 'Order_Operation_Data__c', operationRecordIdsByExternalId.get(operationExternalId));
             setCustomField(movementRecord, 'Movement_Id__c', stringifyLong(movement == null ? null : movement.movementId));
             setCustomField(movementRecord, 'Operation_Id__c', operationExternalId);
@@ -747,24 +778,39 @@ global without sharing class OrderRestResource {
         return matchingOrders[0].Id;
     }
 
-    private static Id resolveInventoryLookupId(Long productId) {
-        if (productId == null) {
-            return null;
+    private static Map<Long, Id> resolveInventoryIdsByProductId(List<OrderWrapper.OperationData> operations) {
+        Map<Long, Id> inventoryIdsByProductId = new Map<Long, Id>();
+        Set<Long> productIds = new Set<Long>();
+
+        if (operations == null) {
+            return inventoryIdsByProductId;
         }
 
-        List<Inventory__c> matchingInventories = [
-            SELECT Id
+        for (OrderWrapper.OperationData operation : operations) {
+            if (operation != null && operation.productId != null) {
+                productIds.add(operation.productId);
+            }
+        }
+
+        if (productIds.isEmpty()) {
+            return inventoryIdsByProductId;
+        }
+
+        for (Inventory__c inventoryRecord : [
+            SELECT Id, Inventory_Id__c
             FROM Inventory__c
-            WHERE Inventory_Id__c = :productId
+            WHERE Inventory_Id__c IN :productIds
             ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
-            LIMIT 1
-        ];
-
-        if (matchingInventories.isEmpty()) {
-            return null;
+        ]) {
+            Long productId = inventoryRecord.Inventory_Id__c == null
+                ? null
+                : Long.valueOf(String.valueOf(inventoryRecord.Inventory_Id__c));
+            if (productId != null && !inventoryIdsByProductId.containsKey(productId)) {
+                inventoryIdsByProductId.put(productId, inventoryRecord.Id);
+            }
         }
 
-        return matchingInventories[0].Id;
+        return inventoryIdsByProductId;
     }
 
     private static Long firstInventoryProductId(OrderWrapper.OrderDetailsData details) {
@@ -790,8 +836,14 @@ global without sharing class OrderRestResource {
         return fallbackProductId;
     }
 
-    private static Id resolveOrderAccountId(OrderWrapper.OrderDetailsData details) {
-        Id topLevelContactAccountId = resolveAccountIdByContactNumber(orderLevelContactReference(details));
+    private static Id resolveOrderAccountId(
+        OrderWrapper.OrderDetailsData details,
+        Map<String, Id> accountIdsByContactNumber
+    ) {
+        Id topLevelContactAccountId = resolveAccountIdByContactNumber(
+            orderLevelContactReference(details),
+            accountIdsByContactNumber
+        );
         if (topLevelContactAccountId != null) {
             return topLevelContactAccountId;
         }
@@ -812,21 +864,50 @@ global without sharing class OrderRestResource {
         return fallbackAccountId;
     }
 
-    private static Id resolveAccountIdByContactNumber(String contactNumber) {
-        String normalizedContactNumber = truncateValue(contactNumber, 80);
+    private static Id resolveAccountIdByContactNumber(String contactNumber, Map<String, Id> accountIdsByContactNumber) {
+        String normalizedContactNumber = normalizeContactNumber(contactNumber);
         if (String.isBlank(normalizedContactNumber)) {
             return null;
         }
 
-        List<Account> matchingAccounts = [
-            SELECT Id
-            FROM Account
-            WHERE Contact_Number__c = :normalizedContactNumber
-            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
-            LIMIT 1
-        ];
+        return accountIdsByContactNumber == null ? null : accountIdsByContactNumber.get(normalizedContactNumber);
+    }
 
-        return matchingAccounts.isEmpty() ? null : matchingAccounts[0].Id;
+    private static Map<String, Id> resolveAccountIdsByContactNumber(OrderWrapper.OrderDetailsData details) {
+        Map<String, Id> accountIdsByContactNumber = new Map<String, Id>();
+        Set<String> contactNumbers = new Set<String>();
+
+        String topLevelContactNumber = normalizeContactNumber(orderLevelContactReference(details));
+        if (!String.isBlank(topLevelContactNumber)) {
+            contactNumbers.add(topLevelContactNumber);
+        }
+
+        if (details != null && details.movementDatas != null) {
+            for (OrderWrapper.MovementData movement : details.movementDatas) {
+                String movementContactNumber = normalizeContactNumber(movement == null ? null : movement.contactReference);
+                if (!String.isBlank(movementContactNumber)) {
+                    contactNumbers.add(movementContactNumber);
+                }
+            }
+        }
+
+        if (contactNumbers.isEmpty()) {
+            return accountIdsByContactNumber;
+        }
+
+        for (Account accountRecord : [
+            SELECT Id, Contact_Number__c
+            FROM Account
+            WHERE Contact_Number__c IN :contactNumbers
+            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
+        ]) {
+            String normalizedContactNumber = normalizeContactNumber(accountRecord.Contact_Number__c);
+            if (!String.isBlank(normalizedContactNumber) && !accountIdsByContactNumber.containsKey(normalizedContactNumber)) {
+                accountIdsByContactNumber.put(normalizedContactNumber, accountRecord.Id);
+            }
+        }
+
+        return accountIdsByContactNumber;
     }
 
     private static ResolvedContact resolveContact(OrderWrapper orderWrapper) {
@@ -910,6 +991,10 @@ global without sharing class OrderRestResource {
 
     private static String orderLevelContactReference(OrderWrapper.OrderDetailsData details) {
         return details == null ? null : details.contactReference;
+    }
+
+    private static String normalizeContactNumber(String contactNumber) {
+        return truncateValue(contactNumber, 80);
     }
 
     private static String firstContactReference(OrderWrapper.OrderDetailsData details) {
