@@ -3,6 +3,7 @@ global without sharing class InventoryRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
     private static final Integer MAX_LONG_TEXT_LENGTH = 32768;
     private static final String FLOW_NAME = 'InventoryRestResource.receiveInventory';
+    private static final String SIMPLE_TICKET_SUBTYPE = 'SIMPLE_TICKET';
 
     @HttpPost
     global static void receiveInventory() {
@@ -39,11 +40,12 @@ global without sharing class InventoryRestResource {
             List<String> productIds = new List<String>();
             List<String> productCodes = new List<String>();
             List<String> productStates = new List<String>();
-            List<Inventory__c> recordsToInsert = new List<Inventory__c>();
+            List<Inventory__c> inventoryRecords = new List<Inventory__c>();
+            Map<Decimal, Inventory__c> existingInventoryByExternalId = getExistingInventoryByExternalId(products);
 
             for (InventoryWrapper inventoryWrapper : products) {
                 validatePayload(inventoryWrapper);
-                recordsToInsert.add(buildInventoryRecord(inventoryWrapper));
+                inventoryRecords.add(buildInventoryRecord(inventoryWrapper, existingInventoryByExternalId));
 
                 if (inventoryWrapper.id != null) {
                     productIds.add(String.valueOf(inventoryWrapper.id));
@@ -58,10 +60,147 @@ global without sharing class InventoryRestResource {
                 }
             }
 
-            insert recordsToInsert;
+            upsert inventoryRecords;
+
+            Set<Id> inventoryIds = new Set<Id>();
+            for (Inventory__c inventoryRecord : inventoryRecords) {
+                if (inventoryRecord.Id != null) {
+                    inventoryIds.add(inventoryRecord.Id);
+                }
+            }
+
+            Map<Id, SObject> existingEventByInventoryId = getSingleRelatedByInventoryId(
+                [
+                    SELECT Id, Inventory__c
+                    FROM Inventory_Event__c
+                    WHERE Inventory__c IN :inventoryIds
+                ]
+            );
+            Map<Id, SObject> existingMembershipByInventoryId = getSingleRelatedByInventoryId(
+                [
+                    SELECT Id, Inventory__c
+                    FROM Membership__c
+                    WHERE Inventory__c IN :inventoryIds
+                ]
+            );
+            Map<Id, SObject> existingPackByInventoryId = getSingleRelatedByInventoryId(
+                [
+                    SELECT Id, Inventory__c
+                    FROM Pack__c
+                    WHERE Inventory__c IN :inventoryIds
+                ]
+            );
+            Map<Id, SObject> existingSeasonTicketByInventoryId = getSingleRelatedByInventoryId(
+                [
+                    SELECT Id, Inventory__c
+                    FROM Season_Ticket__c
+                    WHERE Inventory__c IN :inventoryIds
+                ]
+            );
+
+            List<Inventory_Event__c> eventRecords = new List<Inventory_Event__c>();
+            List<Membership__c> membershipRecords = new List<Membership__c>();
+            List<Pack__c> packRecords = new List<Pack__c>();
+            List<Season_Ticket__c> seasonTicketRecords = new List<Season_Ticket__c>();
+            Set<Id> desiredEventInventoryIds = new Set<Id>();
+            Set<Id> desiredMembershipInventoryIds = new Set<Id>();
+            Set<Id> desiredPackInventoryIds = new Set<Id>();
+            Set<Id> desiredSeasonTicketInventoryIds = new Set<Id>();
+
+            for (Integer i = 0; i < products.size(); i++) {
+                Inventory__c inventoryRecord = inventoryRecords[i];
+
+                Inventory_Event__c eventRecord = buildInventoryEventRecord(
+                    products[i],
+                    inventoryRecord,
+                    (Inventory_Event__c) existingEventByInventoryId.get(inventoryRecord.Id)
+                );
+                if (eventRecord != null) {
+                    eventRecords.add(eventRecord);
+                    desiredEventInventoryIds.add(inventoryRecord.Id);
+                }
+
+                Membership__c membershipRecord = buildMembershipRecord(
+                    products[i],
+                    inventoryRecord,
+                    (Membership__c) existingMembershipByInventoryId.get(inventoryRecord.Id)
+                );
+                if (membershipRecord != null) {
+                    membershipRecords.add(membershipRecord);
+                    desiredMembershipInventoryIds.add(inventoryRecord.Id);
+                }
+
+                Pack__c packRecord = buildPackRecord(
+                    products[i],
+                    inventoryRecord,
+                    (Pack__c) existingPackByInventoryId.get(inventoryRecord.Id)
+                );
+                if (packRecord != null) {
+                    packRecords.add(packRecord);
+                    desiredPackInventoryIds.add(inventoryRecord.Id);
+                }
+
+                Season_Ticket__c seasonTicketRecord = buildSeasonTicketRecord(
+                    products[i],
+                    inventoryRecord,
+                    (Season_Ticket__c) existingSeasonTicketByInventoryId.get(inventoryRecord.Id)
+                );
+                if (seasonTicketRecord != null) {
+                    seasonTicketRecords.add(seasonTicketRecord);
+                    desiredSeasonTicketInventoryIds.add(inventoryRecord.Id);
+                }
+            }
+
+            upsert eventRecords;
+            upsert membershipRecords;
+            upsert packRecords;
+            upsert seasonTicketRecords;
+
+            List<Performance__c> existingPerformancesToDelete = new List<Performance__c>();
+            Set<Id> eventIdsForPerformanceRefresh = new Set<Id>();
+            for (Id inventoryId : desiredEventInventoryIds) {
+                Inventory_Event__c existingEventRecord = (Inventory_Event__c) existingEventByInventoryId.get(inventoryId);
+                if (existingEventRecord != null) {
+                    eventIdsForPerformanceRefresh.add(existingEventRecord.Id);
+                }
+            }
+
+            if (!eventIdsForPerformanceRefresh.isEmpty()) {
+                existingPerformancesToDelete = [
+                    SELECT Id
+                    FROM Performance__c
+                    WHERE Inventory_Event__c IN :eventIdsForPerformanceRefresh
+                ];
+            }
+
+            if (!existingPerformancesToDelete.isEmpty()) {
+                delete existingPerformancesToDelete;
+            }
+
+            deleteUndesiredRelatedRecords(existingEventByInventoryId, desiredEventInventoryIds, inventoryIds);
+            deleteUndesiredRelatedRecords(existingMembershipByInventoryId, desiredMembershipInventoryIds, inventoryIds);
+            deleteUndesiredRelatedRecords(existingPackByInventoryId, desiredPackInventoryIds, inventoryIds);
+            deleteUndesiredRelatedRecords(existingSeasonTicketByInventoryId, desiredSeasonTicketInventoryIds, inventoryIds);
+
+            List<Performance__c> performanceRecords = new List<Performance__c>();
+            Map<Id, Inventory_Event__c> eventByInventoryId = new Map<Id, Inventory_Event__c>();
+            for (Inventory_Event__c eventRecord : eventRecords) {
+                eventByInventoryId.put((Id) eventRecord.get('Inventory__c'), eventRecord);
+            }
+
+            for (Integer i = 0; i < products.size(); i++) {
+                Inventory_Event__c eventRecord = eventByInventoryId.get(inventoryRecords[i].Id);
+                if (eventRecord != null) {
+                    performanceRecords.addAll(buildPerformanceRecords(products[i], eventRecord));
+                }
+            }
+
+            if (!performanceRecords.isEmpty()) {
+                insert performanceRecords;
+            }
 
             List<String> recordIds = new List<String>();
-            for (Inventory__c recordItem : recordsToInsert) {
+            for (Inventory__c recordItem : inventoryRecords) {
                 recordIds.add(recordItem.Id);
             }
 
@@ -173,10 +312,14 @@ global without sharing class InventoryRestResource {
         }
     }
 
-    private static Inventory__c buildInventoryRecord(InventoryWrapper inventoryWrapper) {
+    private static Inventory__c buildInventoryRecord(InventoryWrapper inventoryWrapper, Map<Decimal, Inventory__c> existingInventoryByExternalId) {
+        Inventory__c existingInventory = getExistingInventoryRecord(inventoryWrapper, existingInventoryByExternalId);
         Inventory__c recordItem = new Inventory__c(
             Name = buildRecordName(inventoryWrapper)
         );
+        if (existingInventory != null) {
+            recordItem.Id = existingInventory.Id;
+        }
 
         setCustomField(recordItem, 'Inventory_Id__c', inventoryWrapper.id);
         setCustomField(recordItem, 'Prev_Season_Product_Id__c', inventoryWrapper.prevSeasonProductId);
@@ -227,7 +370,307 @@ global without sharing class InventoryRestResource {
         return recordItem;
     }
 
+    private static Inventory_Event__c buildInventoryEventRecord(
+        InventoryWrapper inventoryWrapper,
+        Inventory__c inventoryRecord,
+        Inventory_Event__c existingEventRecord
+    ) {
+        if (
+            inventoryWrapper == null ||
+            inventoryRecord == null ||
+            !isSimpleTicketSubtype(inventoryWrapper.productFamilySubType) ||
+            !(inventoryWrapper.event instanceof Map<String, Object>)
+        ) {
+            return null;
+        }
+
+        Map<String, Object> eventPayload = (Map<String, Object>) inventoryWrapper.event;
+        Inventory_Event__c eventRecord = new Inventory_Event__c(
+            Name = buildInventoryEventName(eventPayload)
+        );
+        if (existingEventRecord != null) {
+            eventRecord.Id = existingEventRecord.Id;
+        }
+
+        setCustomField(eventRecord, 'Inventory__c', inventoryRecord.Id);
+        setCustomField(eventRecord, 'Activity_Id__c', asDecimal(eventPayload.get('activityId')));
+        setCustomField(eventRecord, 'Activity_Code__c', asString(eventPayload.get('activityCode')));
+        setCustomField(eventRecord, 'Activity_Type__c', asString(eventPayload.get('activityType')));
+        setCustomField(eventRecord, 'Time_Tolerance__c', asDecimal(eventPayload.get('timeTolerance')));
+        setCustomField(eventRecord, 'Minimum_Age__c', asDecimal(eventPayload.get('minimumAge')));
+        setCustomField(eventRecord, 'Language__c', asString(eventPayload.get('language')));
+        setCustomField(eventRecord, 'Name_Add_On__c', serializeRawValue(eventPayload.get('nameAddOn'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(eventRecord, 'Activity_External_Name__c', serializeRawValue(eventPayload.get('activityExternalName'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(eventRecord, 'Competition_Type_Id__c', asDecimal(eventPayload.get('competitionTypeId')));
+        setCustomField(eventRecord, 'Alert_Ratio__c', asDecimal(eventPayload.get('alertRatio')));
+        setCustomField(eventRecord, 'Performances__c', serializeRawValue(eventPayload.get('performances'), MAX_LONG_TEXT_LENGTH));
+
+        return eventRecord;
+    }
+
+    private static Membership__c buildMembershipRecord(
+        InventoryWrapper inventoryWrapper,
+        Inventory__c inventoryRecord,
+        Membership__c existingMembershipRecord
+    ) {
+        if (
+            inventoryWrapper == null ||
+            inventoryRecord == null ||
+            !(inventoryWrapper.membership instanceof Map<String, Object>)
+        ) {
+            return null;
+        }
+
+        Map<String, Object> membershipPayload = (Map<String, Object>) inventoryWrapper.membership;
+        Membership__c membershipRecord = new Membership__c(
+            Name = buildRelatedRecordName(inventoryRecord, 'Membership')
+        );
+        if (existingMembershipRecord != null) {
+            membershipRecord.Id = existingMembershipRecord.Id;
+        }
+
+        setCustomField(membershipRecord, 'Inventory__c', inventoryRecord.Id);
+        setCustomField(membershipRecord, 'User_Define_Start_Validity__c', asBoolean(membershipPayload.get('userDefineStartValidity')));
+        setCustomField(membershipRecord, 'Validity_Duration_Unit__c', asString(membershipPayload.get('validityDurationUnit')));
+        setCustomField(membershipRecord, 'Validity_Duration__c', asDecimal(membershipPayload.get('validityDuration')));
+        setCustomField(membershipRecord, 'Validity_End_Date__c', asDate(membershipPayload.get('validityEndDate')));
+        setCustomField(membershipRecord, 'Validity_Start_Date__c', asDate(membershipPayload.get('validityStartDate')));
+        setCustomField(membershipRecord, 'Validity_Rule__c', asString(membershipPayload.get('validityRule')));
+        setCustomField(membershipRecord, 'Items__c', serializeRawValue(membershipPayload.get('items'), MAX_LONG_TEXT_LENGTH));
+
+        return membershipRecord;
+    }
+
+    private static Pack__c buildPackRecord(
+        InventoryWrapper inventoryWrapper,
+        Inventory__c inventoryRecord,
+        Pack__c existingPackRecord
+    ) {
+        if (
+            inventoryWrapper == null ||
+            inventoryRecord == null ||
+            !(inventoryWrapper.pack instanceof Map<String, Object>)
+        ) {
+            return null;
+        }
+
+        Map<String, Object> packPayload = (Map<String, Object>) inventoryWrapper.pack;
+        Pack__c packRecord = new Pack__c(
+            Name = buildRelatedRecordName(inventoryRecord, 'Pack')
+        );
+        if (existingPackRecord != null) {
+            packRecord.Id = existingPackRecord.Id;
+        }
+
+        setCustomField(packRecord, 'Inventory__c', inventoryRecord.Id);
+        setCustomField(packRecord, 'Ticket_Printing_Mode__c', asString(packPayload.get('ticketPrintingMode')));
+        setCustomField(packRecord, 'Linked_Audience_Sub_Category_Ids__c', serializeRawValue(packPayload.get('linkedAudienceSubCategoryIds'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(packRecord, 'Package_Lines__c', serializeRawValue(packPayload.get('packageLine'), MAX_LONG_TEXT_LENGTH));
+
+        return packRecord;
+    }
+
+    private static Season_Ticket__c buildSeasonTicketRecord(
+        InventoryWrapper inventoryWrapper,
+        Inventory__c inventoryRecord,
+        Season_Ticket__c existingSeasonTicketRecord
+    ) {
+        if (
+            inventoryWrapper == null ||
+            inventoryRecord == null ||
+            !(inventoryWrapper.seasonTicket instanceof Map<String, Object>)
+        ) {
+            return null;
+        }
+
+        Map<String, Object> seasonTicketPayload = (Map<String, Object>) inventoryWrapper.seasonTicket;
+        Season_Ticket__c seasonTicketRecord = new Season_Ticket__c(
+            Name = buildRelatedRecordName(inventoryRecord, 'Season Ticket')
+        );
+        if (existingSeasonTicketRecord != null) {
+            seasonTicketRecord.Id = existingSeasonTicketRecord.Id;
+        }
+
+        setCustomField(seasonTicketRecord, 'Inventory__c', inventoryRecord.Id);
+        setCustomField(seasonTicketRecord, 'Championship_Season_Ticket__c', asBoolean(seasonTicketPayload.get('championshipSeasonTicket')));
+        setCustomField(seasonTicketRecord, 'Fixed_Seat__c', asBoolean(seasonTicketPayload.get('fixedSeat')));
+        setCustomField(seasonTicketRecord, 'Ticket_Printing_Mode__c', asString(seasonTicketPayload.get('ticketPrintingMode')));
+        setCustomField(seasonTicketRecord, 'Season_Ticket_Subjects__c', serializeRawValue(seasonTicketPayload.get('seasonTicketSubjects'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(seasonTicketRecord, 'Season_Ticket_Lines__c', serializeRawValue(seasonTicketPayload.get('seasonTicketLines'), MAX_LONG_TEXT_LENGTH));
+
+        return seasonTicketRecord;
+    }
+
+    private static List<Performance__c> buildPerformanceRecords(InventoryWrapper inventoryWrapper, Inventory_Event__c eventRecord) {
+        List<Performance__c> performanceRecords = new List<Performance__c>();
+        if (
+            inventoryWrapper == null ||
+            eventRecord == null ||
+            !(inventoryWrapper.event instanceof Map<String, Object>)
+        ) {
+            return performanceRecords;
+        }
+
+        Object performancesRaw = ((Map<String, Object>) inventoryWrapper.event).get('performances');
+        if (!(performancesRaw instanceof List<Object>)) {
+            return performanceRecords;
+        }
+
+        for (Object item : (List<Object>) performancesRaw) {
+            if (!(item instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            performanceRecords.add(buildPerformanceRecord((Map<String, Object>) item, eventRecord));
+        }
+
+        return performanceRecords;
+    }
+
+    private static Performance__c buildPerformanceRecord(Map<String, Object> performancePayload, Inventory_Event__c eventRecord) {
+        Performance__c performanceRecord = new Performance__c(
+            Name = buildPerformanceName(performancePayload)
+        );
+
+        setCustomField(performanceRecord, 'Inventory_Event__c', eventRecord.Id);
+        setCustomField(performanceRecord, 'Performance_Id__c', asDecimal(performancePayload.get('id')));
+        setCustomField(performanceRecord, 'Code__c', asString(performancePayload.get('code')));
+        setCustomField(performanceRecord, 'Physical_Configuration_Id__c', asDecimal(performancePayload.get('physicalConfigurationId')));
+        setCustomField(performanceRecord, 'Logical_Configuration_Id__c', asDecimal(performancePayload.get('logicalConfigurationId')));
+        setCustomField(performanceRecord, 'Sale_Configuration_Id__c', asDecimal(performancePayload.get('saleConfigurationId')));
+        setCustomField(performanceRecord, 'Rate_Type_Id__c', asDecimal(performancePayload.get('rateTypeId')));
+        setCustomField(performanceRecord, 'Rate_Type_Code__c', asString(performancePayload.get('rateTypeCode')));
+        setCustomField(performanceRecord, 'Rates_Table_Id__c', asDecimal(performancePayload.get('ratesTableId')));
+        setCustomField(performanceRecord, 'Charges_Table_Id__c', asDecimal(performancePayload.get('chargesTableId')));
+        setCustomField(performanceRecord, 'Start__c', asDatetime(performancePayload.get('start')));
+        setCustomField(performanceRecord, 'Duration__c', asDecimal(performancePayload.get('duration')));
+        setCustomField(performanceRecord, 'Space_Id__c', asDecimal(performancePayload.get('spaceId')));
+        setCustomField(performanceRecord, 'Space_Code__c', asString(performancePayload.get('spaceCode')));
+        setCustomField(performanceRecord, 'Site_Code__c', asString(performancePayload.get('siteCode')));
+        setCustomField(performanceRecord, 'Kind__c', asString(performancePayload.get('kind')));
+        setCustomField(performanceRecord, 'Kind_External_Name__c', asString(performancePayload.get('kindExternalName')));
+        setCustomField(performanceRecord, 'Seat_Selection_Mode__c', asString(performancePayload.get('seatSelectionMode')));
+        setCustomField(performanceRecord, 'Breaks_Quantity__c', asDecimal(performancePayload.get('breaksQuantity')));
+        setCustomField(performanceRecord, 'State__c', asString(performancePayload.get('state')));
+        setCustomField(performanceRecord, 'Image__c', asString(performancePayload.get('image')));
+        setCustomField(performanceRecord, 'Venue_Image__c', asString(performancePayload.get('venueImage')));
+        setCustomField(performanceRecord, 'Logo__c', asString(performancePayload.get('logo')));
+        setCustomField(performanceRecord, 'Logo_Image__c', asString(performancePayload.get('logoImage')));
+        setCustomField(performanceRecord, 'Force_Nominative_Tickets__c', asBoolean(performancePayload.get('forceNominativeTickets')));
+        setCustomField(performanceRecord, 'Titling__c', asString(performancePayload.get('titling')));
+        setCustomField(performanceRecord, 'Block_Comparison_Enabled__c', asBoolean(performancePayload.get('blockComparisonEnabled')));
+        setCustomField(performanceRecord, 'Numbered__c', asBoolean(performancePayload.get('numbered')));
+        setCustomField(performanceRecord, 'Always_Allow_Isolated_Seats__c', asBoolean(performancePayload.get('alwaysAllowIsolatedSeats')));
+        setCustomField(performanceRecord, 'External_Name__c', serializeRawValue(performancePayload.get('externalName'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Internal_Name__c', serializeRawValue(performancePayload.get('internalName'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'External_Short_Name__c', serializeRawValue(performancePayload.get('externalShortName'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Name_Add_On__c', serializeRawValue(performancePayload.get('nameAddOn'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Space_External_Name__c', asString(performancePayload.get('spaceExternalName')));
+        setCustomField(performanceRecord, 'Site_External_Name__c', asString(performancePayload.get('siteExternalName')));
+        setCustomField(performanceRecord, 'Location__c', serializeRawValue(performancePayload.get('location'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Match__c', serializeRawValue(performancePayload.get('match'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Event_External_Name__c', asString(performancePayload.get('eventExternalName')));
+        setCustomField(performanceRecord, 'External_Description__c', serializeRawValue(performancePayload.get('externalDescription'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Internal_Description__c', serializeRawValue(performancePayload.get('internalDescription'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Sale_Close_Exceptions__c', serializeRawValue(performancePayload.get('saleCloseExceptions'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Seat_Categories__c', serializeRawValue(performancePayload.get('seatCategories'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Prices__c', serializeRawValue(performancePayload.get('prices'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Charges__c', serializeRawValue(performancePayload.get('charges'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Comfort_Variable_Values__c', serializeRawValue(performancePayload.get('comfortVariableValues'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Performance_Type__c', asString(performancePayload.get('performanceType')));
+        setCustomField(performanceRecord, 'Visit_Language_Code__c', asString(performancePayload.get('visitLanguageCode')));
+        setCustomField(performanceRecord, 'Max_Seats_Per_Order__c', asDecimal(performancePayload.get('maxSeatsPerOrder')));
+        setCustomField(performanceRecord, 'Item_Ids__c', serializeRawValue(performancePayload.get('itemIds'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Performance_Social_Network_Links__c', serializeRawValue(performancePayload.get('performanceSocialNetworkLinks'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(performanceRecord, 'Sale_Periods__c', serializeRawValue(performancePayload.get('salePeriods'), MAX_LONG_TEXT_LENGTH));
+        return performanceRecord;
+    }
+
+    private static Map<Decimal, Inventory__c> getExistingInventoryByExternalId(List<InventoryWrapper> products) {
+        Set<Decimal> externalIds = new Set<Decimal>();
+        for (InventoryWrapper inventoryWrapper : products) {
+            if (inventoryWrapper != null && inventoryWrapper.id != null) {
+                externalIds.add(Decimal.valueOf(String.valueOf(inventoryWrapper.id)));
+            }
+        }
+
+        Map<Decimal, Inventory__c> existingInventoryByExternalId = new Map<Decimal, Inventory__c>();
+        if (externalIds.isEmpty()) {
+            return existingInventoryByExternalId;
+        }
+
+        for (Inventory__c inventoryRecord : [
+            SELECT Id, Inventory_Id__c
+            FROM Inventory__c
+            WHERE Inventory_Id__c IN :externalIds
+        ]) {
+            if (inventoryRecord.Inventory_Id__c != null) {
+                existingInventoryByExternalId.put(inventoryRecord.Inventory_Id__c, inventoryRecord);
+            }
+        }
+
+        return existingInventoryByExternalId;
+    }
+
+    private static Inventory__c getExistingInventoryRecord(
+        InventoryWrapper inventoryWrapper,
+        Map<Decimal, Inventory__c> existingInventoryByExternalId
+    ) {
+        if (
+            inventoryWrapper == null ||
+            inventoryWrapper.id == null ||
+            existingInventoryByExternalId == null
+        ) {
+            return null;
+        }
+
+        return existingInventoryByExternalId.get(Decimal.valueOf(String.valueOf(inventoryWrapper.id)));
+    }
+
+    private static Map<Id, SObject> getSingleRelatedByInventoryId(List<SObject> records) {
+        Map<Id, SObject> recordsByInventoryId = new Map<Id, SObject>();
+        for (SObject recordItem : records) {
+            Id inventoryId = (Id) recordItem.get('Inventory__c');
+            if (inventoryId != null && !recordsByInventoryId.containsKey(inventoryId)) {
+                recordsByInventoryId.put(inventoryId, recordItem);
+            }
+        }
+        return recordsByInventoryId;
+    }
+
+    private static void deleteUndesiredRelatedRecords(
+        Map<Id, SObject> existingRecordsByInventoryId,
+        Set<Id> desiredInventoryIds,
+        Set<Id> processedInventoryIds
+    ) {
+        List<SObject> recordsToDelete = new List<SObject>();
+        for (Id inventoryId : processedInventoryIds) {
+            if (desiredInventoryIds.contains(inventoryId)) {
+                continue;
+            }
+
+            SObject existingRecord = existingRecordsByInventoryId.get(inventoryId);
+            if (existingRecord != null) {
+                recordsToDelete.add(existingRecord);
+            }
+        }
+
+        if (!recordsToDelete.isEmpty()) {
+            delete recordsToDelete;
+        }
+    }
+
     private static String buildRecordName(InventoryWrapper inventoryWrapper) {
+        String italianInternalName = extractTranslatedValue(inventoryWrapper == null ? null : inventoryWrapper.internalName, 'it');
+        if (!String.isBlank(italianInternalName)) {
+            return italianInternalName.left(80);
+        }
+
+        String englishInternalName = extractTranslatedValue(inventoryWrapper == null ? null : inventoryWrapper.internalName, 'en');
+        if (!String.isBlank(englishInternalName)) {
+            return englishInternalName.left(80);
+        }
+
         if (!String.isBlank(inventoryWrapper.code)) {
             return inventoryWrapper.code.left(80);
         }
@@ -239,16 +682,131 @@ global without sharing class InventoryRestResource {
         return 'Inventory';
     }
 
+    private static String buildInventoryEventName(Map<String, Object> eventPayload) {
+        if (eventPayload == null) {
+            return 'Inventory Event';
+        }
+
+        String italianActivityName = extractTranslatedValue(eventPayload.get('activityExternalName'), 'it');
+        if (!String.isBlank(italianActivityName)) {
+            return italianActivityName.left(80);
+        }
+
+        String englishActivityName = extractTranslatedValue(eventPayload.get('activityExternalName'), 'en');
+        if (!String.isBlank(englishActivityName)) {
+            return englishActivityName.left(80);
+        }
+
+        Decimal activityId = asDecimal(eventPayload.get('activityId'));
+        if (activityId != null) {
+            return String.valueOf(activityId).left(80);
+        }
+
+        return 'Inventory Event';
+    }
+
+    private static String buildRelatedRecordName(Inventory__c inventoryRecord, String suffix) {
+        String inventoryName = inventoryRecord == null ? null : inventoryRecord.Name;
+        if (String.isBlank(inventoryName)) {
+            inventoryName = 'Inventory';
+        }
+
+        if (String.isBlank(suffix)) {
+            return inventoryName.left(80);
+        }
+
+        return (inventoryName + ' - ' + suffix).left(80);
+    }
+
+    private static Boolean isSimpleTicketSubtype(String productFamilySubType) {
+        if (String.isBlank(productFamilySubType)) {
+            return false;
+        }
+
+        String normalizedSubtype = productFamilySubType.replace('_', '').replace(' ', '').toUpperCase();
+        String normalizedSimpleTicket = SIMPLE_TICKET_SUBTYPE.replace('_', '').toUpperCase();
+        return normalizedSubtype == normalizedSimpleTicket;
+    }
+
+    private static String buildPerformanceName(Map<String, Object> performancePayload) {
+        if (performancePayload == null) {
+            return 'Performance';
+        }
+
+        String italianInternalName = extractTranslatedValue(performancePayload.get('internalName'), 'it');
+        if (!String.isBlank(italianInternalName)) {
+            return italianInternalName.left(80);
+        }
+
+        String englishInternalName = extractTranslatedValue(performancePayload.get('internalName'), 'en');
+        if (!String.isBlank(englishInternalName)) {
+            return englishInternalName.left(80);
+        }
+
+        String italianExternalName = extractTranslatedValue(performancePayload.get('externalName'), 'it');
+        if (!String.isBlank(italianExternalName)) {
+            return italianExternalName.left(80);
+        }
+
+        String englishExternalName = extractTranslatedValue(performancePayload.get('externalName'), 'en');
+        if (!String.isBlank(englishExternalName)) {
+            return englishExternalName.left(80);
+        }
+
+        String code = asString(performancePayload.get('code'));
+        if (!String.isBlank(code)) {
+            return code.left(80);
+        }
+
+        Decimal performanceId = asDecimal(performancePayload.get('id'));
+        if (performanceId != null) {
+            return String.valueOf(performanceId).left(80);
+        }
+
+        return 'Performance';
+    }
+
+    private static String extractTranslatedValue(Object rawValue, String preferredLocale) {
+        if (!(rawValue instanceof Map<String, Object>) || String.isBlank(preferredLocale)) {
+            return null;
+        }
+
+        Object translationsRaw = ((Map<String, Object>) rawValue).get('translations');
+        if (!(translationsRaw instanceof List<Object>)) {
+            return null;
+        }
+
+        for (Object item : (List<Object>) translationsRaw) {
+            if (!(item instanceof Map<String, Object>)) {
+                continue;
+            }
+
+            Map<String, Object> translation = (Map<String, Object>) item;
+            String locale = asString(translation.get('locale'));
+            String value = asString(translation.get('value'));
+            if (preferredLocale.equalsIgnoreCase(locale) && !String.isBlank(value)) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
     private static void setCustomField(SObject recordItem, String fieldApiName, Object value) {
-        if (recordItem == null || String.isBlank(fieldApiName) || value == null) {
+        if (recordItem == null || String.isBlank(fieldApiName)) {
             return;
         }
 
         Map<String, SObjectField> fieldMap = recordItem.getSObjectType().getDescribe().fields.getMap();
         if (fieldMap.containsKey(fieldApiName)) {
+            if (value == null) {
+                recordItem.put(fieldApiName, null);
+                return;
+            }
+
             DescribeFieldResult fieldDescribe = fieldMap.get(fieldApiName).getDescribe();
             Object coercedValue = coerceFieldValue(fieldDescribe, value);
-            if (coercedValue != null) {
+            if (coercedValue != null || value == null) {
                 recordItem.put(fieldApiName, coercedValue);
             }
         }
@@ -396,6 +954,57 @@ global without sharing class InventoryRestResource {
         }
 
         return null;
+    }
+
+    private static Date asDate(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Date) {
+            return (Date) value;
+        }
+
+        String stringValue = asString(value);
+        if (String.isBlank(stringValue) || stringValue.length() < 10) {
+            return null;
+        }
+
+        try {
+            return Date.valueOf(stringValue.substring(0, 10));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static Datetime asDatetime(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Datetime) {
+            return (Datetime) value;
+        }
+
+        Long epochMillis = asLong(value);
+        if (epochMillis != null) {
+            try {
+                return Datetime.newInstanceGmt(1970, 1, 1, 0, 0, 0).addSeconds(Integer.valueOf(String.valueOf(epochMillis / 1000)));
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        String stringValue = asString(value);
+        if (String.isBlank(stringValue) || stringValue.length() < 19) {
+            return null;
+        }
+
+        try {
+            return Datetime.valueOf(stringValue.substring(0, 19).replace('T', ' '));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static void setResponse(Integer statusCode, Map<String, Object> payload, Integration_Log__c logRec, Boolean isError) {

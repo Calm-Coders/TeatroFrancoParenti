@@ -467,11 +467,11 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Sales_Channel_Type__c', truncateValue(details.salesChannelType, 80));
         setCustomField(orderRecord, 'Organization_Code__c', truncateValue(details.organizationCode, 80));
         setCustomField(orderRecord, 'Multicurrency__c', details.multicurrency);
-        setCustomField(orderRecord, 'Sale_Amount__c', details.saleAmount);
-        setCustomField(orderRecord, 'Pre_Sale_Amount__c', details.preSaleAmount);
-        setCustomField(orderRecord, 'Reservation_Amount__c', details.reservationAmount);
-        setCustomField(orderRecord, 'Option_Amount__c', details.optionAmount);
-        setCustomField(orderRecord, 'Waiting_Account_Balance_Amount__c', details.waitingAccountBalanceAmount);
+        setCustomField(orderRecord, 'Sale_Amount__c', scaleStoredAmount(details.saleAmount));
+        setCustomField(orderRecord, 'Pre_Sale_Amount__c', scaleStoredAmount(details.preSaleAmount));
+        setCustomField(orderRecord, 'Reservation_Amount__c', scaleStoredAmount(details.reservationAmount));
+        setCustomField(orderRecord, 'Option_Amount__c', scaleStoredAmount(details.optionAmount));
+        setCustomField(orderRecord, 'Waiting_Account_Balance_Amount__c', scaleStoredAmount(details.waitingAccountBalanceAmount));
         setCustomField(orderRecord, 'Movement_Ticket_Datas__c', serializeRawValue(rawDetails.get('movementTicketDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Sales_Channel_Name__c', serializeRawValue(rawDetails.get('salesChannelName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Generated_Contiguities__c', serializeRawValue(rawDetails.get('generatedContiguities'), MAX_SECUTIX_LONG_TEXT_LENGTH));
@@ -597,10 +597,10 @@ global without sharing class OrderRestResource {
             setCustomField(operationRecord, 'Kind__c', truncateValue(operation == null ? null : operation.kind, 80));
             setCustomField(operationRecord, 'Type__c', truncateValue(operation == null ? null : operation.type, 80));
             setCustomField(operationRecord, 'Quantity__c', operation == null ? null : operation.quantity);
-            setCustomField(operationRecord, 'Base_Price__c', operation == null ? null : operation.basePrice);
-            setCustomField(operationRecord, 'Unit_Price__c', operation == null ? null : operation.unitPrice);
-            setCustomField(operationRecord, 'Without_Vat_Total_Amount__c', operation == null ? null : operation.withoutVatTotalAmount);
-            setCustomField(operationRecord, 'Total_Amount__c', operation == null ? null : operation.totalAmount);
+            setCustomField(operationRecord, 'Base_Price__c', scaleStoredAmount(operation == null ? null : operation.basePrice));
+            setCustomField(operationRecord, 'Unit_Price__c', scaleStoredAmount(operation == null ? null : operation.unitPrice));
+            setCustomField(operationRecord, 'Without_Vat_Total_Amount__c', scaleStoredAmount(operation == null ? null : operation.withoutVatTotalAmount));
+            setCustomField(operationRecord, 'Total_Amount__c', scaleStoredAmount(operation == null ? null : operation.totalAmount));
             setCustomField(operationRecord, 'Product_Id__c', decimalFromLong(operation == null ? null : operation.productId));
             setCustomField(operationRecord, 'Product__c', truncateValue(operation == null ? null : operation.product, 255));
             setCustomField(operationRecord, 'Product_Code__c', truncateValue(operation == null ? null : operation.productCode, 80));
@@ -633,7 +633,7 @@ global without sharing class OrderRestResource {
             setCustomField(operationRecord, 'Expiration_Date__c', truncateValue(operation == null ? null : operation.expirationDate, 40));
             setCustomField(operationRecord, 'Item_Display_External_Designation__c', truncateValue(operation == null ? null : operation.itemDisplayExternalDesignation, 255));
             setCustomField(operationRecord, 'File_Id__c', decimalFromLong(operation == null ? null : operation.fileId));
-            setCustomField(operationRecord, 'Waiting_Account_Balance__c', operation == null ? null : operation.waitingAccountBalance);
+            setCustomField(operationRecord, 'Waiting_Account_Balance__c', scaleStoredAmount(operation == null ? null : operation.waitingAccountBalance));
             setCustomField(operationRecord, 'Season__c', truncateValue(operation == null ? null : operation.season, 255));
             setCustomField(operationRecord, 'Season_Code__c', truncateValue(operation == null ? null : operation.seasonCode, 80));
             setCustomField(operationRecord, 'Season_Id__c', decimalFromLong(operation == null ? null : operation.seasonId));
@@ -1216,6 +1216,10 @@ global without sharing class OrderRestResource {
 
     private static Decimal decimalFromLong(Long value) {
         return value == null ? null : Decimal.valueOf(String.valueOf(value));
+    }
+
+    private static Decimal scaleStoredAmount(Decimal value) {
+        return value == null ? null : value / 1000;
     }
 
     private static void setResponse( Integer statusCode, Map<String, Object> payload,Integration_Log__c logRec, Boolean isError) {

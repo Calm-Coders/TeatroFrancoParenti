@@ -35,7 +35,8 @@ private class OrderRestResourceTest {
         System.assertEquals(1, ((List<Object>) resp.get('contactReferences')).size());
 
         Order insertedOrder = [
-            SELECT Id, AccountId, BillToContactId, ShipToContactId, Status, EffectiveDate, Description
+            SELECT Id, AccountId, BillToContactId, ShipToContactId, Status, EffectiveDate, Description,
+                   Sale_Amount__c, Pre_Sale_Amount__c
             FROM Order
             ORDER BY CreatedDate DESC
             LIMIT 1
@@ -45,6 +46,8 @@ private class OrderRestResourceTest {
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals('Draft', insertedOrder.Status);
         System.assertEquals(null, insertedOrder.Description);
+        System.assertEquals(0, insertedOrder.Sale_Amount__c);
+        System.assertEquals(14, insertedOrder.Pre_Sale_Amount__c);
 
         Integration_Log__c logRec = [
             SELECT Flow_Name__c, Integration_Type__c, Is_Error__c, Request_Endpoint__c, Response_State__c
@@ -168,6 +171,7 @@ private class OrderRestResourceTest {
         Id orderId = [SELECT Id FROM Order WHERE Order_Id__c = '454134' LIMIT 1].Id;
         SObject operationRecord = Database.query(
             'SELECT Event_Id__c, Physical_Configuration_Id__c, Contingent__c, Numbered__c, ' +
+            'Base_Price__c, Unit_Price__c, Without_Vat_Total_Amount__c, Total_Amount__c, ' +
             'Seat_Category_Rank__c, Audience_SubCategory_Rank__c, Audience_SubCategory_Require_Attachment__c, ' +
             'Activity_Type__c, Performance_Duration__c, Item_Display_External_Designation__c, File_Id__c, ' +
             'Cross_Sell_Parent_Operation_Ids__c, Comfort_Variable_Values__c, Performance_Code__c, ' +
@@ -182,6 +186,10 @@ private class OrderRestResourceTest {
         System.assertEquals(10228554659410L, Long.valueOf(String.valueOf(operationRecord.get('Physical_Configuration_Id__c'))));
         System.assertEquals('WEB', (String) operationRecord.get('Contingent__c'));
         System.assertEquals(true, (Boolean) operationRecord.get('Numbered__c'));
+        System.assertEquals(22, (Decimal) operationRecord.get('Base_Price__c'));
+        System.assertEquals(22, (Decimal) operationRecord.get('Unit_Price__c'));
+        System.assertEquals(20, (Decimal) operationRecord.get('Without_Vat_Total_Amount__c'));
+        System.assertEquals(22, (Decimal) operationRecord.get('Total_Amount__c'));
         System.assertEquals(1, Integer.valueOf(String.valueOf(operationRecord.get('Seat_Category_Rank__c'))));
         System.assertEquals(1, Integer.valueOf(String.valueOf(operationRecord.get('Audience_SubCategory_Rank__c'))));
         System.assertEquals(false, (Boolean) operationRecord.get('Audience_SubCategory_Require_Attachment__c'));
@@ -361,7 +369,7 @@ private class OrderRestResourceTest {
         System.assertEquals(existingOrder.Id, updatedOrder.Id);
         System.assertEquals('Draft', updatedOrder.Status);
         System.assertEquals(Date.newInstance(2026, 5, 20), updatedOrder.EffectiveDate);
-        System.assertEquals(50000, updatedOrder.Reservation_Amount__c);
+        System.assertEquals(50, updatedOrder.Reservation_Amount__c);
         System.assertEquals('10286', updatedOrder.Contact_Reference__c);
         System.assertEquals(null, updatedOrder.Product_Id__c);
         System.assertEquals(directMatchAccount.Id, updatedOrder.AccountId);
