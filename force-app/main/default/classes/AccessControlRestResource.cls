@@ -139,23 +139,21 @@ global without sharing class AccessControlRestResource {
     }
 
     private static Access_Control__c saveAccessControlRecord(AccessControlWrapper accessControlWrapper) {
-        Id existingRecordId = resolveExistingAccessControlId(accessControlWrapper);
-        Access_Control__c recordItem = buildAccessControlRecord(accessControlWrapper, existingRecordId);
-        if (existingRecordId == null) {
+        Access_Control__c recordItem = buildAccessControlRecord(accessControlWrapper);
+        // Upsert on the unique barcode so concurrent scans of the same ticket
+        // collide at database level instead of creating duplicate records.
+        if (String.isBlank(accessControlWrapper.barcode)) {
             insert recordItem;
         } else {
-            update recordItem;
+            upsert recordItem Barcode__c;
         }
         return recordItem;
     }
 
-    private static Access_Control__c buildAccessControlRecord(AccessControlWrapper accessControlWrapper, Id existingRecordId) {
+    private static Access_Control__c buildAccessControlRecord(AccessControlWrapper accessControlWrapper) {
         Access_Control__c recordItem = new Access_Control__c(
             Name = buildRecordName(accessControlWrapper)
         );
-        if (existingRecordId != null) {
-            recordItem.Id = existingRecordId;
-        }
 
         setCustomField(recordItem, 'Barcode__c', truncateValue(accessControlWrapper.barcode, 255));
         setCustomField(recordItem, 'Ticket_Id__c', accessControlWrapper.ticketId);
@@ -177,23 +175,6 @@ global without sharing class AccessControlRestResource {
         setCustomField(recordItem, 'Price__c', accessControlWrapper.price);
 
         return recordItem;
-    }
-
-    private static Id resolveExistingAccessControlId(AccessControlWrapper accessControlWrapper) {
-        String barcode = truncateValue(accessControlWrapper == null ? null : accessControlWrapper.barcode, 255);
-        if (String.isBlank(barcode)) {
-            return null;
-        }
-
-        List<Access_Control__c> matchingRecords = [
-            SELECT Id
-            FROM Access_Control__c
-            WHERE Barcode__c = :barcode
-            ORDER BY LastModifiedDate DESC, CreatedDate DESC, Id DESC
-            LIMIT 1
-        ];
-
-        return matchingRecords.isEmpty() ? null : matchingRecords[0].Id;
     }
 
     private static String buildRecordName(AccessControlWrapper accessControlWrapper) {

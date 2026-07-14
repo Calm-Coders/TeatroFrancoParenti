@@ -28,7 +28,7 @@ global without sharing class InventoryRestResource {
 
             List<InventoryWrapper> products;
             try {
-                products = deserializePayloads(rawBody);
+                products = dedupePayloadsById(deserializePayloads(rawBody));
             } catch (System.JSONException e) {
                 populateException(logRec, e);
                 setResponse(400, new Map<String, Object>{ 'success' => false, 'message' => 'Invalid JSON payload.' }, logRec, true);
@@ -44,11 +44,10 @@ global without sharing class InventoryRestResource {
             List<String> productCodes = new List<String>();
             List<String> productStates = new List<String>();
             List<Inventory__c> inventoryRecords = new List<Inventory__c>();
-            Map<Decimal, Inventory__c> existingInventoryByExternalId = getExistingInventoryByExternalId(products);
 
             for (InventoryWrapper inventoryWrapper : products) {
                 validatePayload(inventoryWrapper);
-                inventoryRecords.add(buildInventoryRecord(inventoryWrapper, existingInventoryByExternalId));
+                inventoryRecords.add(buildInventoryRecord(inventoryWrapper));
 
                 if (inventoryWrapper.id != null) {
                     productIds.add(String.valueOf(inventoryWrapper.id));
@@ -63,7 +62,19 @@ global without sharing class InventoryRestResource {
                 }
             }
 
-            upsert inventoryRecords;
+            // Upsert on the unique external id so concurrent webhook calls for the
+            // same product collide at database level instead of creating duplicates.
+            List<Inventory__c> recordsWithExternalId = new List<Inventory__c>();
+            List<Inventory__c> recordsWithoutExternalId = new List<Inventory__c>();
+            for (Inventory__c inventoryRecord : inventoryRecords) {
+                if (inventoryRecord.Inventory_Id__c != null) {
+                    recordsWithExternalId.add(inventoryRecord);
+                } else {
+                    recordsWithoutExternalId.add(inventoryRecord);
+                }
+            }
+            upsert recordsWithExternalId Inventory_Id__c;
+            insert recordsWithoutExternalId;
 
             Set<Id> inventoryIds = new Set<Id>();
             for (Inventory__c inventoryRecord : inventoryRecords) {
@@ -251,6 +262,30 @@ global without sharing class InventoryRestResource {
         return payloads;
     }
 
+    // The middleware sometimes repeats the same product inside one request body;
+    // keep only the last occurrence per external id so one call cannot insert twins.
+    private static List<InventoryWrapper> dedupePayloadsById(List<InventoryWrapper> payloads) {
+        Map<String, Integer> indexByExternalId = new Map<String, Integer>();
+        List<InventoryWrapper> deduped = new List<InventoryWrapper>();
+        for (InventoryWrapper inventoryWrapper : payloads) {
+            String externalId = (inventoryWrapper == null || inventoryWrapper.id == null)
+                ? null
+                : String.valueOf(inventoryWrapper.id);
+            if (externalId == null) {
+                deduped.add(inventoryWrapper);
+                continue;
+            }
+            Integer existingIndex = indexByExternalId.get(externalId);
+            if (existingIndex != null) {
+                deduped[existingIndex] = inventoryWrapper;
+            } else {
+                indexByExternalId.put(externalId, deduped.size());
+                deduped.add(inventoryWrapper);
+            }
+        }
+        return deduped;
+    }
+
     private static InventoryWrapper buildWrapper(Object rawPayload) {
         return new InventoryWrapperFactory().build(rawPayload);
     }
@@ -265,14 +300,12 @@ global without sharing class InventoryRestResource {
         }
     }
 
-    private static Inventory__c buildInventoryRecord(InventoryWrapper inventoryWrapper, Map<Decimal, Inventory__c> existingInventoryByExternalId) {
-        Inventory__c existingInventory = getExistingInventoryRecord(inventoryWrapper, existingInventoryByExternalId);
+    private static Inventory__c buildInventoryRecord(InventoryWrapper inventoryWrapper) {
+        // No pre-query matching: the upsert on the unique Inventory_Id__c external id
+        // finds the existing record atomically, which a SELECT-then-upsert cannot.
         Inventory__c recordItem = new Inventory__c(
             Name = buildRecordName(inventoryWrapper)
         );
-        if (existingInventory != null) {
-            recordItem.Id = existingInventory.Id;
-        }
 
         setCustomField(recordItem, 'Inventory_Id__c', inventoryWrapper.id);
         setCustomField(recordItem, 'Prev_Season_Product_Id__c', inventoryWrapper.prevSeasonProductId);
@@ -451,47 +484,6 @@ global without sharing class InventoryRestResource {
         setCustomField(performanceRecord, 'Performance_Social_Network_Links__c', serializeRawValue(performancePayload.get('performanceSocialNetworkLinks'), MAX_LONG_TEXT_LENGTH));
         setCustomField(performanceRecord, 'Sale_Periods__c', serializeRawValue(performancePayload.get('salePeriods'), MAX_LONG_TEXT_LENGTH));
         return performanceRecord;
-    }
-
-    private static Map<Decimal, Inventory__c> getExistingInventoryByExternalId(List<InventoryWrapper> products) {
-        Set<Decimal> externalIds = new Set<Decimal>();
-        for (InventoryWrapper inventoryWrapper : products) {
-            if (inventoryWrapper != null && inventoryWrapper.id != null) {
-                externalIds.add(Decimal.valueOf(String.valueOf(inventoryWrapper.id)));
-            }
-        }
-
-        Map<Decimal, Inventory__c> existingInventoryByExternalId = new Map<Decimal, Inventory__c>();
-        if (externalIds.isEmpty()) {
-            return existingInventoryByExternalId;
-        }
-
-        for (Inventory__c inventoryRecord : [
-            SELECT Id, Inventory_Id__c
-            FROM Inventory__c
-            WHERE Inventory_Id__c IN :externalIds
-        ]) {
-            if (inventoryRecord.Inventory_Id__c != null) {
-                existingInventoryByExternalId.put(inventoryRecord.Inventory_Id__c, inventoryRecord);
-            }
-        }
-
-        return existingInventoryByExternalId;
-    }
-
-    private static Inventory__c getExistingInventoryRecord(
-        InventoryWrapper inventoryWrapper,
-        Map<Decimal, Inventory__c> existingInventoryByExternalId
-    ) {
-        if (
-            inventoryWrapper == null ||
-            inventoryWrapper.id == null ||
-            existingInventoryByExternalId == null
-        ) {
-            return null;
-        }
-
-        return existingInventoryByExternalId.get(Decimal.valueOf(String.valueOf(inventoryWrapper.id)));
     }
 
     private static Map<Id, SObject> getSingleRelatedByInventoryId(List<SObject> records) {

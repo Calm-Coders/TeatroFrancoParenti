@@ -226,18 +226,23 @@ private class AccessControlRestResourceTest {
     }
 
     @IsTest
-    static void receiveAccessControl_usesNewestMatchingInventoryWhenDuplicatesExist() {
-        Inventory__c olderInventory = new Inventory__c(
-            Name = 'Older Access Inventory',
+    static void receiveAccessControl_duplicateInventoryExternalIdsAreRejected() {
+        Inventory__c existingInventory = new Inventory__c(
+            Name = 'Existing Access Inventory',
             Inventory_Id__c = 101095635789L
         );
-        insert olderInventory;
+        insert existingInventory;
 
-        Inventory__c newerInventory = new Inventory__c(
-            Name = 'Newer Access Inventory',
+        Inventory__c duplicateInventory = new Inventory__c(
+            Name = 'Duplicate Access Inventory',
             Inventory_Id__c = 101095635789L
         );
-        insert newerInventory;
+        try {
+            insert duplicateInventory;
+            System.assert(false, 'Expected DUPLICATE_VALUE on the unique Inventory_Id__c external id.');
+        } catch (DmlException e) {
+            System.assert(e.getDmlMessage(0).toLowerCase().contains('duplicate'), e.getDmlMessage(0));
+        }
 
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/v1/accesscontrols';
@@ -261,29 +266,34 @@ private class AccessControlRestResourceTest {
             WHERE Barcode__c = 'INV-LINK-002'
             LIMIT 1
         ];
-        System.assertEquals(newerInventory.Id, insertedRecord.Inventory__c);
+        System.assertEquals(existingInventory.Id, insertedRecord.Inventory__c);
     }
 
     @IsTest
-    static void receiveAccessControl_usesNewestMatchingOrderWhenDuplicatesExist() {
+    static void receiveAccessControl_duplicateOrderExternalIdsAreRejected() {
         Account accountRecord = new Account(Name = 'Duplicate Order Account');
         insert accountRecord;
 
-        Order olderOrder = new Order(
+        Order existingOrder = new Order(
             AccountId = accountRecord.Id,
             EffectiveDate = Date.newInstance(2026, 6, 16),
             Status = 'Draft',
             Order_Id__c = '10000405495'
         );
-        insert olderOrder;
+        insert existingOrder;
 
-        Order newerOrder = new Order(
+        Order duplicateOrder = new Order(
             AccountId = accountRecord.Id,
             EffectiveDate = Date.newInstance(2026, 6, 17),
             Status = 'Draft',
             Order_Id__c = '10000405495'
         );
-        insert newerOrder;
+        try {
+            insert duplicateOrder;
+            System.assert(false, 'Expected DUPLICATE_VALUE on the unique Order_Id__c external id.');
+        } catch (DmlException e) {
+            System.assert(e.getDmlMessage(0).toLowerCase().contains('duplicate'), e.getDmlMessage(0));
+        }
 
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/v1/accesscontrols';
@@ -308,7 +318,7 @@ private class AccessControlRestResourceTest {
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        System.assertEquals(newerOrder.Id, insertedRecord.Order__c);
+        System.assertEquals(existingOrder.Id, insertedRecord.Order__c);
     }
 
     @IsTest
