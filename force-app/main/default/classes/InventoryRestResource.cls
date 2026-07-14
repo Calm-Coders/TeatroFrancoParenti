@@ -249,11 +249,11 @@ global without sharing class InventoryRestResource {
     }
 
     private static InventoryWrapper buildWrapper(Object rawPayload) {
-        return InventoryWrapperFactory.build(rawPayload);
+        return new InventoryWrapperFactory().build(rawPayload);
     }
 
     private static InventoryWrapper buildInventoryWrapper(Map<String, Object> rawPayload) {
-        return InventoryWrapperFactory.build(rawPayload);
+        return new InventoryWrapperFactory().build(rawPayload);
     }
 
     private static void validatePayload(InventoryWrapper inventoryWrapper) {
@@ -325,7 +325,7 @@ global without sharing class InventoryRestResource {
         Inventory__c inventoryRecord,
         Inventory_Event__c existingEventRecord
     ) {
-        return InventoryEventBuilder.build(inventoryWrapper, inventoryRecord, existingEventRecord);
+        return new InventoryEventBuilder().build(inventoryWrapper, inventoryRecord, existingEventRecord);
     }
 
     private static Membership__c buildMembershipRecord(
@@ -333,7 +333,7 @@ global without sharing class InventoryRestResource {
         Inventory__c inventoryRecord,
         Membership__c existingMembershipRecord
     ) {
-        return MembershipBuilder.build(inventoryWrapper, inventoryRecord, existingMembershipRecord);
+        return new MembershipBuilder().build(inventoryWrapper, inventoryRecord, existingMembershipRecord);
     }
 
     private static Pack__c buildPackRecord(
@@ -341,7 +341,7 @@ global without sharing class InventoryRestResource {
         Inventory__c inventoryRecord,
         Pack__c existingPackRecord
     ) {
-        return PackBuilder.build(inventoryWrapper, inventoryRecord, existingPackRecord);
+        return new PackBuilder().build(inventoryWrapper, inventoryRecord, existingPackRecord);
     }
 
     private static Season_Ticket__c buildSeasonTicketRecord(
@@ -349,7 +349,7 @@ global without sharing class InventoryRestResource {
         Inventory__c inventoryRecord,
         Season_Ticket__c existingSeasonTicketRecord
     ) {
-        return SeasonTicketBuilder.build(inventoryWrapper, inventoryRecord, existingSeasonTicketRecord);
+        return new SeasonTicketBuilder().build(inventoryWrapper, inventoryRecord, existingSeasonTicketRecord);
     }
 
     private static List<Performance__c> buildPerformanceRecords(InventoryWrapper inventoryWrapper, Inventory_Event__c eventRecord) {
@@ -895,7 +895,7 @@ global without sharing class InventoryRestResource {
     }
 
     private class InventoryWrapperFactory {
-        private static InventoryWrapper build(Object rawPayload) {
+        private InventoryWrapper build(Object rawPayload) {
             if (!(rawPayload instanceof Map<String, Object>)) {
                 throw new InventoryWebhookException('Each inventory payload must be a valid JSON object.');
             }
@@ -903,7 +903,7 @@ global without sharing class InventoryRestResource {
             return build((Map<String, Object>) rawPayload);
         }
 
-        private static InventoryWrapper build(Map<String, Object> rawPayload) {
+        private InventoryWrapper build(Map<String, Object> rawPayload) {
             InventoryWrapper inventoryWrapper = new InventoryWrapper();
             inventoryWrapper.id = asLong(rawPayload.get('id'));
             inventoryWrapper.prevSeasonProductId = asLong(rawPayload.get('prevSeasonProductId'));
@@ -955,7 +955,7 @@ global without sharing class InventoryRestResource {
     }
 
     private class InventoryEventBuilder {
-        private static Inventory_Event__c build(
+        private Inventory_Event__c build(
             InventoryWrapper inventoryWrapper,
             Inventory__c inventoryRecord,
             Inventory_Event__c existingEventRecord
@@ -995,7 +995,7 @@ global without sharing class InventoryRestResource {
     }
 
     private class MembershipBuilder {
-        private static Membership__c build(
+        private Membership__c build(
             InventoryWrapper inventoryWrapper,
             Inventory__c inventoryRecord,
             Membership__c existingMembershipRecord
@@ -1030,7 +1030,7 @@ global without sharing class InventoryRestResource {
     }
 
     private class PackBuilder {
-        private static Pack__c build(
+        private Pack__c build(
             InventoryWrapper inventoryWrapper,
             Inventory__c inventoryRecord,
             Pack__c existingPackRecord
@@ -1061,7 +1061,7 @@ global without sharing class InventoryRestResource {
     }
 
     private class SeasonTicketBuilder {
-        private static Season_Ticket__c build(
+        private Season_Ticket__c build(
             InventoryWrapper inventoryWrapper,
             Inventory__c inventoryRecord,
             Season_Ticket__c existingSeasonTicketRecord
