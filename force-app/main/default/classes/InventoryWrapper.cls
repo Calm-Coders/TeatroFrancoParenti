@@ -44,4 +44,17 @@ global class InventoryWrapper {
     public Object culturalContact;
     public Boolean waitingListAllowed;
     public Long partnerContactId;
+    public Long seasonId;
+    public Object contactProductLinks;
+    public Boolean grantedToTourPromoter;
+    public Boolean exchangeable;
+    public String xlargeImageUrl;
+    public String additionalPartnerContactNumber;
+    public String invoicePartnerContactNumber;
+    public String additionalState;
+    public String remark;
+    public Decimal ticketTransferLimit;
+    public Object redemptionPeriod;
+    public Object redemptionProducts;
+    public Object subTopics;
 }

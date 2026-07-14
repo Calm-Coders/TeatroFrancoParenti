@@ -16,11 +16,10 @@ private class InventoryRestResourceTest {
         InventoryRestResource.receiveInventory();
         Test.stopTest();
 
-        System.assertEquals(200, RestContext.response.statusCode);
-
         Map<String, Object> resp = (Map<String, Object>) JSON.deserializeUntyped(
             RestContext.response.responseBody.toString()
         );
+        System.assertEquals(200, RestContext.response.statusCode, 'DEBUG server message: ' + resp.get('message'));
         System.assertEquals(true, resp.get('success'));
         System.assertEquals(1, ((List<Object>) resp.get('recordIds')).size());
         System.assertEquals(1, ((List<Object>) resp.get('productIds')).size());

@@ -1,7 +1,10 @@
 @RestResource(urlMapping='/v1/inventories')
 global without sharing class InventoryRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
-    private static final Integer MAX_LONG_TEXT_LENGTH = 32768;
+    // Long-text serialization cap. 32,768 silently truncated large event/seasonTicket/pack
+    // payloads (observed up to ~123k chars in prod logs); 131,072 is the platform max.
+    // setCustomField still truncates to each field's actual configured length.
+    private static final Integer MAX_LONG_TEXT_LENGTH = 131072;
     private static final String FLOW_NAME = 'InventoryRestResource.receiveInventory';
     private static final String SIMPLE_TICKET_SUBTYPE = 'SIMPLE_TICKET';
 
@@ -316,6 +319,19 @@ global without sharing class InventoryRestResource {
         setCustomField(recordItem, 'Cultural_Contact__c', serializeRawValue(inventoryWrapper.culturalContact, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Waiting_List_Allowed__c', inventoryWrapper.waitingListAllowed);
         setCustomField(recordItem, 'Partner_Contact_Id__c', inventoryWrapper.partnerContactId);
+        setCustomField(recordItem, 'Season_Id__c', inventoryWrapper.seasonId);
+        setCustomField(recordItem, 'Contact_Product_Links__c', serializeRawValue(inventoryWrapper.contactProductLinks, MAX_LONG_TEXT_LENGTH));
+        setCustomField(recordItem, 'Granted_To_Tour_Promoter__c', inventoryWrapper.grantedToTourPromoter);
+        setCustomField(recordItem, 'Exchangeable__c', inventoryWrapper.exchangeable);
+        setCustomField(recordItem, 'Xlarge_Image_Url__c', truncateValue(inventoryWrapper.xlargeImageUrl, 255));
+        setCustomField(recordItem, 'Additional_Partner_Contact_Number__c', truncateValue(inventoryWrapper.additionalPartnerContactNumber, 80));
+        setCustomField(recordItem, 'Invoice_Partner_Contact_Number__c', truncateValue(inventoryWrapper.invoicePartnerContactNumber, 80));
+        setCustomField(recordItem, 'Additional_State__c', truncateValue(inventoryWrapper.additionalState, 80));
+        setCustomField(recordItem, 'Remark__c', truncateValue(inventoryWrapper.remark, MAX_LONG_TEXT_LENGTH));
+        setCustomField(recordItem, 'Ticket_Transfer_Limit__c', inventoryWrapper.ticketTransferLimit);
+        setCustomField(recordItem, 'Redemption_Period__c', serializeRawValue(inventoryWrapper.redemptionPeriod, MAX_LONG_TEXT_LENGTH));
+        setCustomField(recordItem, 'Redemption_Products__c', serializeRawValue(inventoryWrapper.redemptionProducts, MAX_LONG_TEXT_LENGTH));
+        setCustomField(recordItem, 'Sub_Topics__c', serializeRawValue(inventoryWrapper.subTopics, MAX_LONG_TEXT_LENGTH));
 
         return recordItem;
     }
@@ -651,7 +667,13 @@ global without sharing class InventoryRestResource {
         Map<String, SObjectField> fieldMap = recordItem.getSObjectType().getDescribe().fields.getMap();
         if (fieldMap.containsKey(fieldApiName)) {
             if (value == null) {
-                recordItem.put(fieldApiName, null);
+                // Checkbox fields reject null: coerce to false so an omitted
+                // boolean in the payload does not fail the whole upsert.
+                if (fieldMap.get(fieldApiName).getDescribe().getType() == DisplayType.Boolean) {
+                    recordItem.put(fieldApiName, false);
+                } else {
+                    recordItem.put(fieldApiName, null);
+                }
                 return;
             }
 
@@ -950,6 +972,19 @@ global without sharing class InventoryRestResource {
             inventoryWrapper.culturalContact = rawPayload.get('culturalContact');
             inventoryWrapper.waitingListAllowed = asBoolean(rawPayload.get('waitingListAllowed'));
             inventoryWrapper.partnerContactId = asLong(rawPayload.get('partnerContactId'));
+            inventoryWrapper.seasonId = asLong(rawPayload.get('seasonId'));
+            inventoryWrapper.contactProductLinks = rawPayload.get('contactProductLinks');
+            inventoryWrapper.grantedToTourPromoter = asBoolean(rawPayload.get('grantedToTourPromoter'));
+            inventoryWrapper.exchangeable = asBoolean(rawPayload.get('exchangeable'));
+            inventoryWrapper.xlargeImageUrl = asString(rawPayload.get('xlargeImageUrl'));
+            inventoryWrapper.additionalPartnerContactNumber = asString(rawPayload.get('additionalPartnerContactNumber'));
+            inventoryWrapper.invoicePartnerContactNumber = asString(rawPayload.get('invoicePartnerContactNumber'));
+            inventoryWrapper.additionalState = asString(rawPayload.get('additionalState'));
+            inventoryWrapper.remark = asString(rawPayload.get('remark'));
+            inventoryWrapper.ticketTransferLimit = asDecimal(rawPayload.get('ticketTransferLimit'));
+            inventoryWrapper.redemptionPeriod = rawPayload.get('redemptionPeriod');
+            inventoryWrapper.redemptionProducts = rawPayload.get('redemptionProducts');
+            inventoryWrapper.subTopics = rawPayload.get('subTopics');
             return inventoryWrapper;
         }
     }
