@@ -90,7 +90,17 @@
     font-size: 12.5px;
     margin: 0;
   }
-  .tabs { display: flex; gap: 2px; margin-top: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 14px; margin-top: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .tab-group { display: flex; gap: 2px; align-items: flex-end; }
+  .tg-label {
+    font: 700 9.5px system-ui, sans-serif;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 6px 8px 2px;
+    border-right: 1px solid var(--line);
+    margin-right: 4px;
+  }
   .tabs button {
     padding: 7px 16px;
     border: 1px solid transparent;
@@ -493,22 +503,32 @@
 
 <header>
   <div class="head-top">
-    <h1>Order JSON — Node Explorer</h1>
-    <p class="sub" id="subtitle">Structural map of every node · merged across array items</p>
+    <h1>TFP Integration Explorer</h1>
+    <p class="sub" id="subtitle">SecuTix catalog ↔ Salesforce · 4 webhook APIs · enrichment plan — live status 2026-07-14</p>
   </div>
   <div class="tabs" role="tablist">
-    <button id="tabTreeBtn" role="tab" aria-selected="true" aria-controls="treePane">Catalog tree</button>
-    <button id="tabGraphBtn" role="tab" aria-selected="false" aria-controls="graphPane">Relations graph</button>
-    <button id="tabMapBtn" role="tab" aria-selected="false" aria-controls="mapPane">Inventory ↔ Catalog</button>
-    <button id="tabInvBtn" role="tab" aria-selected="false" aria-controls="invPane">Inventory model</button>
-    <button id="tabApiInvBtn" role="tab" aria-selected="false" aria-controls="apiInvPane">API · Inventories</button>
-    <button id="tabApiOrdBtn" role="tab" aria-selected="false" aria-controls="apiOrdPane">API · Orders</button>
-    <button id="tabApiConBtn" role="tab" aria-selected="false" aria-controls="apiConPane">API · Contacts</button>
-    <button id="tabApiAccBtn" role="tab" aria-selected="false" aria-controls="apiAccPane">API · Access</button>
-    <button id="tabRelBtn" role="tab" aria-selected="false" aria-controls="relPane">Data relations</button>
-    <button id="tabPlanBtn" role="tab" aria-selected="false" aria-controls="planPane">Enrichment plan</button>
-    <button id="tabResBtn" role="tab" aria-selected="false" aria-controls="resPane">Resolve mapping</button>
-    <button id="tabChkBtn" role="tab" aria-selected="false" aria-controls="chkPane">Live check</button>
+    <div class="tab-group">
+      <span class="tg-label">Catalog</span>
+      <button id="tabTreeBtn" role="tab" aria-selected="true" aria-controls="treePane">Tree</button>
+      <button id="tabGraphBtn" role="tab" aria-selected="false" aria-controls="graphPane">Relations graph</button>
+    </div>
+    <div class="tab-group">
+      <span class="tg-label">Salesforce</span>
+      <button id="tabInvBtn" role="tab" aria-selected="false" aria-controls="invPane">Inventory model</button>
+      <button id="tabApiInvBtn" role="tab" aria-selected="false" aria-controls="apiInvPane">Inventories API</button>
+      <button id="tabApiOrdBtn" role="tab" aria-selected="false" aria-controls="apiOrdPane">Orders API</button>
+      <button id="tabApiConBtn" role="tab" aria-selected="false" aria-controls="apiConPane">Contacts API</button>
+      <button id="tabApiAccBtn" role="tab" aria-selected="false" aria-controls="apiAccPane">Access API</button>
+    </div>
+    <div class="tab-group">
+      <span class="tg-label">Integration</span>
+      <button id="tabMapBtn" role="tab" aria-selected="false" aria-controls="mapPane">Inventory ↔ Catalog</button>
+      <button id="tabRelBtn" role="tab" aria-selected="false" aria-controls="relPane">Data relations</button>
+      <button id="tabPlanBtn" role="tab" aria-selected="false" aria-controls="planPane">Enrichment plan</button>
+      <button id="tabResBtn" role="tab" aria-selected="false" aria-controls="resPane">Resolve mapping</button>
+      <button id="tabExBtn" role="tab" aria-selected="false" aria-controls="exPane">Resolved examples</button>
+      <button id="tabChkBtn" role="tab" aria-selected="false" aria-controls="chkPane">Live check</button>
+    </div>
   </div>
 </header>
 
@@ -577,9 +597,7 @@
 <section class="pane" id="mapPane" role="tabpanel" hidden>
   <main class="map-main">
     <p class="map-intro">
-      The <b>/v1/inventories</b> webhook delivers one catalog <b>product</b> at a time.
-      The join key is <b>Inventory__c.Inventory_Id__c = products[].id</b>. Every other orange line is a raw external ID
-      stored on your records that points at a catalog entity living in the middleware — resolve them there and send the result back.
+      The <b>/v1/inventories</b> webhook delivers one catalog <b>product</b> at a time; the join key <b>Inventory_Id__c = products[].id</b> is now a unique external ID and the upsert is atomic. Season and contact links are captured directly from the webhook (backfilled 2026-07-14 via log replay). The remaining orange lines are raw catalog ids to resolve through the middleware — see the Enrichment plan and Resolve mapping tabs.
     </p>
     <div class="flow-strip">
       <div class="flow-step">
@@ -610,13 +628,14 @@
           <div class="ent" id="e-inv">
             <div class="ent-head"><span class="ent-name">Inventory__c</span> <span class="ent-sub">= one catalog product</span></div>
             <ul>
-              <li class="joinfield keyfield" data-edge="c-products" data-main="1">Inventory_Id__c<span class="fnote">join key = products[].id</span></li>
+              <li class="joinfield keyfield" data-edge="c-products" data-main="1">Inventory_Id__c<span class="fnote">⚷ unique external ID = products[].id</span></li>
               <li>Code__c<span class="fnote">products[].code</span></li>
               <li class="joinfield" data-edge="c-prodtypes">Product_Type_Id__c</li>
               <li class="joinfield" data-edge="c-contacts">Partner_Contact_Number__c</li>
+              <li class="joinfield" data-edge="c-contacts">Contact_Product_Links__c<span class="fnote">captured ✓ resolved links JSON</span></li>
               <li>Vat_Code_Id__c<span class="fnote">catalog VAT table</span></li>
               <li>Charges_Table_Id__c<span class="fnote">empty in this export</span></li>
-              <li class="joinfield missing" data-edge="c-seasons" data-dashed="1">(no season field)<span class="fnote">missing — middleware must supply it</span></li>
+              <li class="joinfield" data-edge="c-seasons">Season_Id__c<span class="fnote">captured ✓ (890/971 filled by log replay)</span></li>
             </ul>
           </div>
 
@@ -782,7 +801,7 @@
         <div class="map-col">
           <div class="map-col-title">Children — created per product family</div>
           <div class="ent" id="inv-event" data-edge="inv-main">
-            <div class="ent-head"><span class="ent-name">Inventory_Event__c</span> <span class="ent-sub">SIMPLE_TICKET only · 1 per inventory</span></div>
+            <div class="ent-head"><span class="ent-name">Inventory_Event__c</span> <span class="ent-sub">SIMPLE_TICKET only · 784 in prod</span></div>
             <ul>
               <li>Activity_Id__c ⚷ · Activity_Code__c · Activity_Type__c</li>
               <li>Language__c · Minimum_Age__c · Time_Tolerance__c · Alert_Ratio__c</li>
@@ -790,7 +809,7 @@
             </ul>
           </div>
           <div class="ent" id="inv-perf" data-edge="inv-event">
-            <div class="ent-head"><span class="ent-name">Performance__c</span> <span class="ent-sub">1 per event.performances[] · delete + reinsert on update</span></div>
+            <div class="ent-head"><span class="ent-name">Performance__c</span> <span class="ent-sub">1 per event.performances[] · rebuilt on update · 2,964 in prod</span></div>
             <ul>
               <li class="keyfield">Performance_Id__c<span class="fnote">⚷</span></li>
               <li>Code__c · Start__c · Duration__c · State__c · Kind__c</li>
@@ -801,7 +820,7 @@
             </ul>
           </div>
           <div class="ent" id="inv-mem" data-edge="inv-main">
-            <div class="ent-head"><span class="ent-name">Membership__c</span> <span class="ent-sub">MEMBERSHIP products</span></div>
+            <div class="ent-head"><span class="ent-name">Membership__c</span> <span class="ent-sub">MEMBERSHIP products · 11 in prod</span></div>
             <ul>
               <li>Validity_Start/End_Date__c · Validity_Duration__c / _Unit__c</li>
               <li>Validity_Rule__c · User_Define_Start_Validity__c</li>
@@ -809,14 +828,14 @@
             </ul>
           </div>
           <div class="ent" id="inv-pack" data-edge="inv-main">
-            <div class="ent-head"><span class="ent-name">Pack__c</span> <span class="ent-sub">PACKAGE products</span></div>
+            <div class="ent-head"><span class="ent-name">Pack__c</span> <span class="ent-sub">PACKAGE products · 34 in prod</span></div>
             <ul>
               <li>Ticket_Printing_Mode__c</li>
               <li class="jsonfield">Linked_Audience_Sub_Category_Ids__c · Package_Lines__c (131k)</li>
             </ul>
           </div>
           <div class="ent" id="inv-st" data-edge="inv-main">
-            <div class="ent-head"><span class="ent-name">Season_Ticket__c</span> <span class="ent-sub">SEASONTICKET products</span></div>
+            <div class="ent-head"><span class="ent-name">Season_Ticket__c</span> <span class="ent-sub">SEASONTICKET products · 37 in prod</span></div>
             <ul>
               <li>Championship_Season_Ticket__c · Fixed_Seat__c · Ticket_Printing_Mode__c</li>
               <li class="jsonfield">Season_Ticket_Lines__c · Season_Ticket_Subjects__c (131k)</li>
@@ -839,7 +858,7 @@
       <span class="endpoint-chip"><span class="verb">POST</span>/services/apexrest/v1/inventories</span>
       <span class="endpoint-chip" style="font-weight:400;">Apex: InventoryRestResource · logs to Integration_Log__c</span>
     </div>
-    <p class="map-intro">Receives one catalog <b>product</b> (single object or array) from the SecuTix middleware. 1,155 calls logged in production, ~1,324 products processed. Every call — success or failure — writes an <b>Integration_Log__c</b> row with request/response bodies.</p>
+    <p class="map-intro">Receives one catalog <b>product</b> (single object or array) from the SecuTix middleware. 1,244+ calls logged in production, 971 unique products; child records populated by the 2026-07-14 log replay. Every call — success or failure — writes an <b>Integration_Log__c</b> row with request/response bodies.</p>
     <div class="flow-strip">
       <div class="flow-step"><div class="fs-n">1 · Match</div><div class="fs-t">Atomic upsert on Inventory_Id__c</div><div class="fs-d">Unique external ID — concurrent calls cannot duplicate; repeated products in one request are collapsed (last wins); all 58 fields rewritten.</div></div>
       <div class="flow-arrow">→</div>
@@ -1142,9 +1161,9 @@
     <div class="plan-grid">
       <div class="gap-card">
         <span class="gc-tag replay">webhook replay</span>
-        <h3>New fields empty on the 971 prod records</h3>
-        <p>Season_Id__c, Contact_Product_Links__c, Exchangeable__c… only fill when a product is re-sent. Old records keep them blank.</p>
-        <div class="gc-how"><b>How:</b> ask the middleware to trigger a full inventory resync — the upsert by Inventory_Id__c makes replay safe and idempotent.</div>
+        <h3>New fields — backfilled via log replay (890/971) ✓</h3>
+        <p>Done 2026-07-14 by replaying the latest Integration_Log__c body per product. 81 records remain blank (truncated or pre-seasonId logs).</p>
+        <div class="gc-how"><b>Remaining:</b> ask the middleware to re-send the 81 leftover products (mostly the &gt;131k season tickets) — the upsert by Inventory_Id__c makes replay safe and idempotent.</div>
       </div>
       <div class="gap-card">
         <span class="gc-tag middleware">catalog API</span>
@@ -1163,6 +1182,18 @@
         <h3>22 products &gt; 6 MB never ingested</h3>
         <p>Payloads over Apex's 6 MB string limit failed on every retry, and the log body is null so they are untraceable from Salesforce.</p>
         <div class="gc-how"><b>How:</b> middleware sends those products with <code>event.performances</code> split into chunks (e.g. 200 performances per call), or strips prices[] and lets the resolve API serve them on demand.</div>
+      </div>
+      <div class="gap-card">
+        <span class="gc-tag middleware">catalog API</span>
+        <h3>Advantages never reach Salesforce</h3>
+        <p>45 discount schemes (Ridotto, UNDER30, RINNOVO…) live only in the catalog: each targets specific products with its own discounted price grid, an access code or contact eligibility, and purchase limits. The inventory webhook carries none of it.</p>
+        <div class="gc-how"><b>How:</b> include <code>advantages[]</code> per product in the resolve response (key: <code>advantage.products[].id</code>) — see the Resolve mapping tab for the target options.</div>
+      </div>
+      <div class="gap-card">
+        <span class="gc-tag middleware">catalog API</span>
+        <h3>Cross-sells arrive empty</h3>
+        <p>The webhook sends crossSellProductLinks as an empty array; the real links (UP_SELL prompts like “VUOI RISPARMIARE? SCEGLI UNA CARD!” with their target products) live on the season-ticket line products inside the catalog, plus season-level conditionalCrossSells groups.</p>
+        <div class="gc-how"><b>How:</b> resolve response includes <code>crossSell[]</code> per product (targetProductId → target name); Salesforce fills the existing <code>Cross_Sell_Product_Links__c</code> field.</div>
       </div>
       <div class="gap-card">
         <span class="gc-tag secutix">SecuTix setup</span>
@@ -1198,8 +1229,20 @@
       <span class="ck">"site"</span>:  { <span class="ck">"code"</span>: <span class="cv">…</span>, <span class="ck">"name"</span>: <span class="cv">…</span>, <span class="ck">"town"</span>: <span class="cv">…</span> },
       <span class="ck">"space"</span>: { <span class="ck">"code"</span>: <span class="cv">…</span>, <span class="ck">"name"</span>: <span class="cv">…</span> },
       <span class="ck">"physicalConfiguration"</span>: { <span class="ck">"id"</span>: <span class="cv">…</span>, <span class="ck">"name"</span>: <span class="cv">…</span>, <span class="ck">"securityGauge"</span>: <span class="cv">…</span> },
-      <span class="ck">"rateType"</span>: { <span class="ck">"id"</span>: <span class="cv">…</span>, <span class="ck">"code"</span>: <span class="cv">…</span>, <span class="ck">"name"</span>: <span class="cv">…</span> }
-    }]
+      <span class="ck">"rateType"</span>: { <span class="ck">"id"</span>: <span class="cv">…</span>, <span class="ck">"code"</span>: <span class="cv">…</span>, <span class="ck">"name"</span>: <span class="cv">…</span> },
+      <span class="ck">"logicalConfiguration"</span>: { <span class="ck">"code"</span>: <span class="cv">"0001"</span>, <span class="ck">"name"</span>: <span class="cv">"SALA GRANDE"</span> }
+    }],
+    <span class="ck">"advantages"</span>: [{                                    <span class="cc">// discount schemes — catalog only, never in the webhook</span>
+      <span class="ck">"id"</span>: <span class="cv">10228643939675</span>, <span class="ck">"code"</span>: <span class="cv">"LPUNIV"</span>, <span class="ck">"name"</span>: <span class="cv">"Ridotto 30% e 50%"</span>,
+      <span class="ck">"targetType"</span>: <span class="cv">"CODE"</span>, <span class="ck">"accessCode"</span>: <span class="cv">"LPUNIV"</span>, <span class="ck">"maxOrderQuantity"</span>: <span class="cv">2</span>,
+      <span class="ck">"discountedPrices"</span>: [ { <span class="ck">"tariff"</span>: { <span class="ck">"id"</span>: <span class="cv">…</span>, <span class="ck">"name"</span>: <span class="cv">"UNIVERSITÀ"</span> }, <span class="ck">"seatCategory"</span>: { <span class="ck">"name"</span>: <span class="cv">"SETTORE C"</span> }, <span class="ck">"amount"</span>: <span class="cv">"€120.00"</span> } ]
+    }],
+    <span class="ck">"crossSell"</span>: [{                                     <span class="cc">// up-sell prompts — arrive empty from the webhook</span>
+      <span class="ck">"type"</span>: <span class="cv">"UP_SELL"</span>, <span class="ck">"targetProduct"</span>: { <span class="ck">"id"</span>: <span class="cv">10228636435680</span>, <span class="ck">"name"</span>: <span class="cv">"CARD 4 INGRESSI SETTORE B 2025/26"</span> },
+      <span class="ck">"message"</span>: <span class="cv">"VUOI RISPARMIARE? SCEGLI UNA CARD!"</span>
+    }],
+    <span class="ck">"conditionalCrossSellWith"</span>: [ <span class="cv">"CARD 6 INGRESSI…"</span>, <span class="cv">"CARD 8 INGRESSI…"</span> ],
+    <span class="ck">"ticketModel"</span>: { <span class="ck">"id"</span>: <span class="cv">634688343</span>, <span class="ck">"name"</span>: <span class="cv">…</span> }   <span class="cc">// from middleware static map — not in catalog</span>
   },
   { <span class="ck">"productId"</span>: <span class="cv">10228683111111</span>, <span class="ck">"found"</span>: <span class="cv">false</span> }]   <span class="cc">// unknown id ≠ error — keeps the batch alive</span>
 }</div>
@@ -1305,6 +1348,22 @@
             </ul>
           </div>
 
+          <div class="ent catalog" id="res-xsell">
+            <div class="ent-head"><span class="ent-name">crossSellProductLinks[]</span> <span class="ent-sub">up-sell prompts — empty at product level, live on season-ticket line products</span></div>
+            <ul>
+              <li class="joinfield" data-edge="res-xsellobj" data-main="1">{ id, type: UP_SELL, targetProductId, message, validity }<span class="fnote">key: targetProductId → products[].id</span></li>
+              <li class="joinfield" data-edge="res-xsellobj" data-dashed="1">conditionalCrossSells[] groups<span class="fnote">season level — products offered together</span></li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="res-adv">
+            <div class="ent-head"><span class="ent-name">advantages[]</span> <span class="ent-sub">45 discount schemes in catalog — never sent by the webhook</span></div>
+            <ul>
+              <li class="joinfield" data-edge="res-advobj" data-main="1">advantage { id, code, name, targetType, accessCode, limits }<span class="fnote">key: advantage.products[].id = productId</span></li>
+              <li class="joinfield" data-edge="res-advobj">discounted price grid per product<span class="fnote">tariff × seatCategory × amount</span></li>
+            </ul>
+          </div>
+
           <div class="ent catalog" id="res-tm">
             <div class="ent-head"><span class="ent-name">ticketModel { }</span> <span class="ent-sub">from SecuTix setup, not the catalog — static map in middleware</span></div>
             <ul>
@@ -1355,6 +1414,23 @@
             </ul>
           </div>
 
+          <div class="ent" id="res-xsellobj">
+            <div class="ent-head"><span class="ent-name">Cross-sell target</span> <span class="ent-sub">field exists — arrives empty from the webhook</span></div>
+            <ul>
+              <li>Inventory__c.Cross_Sell_Product_Links__c<span class="fnote">fill via resolve: target name + type + message</span></li>
+              <li class="fnote" style="padding:2px 11px;">targetProductId is joinable to the target Inventory__c record by Inventory_Id__c</li>
+            </ul>
+          </div>
+
+          <div class="ent" id="res-advobj">
+            <div class="ent-head"><span class="ent-name">Advantages target</span> <span class="ent-sub">product ↔ discount scheme (n:m)</span></div>
+            <ul>
+              <li class="newf">Inventory__c.Product_Advantages__c (JSON)<span class="fnote">option 1 — resolved list per product</span></li>
+              <li class="newf">Advantage__c + Product_Advantage__c junction<span class="fnote">option 2 — 45 records + links, upsert by External_Id__c</span></li>
+              <li class="fnote" style="padding:2px 11px;">a product can be in many advantages (0185 is in 18) and one advantage covers many products</li>
+            </ul>
+          </div>
+
           <div class="ent" id="res-refs">
             <div class="ent-head"><span class="ent-name">Reference objects (option 2)</span> <span class="ent-sub">~100 records total, upsert by External_Id__c</span></div>
             <ul>
@@ -1373,6 +1449,98 @@
       <span>⚷ match key</span>
     </div>
 
+    <div class="plan-h" style="margin-top:26px;">Worked example with real data — product 0185 · “NAPOLI NOBILISSIMA”</div>
+    <p class="map-intro">
+      All values below are real: resolved from the 2026-07-10 catalog export and matched against the live production record.
+      This is exactly what one entry of the resolve response should contain, and where each value lands.
+    </p>
+    <div class="map-diagram" id="resExDiagram">
+      <svg class="map-svg" aria-hidden="true"></svg>
+      <div class="map-cols">
+        <div class="map-col">
+          <div class="map-col-title">Resolve response — real values from the catalog</div>
+
+          <div class="ent catalog" id="rex-root">
+            <div class="ent-head"><span class="ent-name">productId: 10228676772860</span> <span class="ent-sub">found: true · code "0185"</span></div>
+            <ul>
+              <li class="joinfield keyfield" data-edge="rex-inv" data-main="1">matches Inventory_Id__c<span class="fnote">1 record after dedupe ✓</span></li>
+              <li>productType: null<span class="fnote">genuinely absent in catalog for this product</span></li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="rex-season">
+            <div class="ent-head"><span class="ent-name">season</span></div>
+            <ul>
+              <li class="joinfield" data-edge="rex-inv">{ id: 10228635444462, code: "2526",<br>&nbsp;&nbsp;name: "STAGIONE 25-26",<br>&nbsp;&nbsp;start: 2025-06-01, end: 2026-09-27 }</li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="rex-perf">
+            <div class="ent-head"><span class="ent-name">performances[0] of 9</span> <span class="ent-sub">performanceId 10228676773176 · 2026-07-19 18:00</span></div>
+            <ul>
+              <li class="joinfield" data-edge="rex-perfobj" data-main="1">site: { code: "1", name: "Teatro Franco Parenti",<br>&nbsp;&nbsp;address: "Via Pier Lombardo 14, Milano" }</li>
+              <li class="joinfield" data-edge="rex-perfobj">space: { code: "GRANDE", name: "SALA GRANDE" }</li>
+              <li class="joinfield" data-edge="rex-perfobj">physicalConfiguration: { id: 10228544670213,<br>&nbsp;&nbsp;name: "01 - SALA GRANDE (STANDARD)", securityGauge: 1000 }</li>
+              <li class="joinfield" data-edge="rex-perfobj">logicalConfiguration: { code: "0001", name: "SALA GRANDE" }</li>
+              <li class="joinfield" data-edge="rex-perfobj">rateType: { code: "1", name: "TEATRO", bgColor: FF0000 }</li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="rex-legend">
+            <div class="ent-head"><span class="ent-name">tariff legend</span> <span class="ent-sub">decodes the 9 price rows on this performance</span></div>
+            <ul>
+              <li class="joinfield" data-edge="rex-perfobj">audienceSubCategories:<br>&nbsp;&nbsp;I1 "INTERO + prev." · I5 "intero OVER 65 + prev." · I3 "intero UNDER 30 + prev."</li>
+              <li class="joinfield" data-edge="rex-perfobj">seatCategories: SETTORE A · SETTORE B · SETTORE C</li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="rex-links">
+            <div class="ent-head"><span class="ent-name">contactProductLinks</span></div>
+            <ul>
+              <li class="joinfield" data-edge="rex-acc" data-dashed="1">{ contactNumber: "22", type: RESPONSIBLE }<br>{ contactNumber: "12900", type: OBSERVER }</li>
+            </ul>
+          </div>
+        </div>
+
+        <div></div>
+
+        <div class="map-col">
+          <div class="map-col-title">Salesforce production — where it lands</div>
+
+          <div class="ent" id="rex-inv">
+            <div class="ent-head"><span class="ent-name">Inventory__c a03SX00000bGJxTYAW</span> <span class="ent-sub">Name "NAPOLI NOBILISSIMA" · re-verified after the log replay</span></div>
+            <ul>
+              <li class="keyfield">Inventory_Id__c = 10228676772860<span class="fnote">⚷ match</span></li>
+              <li>Season_Id__c = 10228635444462 ✓<span class="fnote">filled by the log replay</span></li>
+              <li class="newf">Season_Name__c ← "STAGIONE 25-26"</li>
+              <li class="newf">Ticket_Model_Name__c ← via middleware map (634688343)</li>
+              <li class="newf">Enriched_On__c ← now()</li>
+            </ul>
+          </div>
+
+          <div class="ent" id="rex-perfobj">
+            <div class="ent-head"><span class="ent-name">Performance__c</span> <span class="ent-sub">Performance_Id__c = 10228676773176 · exists since the replay ✓</span></div>
+            <ul>
+              <li class="newf">Site_Name__c ← "Teatro Franco Parenti"</li>
+              <li class="newf">Space_Name__c ← "SALA GRANDE"</li>
+              <li class="newf">Physical_Configuration_Name__c ← "01 - SALA GRANDE (STANDARD)"</li>
+              <li class="newf">Rate_Type_Name__c ← "TEATRO"</li>
+              <li class="newf">Tariff_Legend__c ← { I1: "INTERO + prev.", … }</li>
+              <li class="jsonfield">Prices__c becomes readable:<span class="fnote">SETTORE A × INTERO = €430.00 · OVER 65 = €320.00 · SETTORE B × OVER 65 = €235.00</span></li>
+            </ul>
+          </div>
+
+          <div class="ent" id="rex-acc">
+            <div class="ent-head"><span class="ent-name">Account</span> <span class="ent-sub">no write — joinable via Contact_Number__c</span></div>
+            <ul>
+              <li>Contact_Number__c "22" → the RESPONSIBLE partner account</li>
+              <li>Contact_Number__c "12900" → the OBSERVER account</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="plan-h" style="margin-top:26px;">Write order inside one enrichment run</div>
     <div class="flow-strip">
       <div class="flow-step"><div class="fs-n">1</div><div class="fs-t">Match Inventory__c</div><div class="fs-d">Map response productId → Inventory_Id__c. Not found in SF → skip; found:false in response → leave Enriched_On__c empty for the retry sweep.</div></div>
@@ -1389,17 +1557,17 @@
 <section class="pane" id="chkPane" role="tabpanel" hidden>
   <main class="map-main">
     <p class="map-intro">
-      A real cross-check performed on <b>2026-07-14</b>: one or two example products per family/subtype were taken from the
-      catalog JSON (export of 2026-07-10) and the same products were queried live in the <b>TFA production org</b> by
-      <code>Inventory_Id__c</code>. Identity fields all match; the enrichment fields are still pending because every record
-      was last written on 2026-07-09 — before the new mapping was deployed.
+      A real cross-check: one or two example products per family/subtype taken from the catalog JSON (export of 2026-07-10)
+      and queried live in the <b>TFA production org</b> by <code>Inventory_Id__c</code> — last verified <b>2026-07-14 after the
+      log replay</b>. Every field now matches: identity, names, season ids and contact links. All 7 records were rewritten by
+      the replay at 15:20–15:25 UTC.
     </p>
     <div class="chk-stats">
-      <div class="stat-tile"><div class="st-n">7 / 7</div><div class="st-l">examples found in prod</div></div>
-      <div class="stat-tile"><div class="st-n">971</div><div class="st-l">Inventory__c records after cleanup</div></div>
-      <div class="stat-tile"><div class="st-n">0</div><div class="st-l">duplicates remaining ✓</div></div>
+      <div class="stat-tile"><div class="st-n">7 / 7</div><div class="st-l">examples verified — all fields match ✓</div></div>
+      <div class="stat-tile"><div class="st-n">971</div><div class="st-l">Inventory__c records · all unique</div></div>
+      <div class="stat-tile"><div class="st-n">890</div><div class="st-l">with Season_Id__c + contact links after log replay ✓</div></div>
       <div class="stat-tile warn"><div class="st-n">557</div><div class="st-l">duplicate records deleted (was 62 products, worst ×32)</div></div>
-      <div class="stat-tile"><div class="st-n">451</div><div class="st-l">order operations re-pointed to survivors</div></div>
+      <div class="stat-tile"><div class="st-n">2,964</div><div class="st-l">Performance__c rows built (784 events · 37 STs · 34 packs · 11 memberships)</div></div>
     </div>
     <p class="map-intro" style="margin-top:0;">
       <b style="color:var(--t-object)">Duplicates — FIXED 2026-07-14:</b> the webhook's find-then-upsert was not atomic, so concurrent calls
@@ -1408,84 +1576,257 @@
       repeated products inside one request are collapsed, and a one-off dedupe deleted 557 copies (keeping the newest, re-pointing
       451 Order_Operation_Data__c lookups and 7 event children first). The duplicate counts shown on the cards below are the
       <b>pre-cleanup</b> evidence.
-      <b style="color:var(--t-string)">Name finding (still pending):</b> records are named by product code (“0191”) instead of the internal
-      name (“AMLETO2”) — the full resync will rewrite them via the current naming logic.
+      <b style="color:var(--t-object)">Name finding — FIXED by the log replay:</b> records are now named by their internal name (“CARD 2 INGRESSI 2026/27” instead of “0012”). <b style="color:var(--t-string)">Log replay 2026-07-14:</b> the 888 products with intact logged payloads were re-posted to /v1/inventories from Integration_Log__c bodies (89 batches, 0 failures) — filling Season_Id__c, Contact_Product_Links__c and building all child records. The 81 remaining records had only truncated (&gt;131k) or pre-seasonId logs and need one middleware resend.
     </p>
     <div class="chk-grid" id="chkGrid"></div>
   </main>
 </section>
+
+<section class="pane" id="exPane" role="tabpanel" hidden>
+  <main class="map-main">
+    <p class="map-intro">
+      <b>10 real products, one per shape the catalog contains</b> — each shown exactly as the middleware's
+      <code>/catalog/products/resolve</code> response should return it: every raw id replaced by an
+      <code>{ id, name }</code> pair resolved from the catalog export, prices in euro, and the live production record it maps onto.
+      All 10 verified unique in prod on 2026-07-14.
+    </p>
+    <div id="exGrid"></div>
+  </main>
+</section>
+
+<script>
+const RESOLVED_EXAMPLES = [{"productId":10228636435680,"found":true,"code":"CRD6","name":"CARD 4 INGRESSI SETTORE B 2025/26","family":"SEASONTICKET / SEASONTICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":{"id":10228635445271,"code":"01","name":"ABBONAMENTI E CARD"},"ticketModel":{"id":10228635519101,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10142016485,"contactNumber":"22","type":"RESPONSIBLE"},{"id":10228636436185,"contactNumber":"12900","type":"OBSERVER"}],"crossSell":[{"id":10228650126024,"type":"UP_SELL","message":"VUOI RISPARMIARE? SCEGLI UNA CARD!","targetProduct":{"id":10228636435680,"name":"CARD 4 INGRESSI SETTORE B 2025/26"}}],"seasonTicket":{"priceType":"PREDEFINED","itemPrices":[{"tariff":{"id":10228635444787,"code":"RL","name":"RIDOTTO CONVENZIONATI","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€800.00"},{"tariff":{"id":10228635444781,"code":"IA","name":"INTERO","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€960.00"},{"tariff":{"id":10228636323264,"code":"RJ","name":"RIDOTTO UNDER 30","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€800.00"},{"tariff":{"id":10228635444783,"code":"RK","name":"RIDOTTO OVER 65","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€800.00"}],"lines":[{"product":{"id":10228638570318,"code":"0108","name":"ANNA CAPPELLI"},"performances":12},{"product":{"id":10228638570314,"code":"0104","name":"CAPINERA"},"performances":6},{"product":{"id":10228638570311,"code":"0101","name":"CHI COME ME"},"performances":103},{"product":{"id":10228638581122,"code":"0125","name":"COME DIVENTARE RICCHI E FAMOSI DA UN MOMENTO ALL'ALTRO"},"performances":11}],"lineCount":71},"advantages":[{"id":10228636995724,"code":"CB08160","name":"PROMO CORPORATE BENEFITS","targetType":"CODE","accessCode":"CB08160"},{"id":10228636549002,"code":"PCC80160","name":"RIDOTTO PROMO 80€/160€","targetType":"CODE","accessCode":"PCC80160"}],"conditionalCrossSellWith":["CARD 8 INGRESSI SETTORE A 2025/26","CARD 8 INGRESSI SETTORE B 2025/26","CARD 6 INGRESSI SETTORE A 2025/26","CARD 6 INGRESSI SETTORE B 2025/26"],"salesforce":{"recordId":"a03SX00000bGRwfYAG","currentName":"CRD6","status":"unique in prod ✓"}},{"productId":10228636435676,"found":true,"code":"CRD2","name":"CARD 8 INGRESSI SETTORE B 2025/26","family":"SEASONTICKET / SEASONTICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":{"id":10228635445271,"code":"01","name":"ABBONAMENTI E CARD"},"ticketModel":{"id":10228635519101,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10142016442,"contactNumber":"22","type":"RESPONSIBLE"},{"id":10228636436181,"contactNumber":"12900","type":"OBSERVER"}],"crossSell":[{"id":10228650126024,"type":"UP_SELL","message":"VUOI RISPARMIARE? SCEGLI UNA CARD!","targetProduct":{"id":10228636435680,"name":"CARD 4 INGRESSI SETTORE B 2025/26"}}],"seasonTicket":{"priceType":"PREDEFINED","itemPrices":[{"tariff":{"id":10228635444787,"code":"RL","name":"RIDOTTO CONVENZIONATI","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€1600.00"},{"tariff":{"id":10228635444811,"code":"OJ","name":"OMAGGIO CARD/ABBO","kind":"FREE"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€0.00"},{"tariff":{"id":10228635444781,"code":"IA","name":"INTERO","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€1760.00"},{"tariff":{"id":10228636323264,"code":"RJ","name":"RIDOTTO UNDER 30","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€1600.00"}],"lines":[{"product":{"id":10228638570318,"code":"0108","name":"ANNA CAPPELLI"},"performances":12},{"product":{"id":10228638570314,"code":"0104","name":"CAPINERA"},"performances":6},{"product":{"id":10228638570311,"code":"0101","name":"CHI COME ME"},"performances":103},{"product":{"id":10228638581122,"code":"0125","name":"COME DIVENTARE RICCHI E FAMOSI DA UN MOMENTO ALL'ALTRO"},"performances":11}],"lineCount":71},"advantages":[{"id":10228636995724,"code":"CB08160","name":"PROMO CORPORATE BENEFITS","targetType":"CODE","accessCode":"CB08160"},{"id":10228636549002,"code":"PCC80160","name":"RIDOTTO PROMO 80€/160€","targetType":"CODE","accessCode":"PCC80160"}],"conditionalCrossSellWith":["CARD 4 INGRESSI SETTORE B 2025/26","CARD 8 INGRESSI SETTORE A 2025/26","CARD 6 INGRESSI SETTORE A 2025/26","CARD 6 INGRESSI SETTORE B 2025/26"],"salesforce":{"recordId":"a03SX00000bGPV0YAO","currentName":"CRD2","status":"unique in prod ✓"}},{"productId":10228636523446,"found":true,"code":"BBB3","name":"LIBERO X6 CONV. 2025/26","family":"SEASONTICKET / SEASONTICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":{"id":10228635445271,"code":"01","name":"ABBONAMENTI E CARD"},"ticketModel":{"id":10228635519101,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10142017274,"contactNumber":"22","type":"RESPONSIBLE"},{"id":10228636524052,"contactNumber":"12900","type":"OBSERVER"}],"crossSell":[{"id":10228650126024,"type":"UP_SELL","message":"VUOI RISPARMIARE? SCEGLI UNA CARD!","targetProduct":{"id":10228636435680,"name":"CARD 4 INGRESSI SETTORE B 2025/26"}}],"seasonTicket":{"priceType":"PREDEFINED","itemPrices":[{"tariff":{"id":10228635444781,"code":"IA","name":"INTERO","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€1500.00"},{"tariff":{"id":10228635444787,"code":"RL","name":"RIDOTTO CONVENZIONATI","kind":"FULL"},"priceLevel":{"id":10228635445169,"code":"ABBONATO","category":"SUBSCRIBER"},"amount":"€1080.00"}],"lines":[{"product":{"id":10228638570318,"code":"0108","name":"ANNA CAPPELLI"},"performances":12},{"product":{"id":10228638570314,"code":"0104","name":"CAPINERA"},"performances":6},{"product":{"id":10228638570311,"code":"0101","name":"CHI COME ME"},"performances":103},{"product":{"id":10228638581122,"code":"0125","name":"COME DIVENTARE RICCHI E FAMOSI DA UN MOMENTO ALL'ALTRO"},"performances":11}],"lineCount":63},"advantages":[{"id":10228636995722,"code":"CB01612","name":"PROMO CORPORATE BENEFITS","targetType":"CODE","accessCode":"CB01612"},{"id":10228636549000,"code":"AIC612","name":"108€/216€","targetType":"CODE","accessCode":"AIC612"}],"salesforce":{"recordId":"a03SX00000bGPMzYAO","currentName":"BBB3","status":"unique in prod ✓"}},{"productId":10228680140505,"found":true,"code":"0506","name":"PINK FLOYD: WISH YOU WERE HERE","family":"SINGLE_ENTRY / SIMPLE_TICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":null,"ticketModel":{"id":634688343,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10142728482,"contactNumber":"22","type":"RESPONSIBLE"},{"id":10228680436023,"contactNumber":"12900","type":"OBSERVER"}],"event":{"activity":{"id":10228635444867,"code":"5","name":"MUSICA E DANZA"},"performanceCount":1,"performances":[{"performanceId":10228680141016,"code":"0506","start":"2026-07-23 19:00","state":"RUNNING","site":{"code":"CASSFO","id":10228583654187,"name":"Castello Sforzesco","town":"Milano"},"space":{"code":"CASTELLO","name":"CASTELLO SFORZESCO"},"physicalConfiguration":{"id":10228680404512,"name":"17 - CASTELLO SFORZESCO 25/26","site":"Castello Sforzesco","space":"CASTELLO SFORZESCO","gauge":1000,"town":"Milano"},"logicalConfiguration":{"id":10228680135955,"code":"1901","name":"CASTELLO SFORZESCO"},"rateType":{"id":10228635445073,"code":"5","name":"MUSICA E DANZA"},"priceGrid":[{"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€285.00","fees":[{"component":"PREV","amount":"€35.00"}]},{"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€205.00","fees":[{"component":"PREV","amount":"€25.00"}]}]}]},"advantages":[{"id":10228643939675,"code":"LPUNIV","name":"Ridotto 30% e 50%","targetType":"CODE","accessCode":"LPUNIV","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€200.00"},{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€140.00"}]},{"id":10228646191470,"code":"NRC30","name":"Ridotto 30%","targetType":"CODE","accessCode":"NRC30","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€200.00"}]},{"id":10228654430053,"code":"AAR2526","name":"Ridotto 10€","targetType":"CONTACT","discountedPrices":[{"tariff":{"id":10228639474566,"code":"RI","name":"RIDOTTO 10 EURO","kind":"FULL"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€100.00"}]},{"id":10228643726974,"code":"LP200","name":"Ridotto 40%","targetType":"CODE","accessCode":"LP200","discountedPrices":[{"tariff":{"id":10228635444806,"code":"R9","name":"RIDOTTO 40%","kind":"REDUCED"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€170.00"}]},{"id":10228653611943,"code":"U35NP","name":"Under 30","targetType":"CONTACT","discountedPrices":[{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€140.00"}]},{"id":10228687090610,"code":"B907","name":"Biglietto 15€","targetType":"CODE","accessCode":"B907","discountedPrices":[{"tariff":{"id":10228639474565,"code":"RH","name":"RIDOTTO 15 EURO","kind":"FULL"},"seatCategory":{"id":10228680136056,"name":"POSTO UNICO"},"amount":"€150.00"}]}],"salesforce":{"recordId":"a03SX00000bGWOQYA4","currentName":"PINK FLOYD: WISH YOU WERE HERE","status":"unique in prod ✓"},"advantagesNote":"4 more advantages omitted"},{"productId":10228676772860,"found":true,"code":"0185","name":"NAPOLI NOBILISSIMA","family":"SINGLE_ENTRY / SIMPLE_TICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":null,"ticketModel":{"id":634688343,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10228676785581,"contactNumber":"12900","type":"OBSERVER"},{"id":10142629457,"contactNumber":"22","type":"RESPONSIBLE"}],"event":{"activity":{"id":10228635444869,"code":"1","name":"TEATRO"},"performanceCount":9,"performances":[{"performanceId":10228676773176,"code":"0185","start":"2026-07-19 16:00","state":"RUNNING","site":{"code":"1","id":10228544852613,"name":"Teatro Franco Parenti","town":"Milano"},"space":{"code":"GRANDE","name":"SALA GRANDE"},"physicalConfiguration":{"id":10228544670213,"name":"01 - SALA GRANDE (STANDARD)","site":"Teatro Franco Parenti","space":"SALA GRANDE","gauge":1000,"town":"Milano"},"logicalConfiguration":{"id":10228635451835,"code":"0001","name":"SALA GRANDE"},"rateType":{"id":10228635445070,"code":"1","name":"TEATRO"},"priceGrid":[{"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€430.00","fees":[{"component":"PREV","amount":"€50.00"}]},{"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"tariff":{"id":10228635444776,"code":"I5","name":"intero OVER 65 + prev.","kind":"FULL"},"amount":"€320.00","fees":[{"component":"PREV","amount":"€40.00"}]},{"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€320.00","fees":[{"component":"PREV","amount":"€40.00"}]},{"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"tariff":{"id":10228635444776,"code":"I5","name":"intero OVER 65 + prev.","kind":"FULL"},"amount":"€235.00","fees":[{"component":"PREV","amount":"€30.00"}]}],"priceGridNote":"5 more rows"},{"performanceId":10228676773177,"code":"0185","start":"2026-07-21 18:00","state":"RUNNING","site":{"code":"1","id":10228544852613,"name":"Teatro Franco Parenti","town":"Milano"},"space":{"code":"GRANDE","name":"SALA GRANDE"},"physicalConfiguration":{"id":10228544670213,"name":"01 - SALA GRANDE (STANDARD)","site":"Teatro Franco Parenti","space":"SALA GRANDE","gauge":1000,"town":"Milano"},"logicalConfiguration":{"id":10228635451835,"code":"0001","name":"SALA GRANDE"},"rateType":{"id":10228635445070,"code":"1","name":"TEATRO"},"priceGrid":[{"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€430.00","fees":[{"component":"PREV","amount":"€50.00"}]},{"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"tariff":{"id":10228635444776,"code":"I5","name":"intero OVER 65 + prev.","kind":"FULL"},"amount":"€320.00","fees":[{"component":"PREV","amount":"€40.00"}]},{"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€320.00","fees":[{"component":"PREV","amount":"€40.00"}]},{"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"tariff":{"id":10228635444776,"code":"I5","name":"intero OVER 65 + prev.","kind":"FULL"},"amount":"€235.00","fees":[{"component":"PREV","amount":"€30.00"}]}],"priceGridNote":"7 more rows"}]},"advantages":[{"id":10228688269892,"code":"PNN10","name":"Ridotto 10€","targetType":"CODE","accessCode":"PNN10","discountedPrices":[{"tariff":{"id":10228639474566,"code":"RI","name":"RIDOTTO 10 EURO","kind":"FULL"},"seatCategory":{"id":10228635451939,"name":"POSTO UNICO"},"amount":"€100.00"},{"tariff":{"id":10228639474566,"code":"RI","name":"RIDOTTO 10 EURO","kind":"FULL"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€100.00"}]},{"id":10228643939675,"code":"LPUNIV","name":"Ridotto 30% e 50%","targetType":"CODE","accessCode":"LPUNIV","discountedPrices":[{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451939,"name":"POSTO UNICO"},"amount":"€120.00"},{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€160.00"}]},{"id":10228652653246,"code":"RID50","name":"Riduzione 50%","targetType":"CONTACT","discountedPrices":[{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"amount":"€215.00"},{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451939,"name":"POSTO UNICO"},"amount":"€120.00"}]},{"id":10228646191470,"code":"NRC30","name":"Ridotto 30%","targetType":"CODE","accessCode":"NRC30","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€160.00"},{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€220.00"}]},{"id":10228643704545,"code":"CB0010","name":"Riduzione 30%","targetType":"CODE","accessCode":"CB0010","maxOrderQuantity":999999,"discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€220.00"},{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€220.00"}]},{"id":10228654430053,"code":"AAR2526","name":"Ridotto 10€","targetType":"CONTACT","discountedPrices":[{"tariff":{"id":10228639474566,"code":"RI","name":"RIDOTTO 10 EURO","kind":"FULL"},"seatCategory":{"id":10228635451939,"name":"POSTO UNICO"},"amount":"€100.00"},{"tariff":{"id":10228639474566,"code":"RI","name":"RIDOTTO 10 EURO","kind":"FULL"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€100.00"}]}],"salesforce":{"recordId":"a03SX00000bGJxTYAW","currentName":"NAPOLI NOBILISSIMA","status":"unique in prod ✓"},"advantagesNote":"12 more advantages omitted"},{"productId":10228682346339,"found":true,"code":"0190","name":"LA LOCANDIERA A LONG PLAY","family":"SINGLE_ENTRY / SIMPLE_TICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":null,"ticketModel":{"id":634688343,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10142809811,"contactNumber":"22","type":"RESPONSIBLE"},{"id":10228682451681,"contactNumber":"12900","type":"OBSERVER"}],"event":{"activity":{"id":10228635444869,"code":"1","name":"TEATRO"},"performanceCount":1,"performances":[{"performanceId":10228682361696,"code":"0190","start":"2026-07-28 18:00","state":"RUNNING","site":{"code":"1","id":10228544852613,"name":"Teatro Franco Parenti","town":"Milano"},"space":{"code":"GRANDE","name":"SALA GRANDE"},"physicalConfiguration":{"id":10228544670213,"name":"01 - SALA GRANDE (STANDARD)","site":"Teatro Franco Parenti","space":"SALA GRANDE","gauge":1000,"town":"Milano"},"logicalConfiguration":{"id":10228635451835,"code":"0001","name":"SALA GRANDE"},"rateType":{"id":10228635445070,"code":"1","name":"TEATRO"},"priceGrid":[{"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"tariff":{"id":10228635444776,"code":"I5","name":"intero OVER 65 + prev.","kind":"FULL"},"amount":"€180.00","fees":[{"component":"PREV","amount":"€20.00"}]},{"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"tariff":{"id":10228635444776,"code":"I5","name":"intero OVER 65 + prev.","kind":"FULL"},"amount":"€180.00","fees":[{"component":"PREV","amount":"€20.00"}]},{"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€250.00","fees":[{"component":"PREV","amount":"€30.00"}]},{"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€205.00","fees":[{"component":"PREV","amount":"€25.00"}]}],"priceGridNote":"5 more rows"}]},"advantages":[{"id":10228664738001,"code":"PP15DD","name":"Riduzione 30%","targetType":"PUBLIC","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€140.00"}]},{"id":10228643939675,"code":"LPUNIV","name":"Ridotto 30% e 50%","targetType":"CODE","accessCode":"LPUNIV","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€175.00"},{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€100.00"}]},{"id":10228652653246,"code":"RID50","name":"Riduzione 50%","targetType":"CONTACT","discountedPrices":[{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€100.00"},{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451937,"name":"SETTORE A"},"amount":"€170.00"}]},{"id":10228646191470,"code":"NRC30","name":"Ridotto 30%","targetType":"CODE","accessCode":"NRC30","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€175.00"},{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€140.00"}]},{"id":10228643726974,"code":"LP200","name":"Ridotto 40%","targetType":"CODE","accessCode":"LP200","discountedPrices":[{"tariff":{"id":10228635444806,"code":"R9","name":"RIDOTTO 40%","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€125.00"},{"tariff":{"id":10228635444806,"code":"R9","name":"RIDOTTO 40%","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€145.00"}]},{"id":10228653611943,"code":"U35NP","name":"Under 30","targetType":"CONTACT","discountedPrices":[{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451938,"name":"SETTORE C"},"amount":"€100.00"},{"tariff":{"id":10228635444816,"code":"RA","name":"RIDOTTO 50%","kind":"REDUCED"},"seatCategory":{"id":10228635451936,"name":"SETTORE B"},"amount":"€125.00"}]}],"salesforce":{"recordId":"a03SX00000bGBS5YAO","currentName":"LA LOCANDIERA A LONG PLAY","status":"unique in prod ✓"},"advantagesNote":"4 more advantages omitted"},{"productId":10228682346338,"found":true,"code":"0189","name":"SUMMER ON A SOLITARY BITCH","family":"SINGLE_ENTRY / SIMPLE_TICKET","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":null,"ticketModel":{"id":634688343,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849893,"contactProductLinks":[{"id":10142809749,"contactNumber":"22","type":"RESPONSIBLE"},{"id":10228682451680,"contactNumber":"12900","type":"OBSERVER"}],"event":{"activity":{"id":10228635444869,"code":"1","name":"TEATRO"},"performanceCount":4,"performances":[{"performanceId":10228682487257,"code":"0189","start":"2026-07-15 17:15","state":"RUNNING","site":{"code":"1","id":10228544852613,"name":"Teatro Franco Parenti","town":"Milano"},"space":{"code":"BLU","name":"SALA BLU"},"physicalConfiguration":{"id":10228544670211,"name":"01 - SALA BLU (STANDARD)","site":"Teatro Franco Parenti","space":"SALA BLU","gauge":500,"town":"Milano"},"logicalConfiguration":{"id":10228635451839,"code":"0003","name":"SALA BLU"},"rateType":{"id":10228635445070,"code":"1","name":"TEATRO"},"priceGrid":[{"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€170.00","fees":[{"component":"PREV","amount":"€20.00"}]},{"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€250.00","fees":[{"component":"PREV","amount":"€30.00"}]},{"seatCategory":{"id":10228635451946,"name":"GALLERIA A"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€170.00","fees":[{"component":"PREV","amount":"€20.00"}]},{"seatCategory":{"id":10228635451947,"name":"SETTORE A"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€170.00","fees":[{"component":"PREV","amount":"€20.00"}]}],"priceGridNote":"1 more rows"},{"performanceId":10228682487256,"code":"0189","start":"2026-07-14 18:30","state":"RUNNING","site":{"code":"1","id":10228544852613,"name":"Teatro Franco Parenti","town":"Milano"},"space":{"code":"BLU","name":"SALA BLU"},"physicalConfiguration":{"id":10228544670211,"name":"01 - SALA BLU (STANDARD)","site":"Teatro Franco Parenti","space":"SALA BLU","gauge":500,"town":"Milano"},"logicalConfiguration":{"id":10228635451839,"code":"0003","name":"SALA BLU"},"rateType":{"id":10228635445070,"code":"1","name":"TEATRO"},"priceGrid":[{"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€170.00","fees":[{"component":"PREV","amount":"€20.00"}]},{"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€250.00","fees":[{"component":"PREV","amount":"€30.00"}]},{"seatCategory":{"id":10228635451946,"name":"GALLERIA A"},"tariff":{"id":10228635444778,"code":"I1","name":"INTERO + prev.","kind":"FULL"},"amount":"€170.00","fees":[{"component":"PREV","amount":"€20.00"}]},{"seatCategory":{"id":10228635451947,"name":"SETTORE A"},"tariff":{"id":10228635444793,"code":"I3","name":"intero UNDER 30 + prev.","kind":"FULL"},"amount":"€170.00","fees":[{"component":"PREV","amount":"€20.00"}]}],"priceGridNote":"1 more rows"}]},"advantages":[{"id":10228643939675,"code":"LPUNIV","name":"Ridotto 30% e 50%","targetType":"CODE","accessCode":"LPUNIV","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"amount":"€175.00"},{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451946,"name":"GALLERIA A"},"amount":"€120.00"}]},{"id":10228646191470,"code":"NRC30","name":"Ridotto 30%","targetType":"CODE","accessCode":"NRC30","discountedPrices":[{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"amount":"€175.00"},{"tariff":{"id":10228635444805,"code":"R8","name":"RIDOTTO PROMO","kind":"REDUCED"},"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"amount":"€175.00"}]},{"id":10228643726974,"code":"LP200","name":"Ridotto 40%","targetType":"CODE","accessCode":"LP200","discountedPrices":[{"tariff":{"id":10228635444806,"code":"R9","name":"RIDOTTO 40%","kind":"REDUCED"},"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"amount":"€145.00"},{"tariff":{"id":10228635444806,"code":"R9","name":"RIDOTTO 40%","kind":"REDUCED"},"seatCategory":{"id":10228635451944,"name":"SETTORE B"},"amount":"€145.00"}]}],"salesforce":{"recordId":"a03SX00000bGVTzYAO","currentName":"SUMMER ON A SOLITARY BITCH","status":"unique in prod ✓"}},{"productId":10228687124788,"found":true,"code":"1","name":"MEMBERSHIP UNDER30","family":"MEMBERSHIP / MEMBERSHIP","state":"RUNNING","season":{"id":10228683117776,"code":"2627","name":"STAGIONE 26-27"},"productType":{"id":10228687303726,"code":"7","name":"MEMBERSHIP"},"ticketModel":{"id":10228638467696,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849895,"contactProductLinks":[{"id":10142991257,"contactNumber":"12900","type":"RESPONSIBLE"}],"membership":{"validity":" → undefined ","items":[{"itemPrices":[{"tariff":{"id":10228687152442,"code":"OM","name":"OMAGGIO MEMBERSHIP UNDER30","kind":"FREE"},"amount":"€0.00","maxQty":1}]}]},"salesforce":{"recordId":"a03SX00000bGH24YAG","currentName":"MEMBERSHIP UNDER30","status":"unique in prod ✓"}},{"productId":10228656709105,"found":true,"code":"SC2526","name":"PARENTI SOCIAL CARD 2026","family":"MEMBERSHIP / MEMBERSHIP","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":{"id":10228656709709,"code":"11","name":"PARENTI SOCIAL CARD"},"ticketModel":{"id":10228657349140,"name":"(from middleware static map — not in catalog)"},"vatCodeId":20849896,"contactProductLinks":[{"id":10142230692,"contactNumber":"12900","type":"RESPONSIBLE"}],"membership":{"validity":"2025-11-21T00:00:00.000+01:00 → 2026-12-31T00:00:00.000+01:00","items":[{"itemPrices":[{"tariff":{"id":10228635444777,"code":"I2","name":"INTERO","kind":"FULL"},"amount":"€100.00","maxQty":10}]}]},"salesforce":{"recordId":"a03SX00000bGGF1YAO","currentName":"PARENTI SOCIAL CARD 2026","status":"unique in prod ✓"}},{"productId":10228683831063,"found":true,"code":"PAC3","name":"PACCHETTO 3 CONCERTI - È TEMPO DI INDIE","family":"PACKAGE / PACKAGE","state":"RUNNING","season":{"id":10228635444462,"code":"2526","name":"STAGIONE 25-26"},"productType":{"id":10228635445277,"code":"02","name":"PACCHETTO"},"ticketModel":null,"vatCodeId":null,"contactProductLinks":[{"id":10142870871,"contactNumber":"12900","type":"RESPONSIBLE"}],"pack":{"priceType":"DYNAMIC","linkedTariffs":[],"packageLine":[{"product":{"id":10228683831060,"code":"0507","name":"È TEMPO DI INDIE"}},{"product":{"id":10228683831060,"code":"0507","name":"È TEMPO DI INDIE"}},{"product":{"id":10228683831060,"code":"0507","name":"È TEMPO DI INDIE"}}]},"salesforce":{"recordId":"a03SX00000bGTDfYAO","currentName":"PACCHETTO 3 CONCERTI - È TEMPO DI INDIE","status":"unique in prod ✓"}}];
+
+(function renderResolvedExamples() {
+  const grid = document.getElementById('exGrid');
+  const famColor = {
+    'SINGLE_ENTRY / SIMPLE_TICKET': 'var(--t-object)',
+    'SEASONTICKET / SEASONTICKET': 'var(--t-array)',
+    'MEMBERSHIP / MEMBERSHIP': 'var(--t-bool)',
+    'PACKAGE / PACKAGE': 'var(--t-string)'
+  };
+  function esc2(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function jsonHtml(v, ind) {
+    const pad = ' '.repeat(ind);
+    if (v === null) return '<span class="cc">null</span>';
+    if (typeof v === 'number' || typeof v === 'boolean') return '<span class="cv">' + v + '</span>';
+    if (typeof v === 'string') return '<span class="cv">"' + esc2(v) + '"</span>';
+    if (Array.isArray(v)) {
+      if (!v.length) return '[]';
+      return '[\n' + v.map(x => pad + '  ' + jsonHtml(x, ind + 2)).join(',\n') + '\n' + pad + ']';
+    }
+    const keys = Object.keys(v);
+    if (!keys.length) return '{}';
+    return '{\n' + keys.map(k => pad + '  <span class="ck">"' + esc2(k) + '"</span>: ' + jsonHtml(v[k], ind + 2)).join(',\n') + '\n' + pad + '}';
+  }
+  function entCard(id, title, sub, rows, catalog) {
+    let lis = '';
+    for (const r of rows) lis += '<li' + (r.cls ? ' class="' + r.cls + '"' : '') + '>' + r.html + '</li>';
+    return '<div class="ent' + (catalog ? ' catalog' : '') + '" id="' + id + '">' +
+      '<div class="ent-head"><span class="ent-name">' + esc2(title) + '</span>' +
+      (sub ? ' <span class="ent-sub">' + esc2(sub) + '</span>' : '') + '</div><ul>' + lis + '</ul></div>';
+  }
+
+  RESOLVED_EXAMPLES.forEach((ex, idx) => {
+    const card = document.createElement('div');
+    card.className = 'chk-card';
+    card.style.marginBottom = '18px';
+    const sf = ex.salesforce || {};
+    const body = Object.assign({}, ex);
+    delete body.salesforce;
+    const P = 'ex' + idx + '-';
+
+    // --- right column: one card per resolved entity that exists on this product ---
+    let right = '';
+    const leftRows = [];
+    leftRows.push({ cls: 'joinfield keyfield', html: 'productId ' + ex.productId + '<span class="fnote">⚷ = Inventory_Id__c</span>', edge: P + 'sf', main: true });
+
+    right += entCard(P + 'sf', 'Inventory__c ' + (sf.recordId || ''), 'production record · ' + (sf.status || ''), [
+      { html: 'current Name: "' + esc2(sf.currentName || '') + '"' },
+      { cls: 'newf', html: 'Season_Name__c ← "' + esc2(ex.season.name) + '"' }
+    ]);
+
+    leftRows.push({ cls: 'joinfield', html: 'seasonId ' + ex.season.id, edge: P + 'season' });
+    right += entCard(P + 'season', 'season ' + ex.season.code, null, [{ html: esc2(ex.season.name) }], true);
+
+    if (ex.ticketModel) {
+      leftRows.push({ cls: 'joinfield', html: 'ticketModelId ' + ex.ticketModel.id, edge: P + 'tm', dashed: true });
+      right += entCard(P + 'tm', 'ticketModel', 'not in catalog', [{ cls: 'jsonfield', html: 'name via middleware static map' }], true);
+    }
+    if (ex.contactProductLinks && ex.contactProductLinks.length) {
+      leftRows.push({ cls: 'joinfield', html: 'contactProductLinkIds [' + ex.contactProductLinks.length + ']', edge: P + 'links' });
+      right += entCard(P + 'links', 'contacts', 'joinable to Account by number', ex.contactProductLinks.slice(0, 3).map(l => ({ html: esc2(l.contactNumber || '?') + ' · ' + esc2(l.type || '') })), true);
+    }
+    if (ex.event) {
+      const pf = (ex.event.performances || [])[0] || {};
+      leftRows.push({ cls: 'joinfield', html: 'event.performances [' + ex.event.performanceCount + ']', edge: P + 'venue', main: true });
+      const vrows = [];
+      if (pf.site) vrows.push({ html: 'site ' + esc2(pf.site.code || '') + ' → "' + esc2(pf.site.name || '') + '"' + (pf.site.town ? ' (' + esc2(pf.site.town) + ')' : '') });
+      if (pf.space) vrows.push({ html: 'space ' + esc2(pf.space.code || '') + ' → "' + esc2(pf.space.name || '') + '"' });
+      if (pf.physicalConfiguration) vrows.push({ html: 'physConf ' + pf.physicalConfiguration.id + ' → "' + esc2(pf.physicalConfiguration.name || '') + '"' });
+      if (pf.logicalConfiguration) vrows.push({ html: 'logConf → "' + esc2(pf.logicalConfiguration.name || '') + '"' });
+      if (pf.rateType) vrows.push({ html: 'rateType ' + esc2(pf.rateType.code || '') + ' → "' + esc2(pf.rateType.name || '') + '"' });
+      right += entCard(P + 'venue', 'venue & rates', 'performance ' + (pf.performanceId || ''), vrows, true);
+      if (pf.priceGrid && pf.priceGrid.length) {
+        leftRows.push({ cls: 'joinfield', html: 'prices → tariff legend', edge: P + 'tariff' });
+        right += entCard(P + 'tariff', 'tariff grid (decoded)', null, pf.priceGrid.slice(0, 3).map(r => ({
+          html: esc2((r.seatCategory && r.seatCategory.name) || '') + ' × ' + esc2((r.tariff && r.tariff.name) || '') + ' = <b>' + esc2(r.amount || '') + '</b>'
+        })), true);
+      }
+    }
+    if (ex.seasonTicket) {
+      if (ex.seasonTicket.itemPrices && ex.seasonTicket.itemPrices.length) {
+        leftRows.push({ cls: 'joinfield', html: 'seasonTicket.itemPrices (audSubCatId · priceLevelId)', edge: P + 'stp' });
+        right += entCard(P + 'stp', 'season-ticket prices (decoded)', null, ex.seasonTicket.itemPrices.slice(0, 3).map(r => ({
+          html: esc2((r.tariff && r.tariff.name) || '') + (r.priceLevel ? ' · ' + esc2(r.priceLevel.code || '') : '') + ' = <b>' + esc2(r.amount || '') + '</b>'
+        })), true);
+      }
+      if (ex.seasonTicket.lines && ex.seasonTicket.lines.length) {
+        leftRows.push({ cls: 'joinfield', html: 'seasonTicketLines [' + ex.seasonTicket.lineCount + '] → products', edge: P + 'bundle', main: true });
+        right += entCard(P + 'bundle', 'bundled products', ex.seasonTicket.lineCount + ' lines', ex.seasonTicket.lines.slice(0, 4).map(l => ({
+          html: (l.product ? esc2(l.product.code || '') + ' "' + esc2(l.product.name || '') + '"' + (l.performances ? ' · ' + l.performances + ' perf.' : '') : '?')
+        })), true);
+      }
+    }
+    if (ex.pack) {
+      if (ex.pack.linkedTariffs && ex.pack.linkedTariffs.length) {
+        leftRows.push({ cls: 'joinfield', html: 'pack.linkedAudienceSubCategoryIds', edge: P + 'ptar' });
+        right += entCard(P + 'ptar', 'pack tariffs (decoded)', null, ex.pack.linkedTariffs.slice(0, 3).map(t => ({ html: esc2(t.code || '') + ' "' + esc2(t.name || '') + '"' })), true);
+      }
+      if (ex.pack.packageLine && ex.pack.packageLine.length) {
+        leftRows.push({ cls: 'joinfield', html: 'pack.packageLine → products', edge: P + 'bundle', main: true });
+        right += entCard(P + 'bundle', 'bundled products', null, ex.pack.packageLine.slice(0, 4).map(l => ({
+          html: (l.product ? esc2(l.product.code || '') + ' "' + esc2(l.product.name || '') + '"' : '?')
+        })), true);
+      }
+    }
+    if (ex.membership) {
+      leftRows.push({ cls: 'joinfield', html: 'membership.items (audSubCatId)', edge: P + 'mtar' });
+      const mrows = [];
+      for (const item of ex.membership.items || [])
+        for (const ip of item.itemPrices || [])
+          if (mrows.length < 3) mrows.push({ html: esc2((ip.tariff && (ip.tariff.name || ip.tariff.code)) || '?') + ' = <b>' + esc2(ip.amount || '') + '</b>' + (ip.maxQty ? ' · max ' + ip.maxQty : '') });
+      right += entCard(P + 'mtar', 'membership tariffs (decoded)', 'validity ' + esc2(ex.membership.validity || ''), mrows, true);
+    }
+    if (ex.crossSell && ex.crossSell.length) {
+      leftRows.push({ cls: 'joinfield', html: 'crossSellProductLinks [' + ex.crossSell.length + ']<span class="fnote">on season-ticket line products</span>', edge: P + 'xsell', main: true });
+      right += entCard(P + 'xsell', 'cross-sell / up-sell', 'targetProductId resolved', ex.crossSell.map(x => ({
+        html: esc2(x.type || '') + ' → "' + esc2(x.targetProduct.name || '') + '"' +
+          (x.message ? '<span class="fnote">“' + esc2(x.message) + '”</span>' : '')
+      })), true);
+    }
+    if (ex.conditionalCrossSellWith && ex.conditionalCrossSellWith.length) {
+      leftRows.push({ cls: 'joinfield', html: 'conditionalCrossSells group<span class="fnote">season level</span>', edge: P + 'ccs', dashed: true });
+      right += entCard(P + 'ccs', 'conditional cross-sell group', 'offered together with', ex.conditionalCrossSellWith.map(n => ({ html: '"' + esc2(n) + '"' })), true);
+    }
+    if (ex.advantages && ex.advantages.length) {
+      leftRows.push({ cls: 'joinfield', html: 'advantages [' + ex.advantages.length + (ex.advantagesNote ? '+' : '') + ']<span class="fnote">catalog only — not in webhook</span>', edge: P + 'adv', main: true });
+      right += entCard(P + 'adv', 'advantages (discount schemes)', ex.advantagesNote || null, ex.advantages.slice(0, 4).map(a => {
+        let h = esc2(a.code || '') + ' "' + esc2(a.name || '') + '" · ' + esc2(a.targetType || '');
+        if (a.accessCode) h += ' · code ' + esc2(a.accessCode);
+        const d = a.discountedPrices && a.discountedPrices[0];
+        if (d) h += '<span class="fnote">' + esc2((d.seatCategory && d.seatCategory.name) || '') + ' × ' + esc2((d.tariff && d.tariff.name) || '') + ' = ' + esc2(d.amount || '') + '</span>';
+        return { html: h };
+      }), true);
+    }
+
+    let leftLis = '';
+    for (const r of leftRows) {
+      leftLis += '<li class="' + (r.cls || '') + '" data-edge="' + r.edge + '"' + (r.main ? ' data-main="1"' : '') + (r.dashed ? ' data-dashed="1"' : '') + '>' + r.html + '</li>';
+    }
+    const leftCard = '<div class="ent"><div class="ent-head"><span class="ent-name">' + esc2(ex.code) + '</span> <span class="ent-sub">' + esc2(ex.state || '') + '</span></div><ul>' + leftLis + '</ul></div>';
+
+    card.innerHTML =
+      '<div class="ent-head">' +
+      '<span class="badge" style="color:' + (famColor[ex.family] || 'var(--muted)') + ';font-size:11px;">' + esc2(ex.family) + '</span>' +
+      '<span class="ent-name">' + esc2(ex.code) + ' · ' + esc2(ex.name || '') + '</span>' +
+      '<span class="ent-sub">productId ' + ex.productId + '</span>' +
+      '<span class="dup-badge ok">' + esc2(sf.status || '') + (sf.recordId ? ' · ' + sf.recordId : '') + '</span>' +
+      '</div>' +
+      '<div class="map-diagram" style="padding:14px 14px 6px;">' +
+      '<svg class="map-svg" aria-hidden="true"></svg>' +
+      '<div class="map-cols"><div class="map-col">' + leftCard + '</div><div></div><div class="map-col">' + right + '</div></div>' +
+      '</div>' +
+      '<details style="border-top:1px solid var(--line);"><summary style="cursor:pointer;padding:7px 14px;font-size:12px;color:var(--muted);">raw resolve JSON</summary>' +
+      '<div class="codeblock" style="border:none;border-radius:0;margin:0;">' + jsonHtml(body, 0) + '</div></details>';
+    grid.appendChild(card);
+
+    card.querySelector('details').addEventListener('toggle', () => requestAnimationFrame(drawVisibleDiagrams));
+  });
+})();
+</script>
 
 <script>
 const CHK_EXAMPLES = [
   { combo: 'SINGLE_ENTRY / SIMPLE_TICKET', id: 10228676772860, copies: 2,
     rows: [
       ['code', '0185', '0185', 'ok'],
-      ['name (it)', 'NAPOLI NOBILISSIMA', 'Name = "0185"', 'bad'],
+      ['name (it)', 'NAPOLI NOBILISSIMA', 'Name = "NAPOLI NOBILISSIMA"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', '634688343', '634688343', 'ok'],
       ['vatCodeId', '20849893', '20849893', 'ok'],
-      ['seasonId', '10228635444462 (season 2526)', 'Season_Id__c = null', 'pend'],
-      ['contactProductLinks', 'present', 'Contact_Product_Links__c = null', 'pend']
+      ['seasonId', '10228635444462 (STAGIONE 25-26)', '10228635444462', 'ok'],
+      ['contactProductLinks', '2 links', 'filled (JSON, 290 chars)', 'ok']
     ]},
   { combo: 'SINGLE_ENTRY / SIMPLE_TICKET', id: 10228687124754, copies: 8,
     rows: [
       ['code', '0191', '0191', 'ok'],
-      ['name (it)', 'AMLETO2', 'Name = "0191"', 'bad'],
+      ['name (it)', 'AMLETO2', 'Name = "AMLETO2"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', '634688343', '634688343', 'ok'],
       ['vatCodeId', '20849893', '20849893', 'ok'],
-      ['seasonId', '10228635444462 (season 2526)', 'null', 'pend'],
-      ['contactProductLinks', 'present', 'null', 'pend']
+      ['seasonId', '10228635444462 (STAGIONE 25-26)', '10228635444462', 'ok'],
+      ['contactProductLinks', '2 links', 'filled (JSON, 290 chars)', 'ok']
     ]},
   { combo: 'SEASONTICKET / SEASONTICKET', id: 10228687284472, copies: 13,
     rows: [
       ['code', '0012', '0012', 'ok'],
-      ['name (it)', 'CARD 2 INGRESSI 2026/27', 'Name = "0012"', 'bad'],
+      ['name (it)', 'CARD 2 INGRESSI 2026/27', 'Name = "CARD 2 INGRESSI 2026/27"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', '10228635519101', '10228635519101', 'ok'],
       ['vatCodeId', '20849893', '20849893', 'ok'],
-      ['seasonId', '10228683117776 (STAGIONE 26-27)', 'null', 'pend'],
-      ['contactProductLinks', 'present', 'null', 'pend']
+      ['seasonId', '10228683117776 (STAGIONE 26-27)', '10228683117776', 'ok'],
+      ['contactProductLinks', 'present', 'filled (JSON)', 'ok']
     ]},
   { combo: 'SEASONTICKET / SEASONTICKET', id: 10228687124780, copies: 9,
     rows: [
       ['code', '0013', '0013', 'ok'],
-      ['name (it)', 'PASSEPARTOUT 2026/27', 'Name = "0013"', 'bad'],
+      ['name (it)', 'PASSEPARTOUT 2026/27', 'Name = "PASSEPARTOUT 2026/27"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', '10228635519101', '10228635519101', 'ok'],
       ['vatCodeId', '20849893', '20849893', 'ok'],
-      ['seasonId', '10228683117776 (STAGIONE 26-27)', 'null', 'pend'],
-      ['contactProductLinks', 'present', 'null', 'pend']
+      ['seasonId', '10228683117776 (STAGIONE 26-27)', '10228683117776', 'ok'],
+      ['contactProductLinks', 'present', 'filled (JSON)', 'ok']
     ]},
   { combo: 'MEMBERSHIP / MEMBERSHIP', id: 10228687124788, copies: 4,
     rows: [
       ['code', '1', '1', 'ok'],
-      ['name (it)', 'MEMBERSHIP UNDER30', 'Name = "1"', 'bad'],
+      ['name (it)', 'MEMBERSHIP UNDER30', 'Name = "MEMBERSHIP UNDER30"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', '10228638467696', '10228638467696', 'ok'],
       ['vatCodeId', '20849895', '20849895', 'ok'],
-      ['seasonId', '10228683117776 (STAGIONE 26-27)', 'null', 'pend'],
-      ['contactProductLinks', 'present', 'null', 'pend']
+      ['seasonId', '10228683117776 (STAGIONE 26-27)', '10228683117776', 'ok'],
+      ['contactProductLinks', 'present', 'filled (JSON)', 'ok']
     ]},
   { combo: 'MEMBERSHIP / MEMBERSHIP', id: 10228656709105, copies: 1,
     rows: [
       ['code', 'SC2526', 'SC2526', 'ok'],
-      ['name (it)', 'PARENTI SOCIAL CARD 2026', 'Name = "SC2526"', 'bad'],
+      ['name (it)', 'PARENTI SOCIAL CARD 2026', 'Name = "PARENTI SOCIAL CARD 2026"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', '10228657349140', '10228657349140', 'ok'],
       ['vatCodeId', '20849896', '20849896', 'ok'],
-      ['seasonId', '10228635444462 (season 2526)', 'null', 'pend'],
-      ['contactProductLinks', 'present', 'null', 'pend']
+      ['seasonId', '10228635444462 (STAGIONE 25-26)', '10228635444462', 'ok'],
+      ['contactProductLinks', 'present', 'filled (JSON)', 'ok']
     ]},
   { combo: 'PACKAGE / PACKAGE', id: 10228683831063, copies: 4,
     rows: [
       ['code', 'PAC3', 'PAC3', 'ok'],
-      ['name (it)', 'PACCHETTO 3 CONCERTI - È TEMPO DI INDIE', 'Name = "PAC3"', 'bad'],
+      ['name (it)', 'PACCHETTO 3 CONCERTI - È TEMPO DI INDIE', 'Name = "PACCHETTO 3 CONCERTI - È TEMPO DI INDIE"', 'ok'],
       ['state', 'RUNNING', 'RUNNING', 'ok'],
       ['ticketModelId', 'null', 'null', 'ok'],
       ['vatCodeId', 'null', 'null', 'ok'],
-      ['seasonId', '10228635444462 (season 2526)', 'null', 'pend'],
-      ['contactProductLinks', 'present', 'null', 'pend']
+      ['seasonId', '10228635444462 (STAGIONE 25-26)', '10228635444462', 'ok'],
+      ['contactProductLinks', 'present', 'filled (JSON)', 'ok']
     ]}
 ];
 (function renderChk() {
@@ -1501,8 +1842,8 @@ const CHK_EXAMPLES = [
     card.innerHTML =
       '<div class="ent-head"><span class="ent-name">' + ex.combo + '</span>' +
       '<span class="ent-sub">productId ' + ex.id + '</span>' +
-      '<span class="dup-badge' + (ex.copies === 1 ? ' ok' : '') + '">' + (ex.copies === 1 ? 'unique in prod' : '×' + ex.copies + ' duplicates in prod') + '</span></div>' +
-      '<table class="cmp"><tr><th>field</th><th>catalog (2026-07-10)</th><th>salesforce prod (2026-07-14)</th><th>status</th></tr>' + rows + '</table>';
+      '<span class="dup-badge ok">' + (ex.copies === 1 ? 'unique in prod' : 'was ×' + ex.copies + ' · deduped ✓') + '</span></div>' +
+      '<table class="cmp"><tr><th>field</th><th>catalog (2026-07-10)</th><th>salesforce prod (after replay)</th><th>status</th></tr>' + rows + '</table>';
     grid.appendChild(card);
   }
 })();
@@ -1642,6 +1983,7 @@ const tabBtns = {
   rel: document.getElementById('tabRelBtn'),
   plan: document.getElementById('tabPlanBtn'),
   res: document.getElementById('tabResBtn'),
+  ex: document.getElementById('tabExBtn'),
   chk: document.getElementById('tabChkBtn')
 };
 const panes = {
@@ -1656,6 +1998,7 @@ const panes = {
   rel: document.getElementById('relPane'),
   plan: document.getElementById('planPane'),
   res: document.getElementById('resPane'),
+  ex: document.getElementById('exPane'),
   chk: document.getElementById('chkPane')
 };
 let graphInited = false;

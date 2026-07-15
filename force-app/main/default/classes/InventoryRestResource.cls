@@ -964,7 +964,7 @@ global without sharing class InventoryRestResource {
             inventoryWrapper.culturalContact = rawPayload.get('culturalContact');
             inventoryWrapper.waitingListAllowed = asBoolean(rawPayload.get('waitingListAllowed'));
             inventoryWrapper.partnerContactId = asLong(rawPayload.get('partnerContactId'));
-            inventoryWrapper.seasonId = asLong(rawPayload.get('seasonId'));
+            inventoryWrapper.seasonId = asString(rawPayload.get('seasonId'));
             inventoryWrapper.contactProductLinks = rawPayload.get('contactProductLinks');
             inventoryWrapper.grantedToTourPromoter = asBoolean(rawPayload.get('grantedToTourPromoter'));
             inventoryWrapper.exchangeable = asBoolean(rawPayload.get('exchangeable'));
