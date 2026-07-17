@@ -42,6 +42,9 @@ $RECYCLE.BIN/
 # Local environment variables
 .env
 
+# Generated row catalog
+/docs/Row Catalog formatted.json
+
 # Python Salesforce Functions
 **/__pycache__/
 **/.venv/
