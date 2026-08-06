@@ -17,6 +17,10 @@ private class CatalogEnrichmentTest {
         System.assertEquals(1, result.inventoriesUpdated);
         System.assertEquals(1, result.eventsUpdated);
         System.assertEquals(1, result.performancesUpdated);
+        System.assertEquals(1, result.salesChannelsUpdated);
+        System.assertEquals(2, result.salePeriodsUpdated);
+        System.assertEquals(2, result.salePeriodAudiencesUpdated);
+        System.assertEquals(1, result.salePeriodSeatCategoriesUpdated);
         System.assertEquals(0, result.errors.size());
 
         Inventory__c inventory = [
@@ -61,6 +65,86 @@ private class CatalogEnrichmentTest {
         System.assertEquals('01 - SALA GRANDE', performance.Physical_Configuration_Name__c);
         System.assertEquals('TEATRO', performance.Rate_Type_Name__c);
         System.assert(performance.Tariff_Legend__c.contains('INTERO'));
+        System.assertEquals(1, [
+            SELECT COUNT() FROM Sale_Period__c WHERE Inventory__c = :data.inventoryId
+        ]);
+        System.assertEquals(1, [
+            SELECT COUNT() FROM Sale_Period__c WHERE Performance__c = :data.performanceRecordId
+        ]);
+        System.assertEquals(2, [SELECT COUNT() FROM Sale_Period_Audience__c]);
+        System.assertEquals(1, [SELECT COUNT() FROM Sale_Period_Seat_Category__c]);
+    }
+
+    @IsTest
+    static void serviceUsesNestedApiVenueAndEventShape() {
+        TestData data = createTestData(PRODUCT_ID, PERFORMANCE_ID);
+        Map<String, Object> response = responsePayload(PRODUCT_ID, PERFORMANCE_ID, true);
+        Map<String, Object> product = (Map<String, Object>) ((List<Object>) response.get('order'))[0];
+        Map<String, Object> activity = (Map<String, Object>) product.remove('activity');
+        List<Object> performances = (List<Object>) product.remove('performances');
+        Map<String, Object> performancePayload = (Map<String, Object>) performances[0];
+        performancePayload.put('performanceId', performancePayload.remove('id'));
+        performancePayload.remove('siteCode');
+        performancePayload.remove('spaceCode');
+        performancePayload.remove('siteName_it');
+        performancePayload.remove('siteName_en');
+        performancePayload.remove('spaceName_it');
+        performancePayload.remove('spaceName_en');
+        performancePayload.put('site', new Map<String, Object>{
+            'id' => 10228544852613L,
+            'code' => '1',
+            'name' => 'Teatro Franco Parenti',
+            'town' => 'Milano',
+            'address' => 'Via Pier Lombardo 14, Milano'
+        });
+        performancePayload.put('space', new Map<String, Object>{
+            'id' => 10228544852816L,
+            'code' => 'GRANDE',
+            'name' => 'SALA GRANDE'
+        });
+        ((Map<String, Object>) performancePayload.get('physicalConfiguration')).put('id', 10228544670213L);
+        ((Map<String, Object>) performancePayload.get('logicalConfiguration')).put('id', 10228635451835L);
+        ((Map<String, Object>) performancePayload.get('rateType')).put('id', 10228635445070L);
+        ((Map<String, Object>) performancePayload.get('rateType')).put('code', '1');
+        product.put('event', new Map<String, Object>{
+            'activity' => activity,
+            'performances' => performances
+        });
+
+        CatalogEnrichmentService.Result result = CatalogEnrichmentService.applyResponse(response);
+
+        System.assertEquals(1, result.performancesUpdated);
+        System.assertEquals(1, result.performanceLocationsLinked);
+        Performance__c performance = [
+            SELECT Site_Id__c, Site_Code__c, Space_Id__c, Space_Code__c,
+                   Site_Name_IT__c, Space_Name_IT__c, Location__c,
+                   Physical_Configuration_Id__c, Logical_Configuration_Id__c,
+                   Rate_Type_Id__c, Rate_Type_Code__c, Venue_Location__c
+            FROM Performance__c
+            WHERE Id = :data.performanceRecordId
+        ];
+        System.assertEquals(Decimal.valueOf('10228544852613'), performance.Site_Id__c);
+        System.assertEquals('1', performance.Site_Code__c);
+        System.assertEquals(Decimal.valueOf('10228544852816'), performance.Space_Id__c);
+        System.assertEquals('GRANDE', performance.Space_Code__c);
+        System.assertEquals('Teatro Franco Parenti', performance.Site_Name_IT__c);
+        System.assertEquals('SALA GRANDE', performance.Space_Name_IT__c);
+        System.assertEquals(Decimal.valueOf('10228544670213'), performance.Physical_Configuration_Id__c);
+        System.assertEquals(Decimal.valueOf('10228635451835'), performance.Logical_Configuration_Id__c);
+        System.assertEquals(Decimal.valueOf('10228635445070'), performance.Rate_Type_Id__c);
+        System.assertEquals('1', performance.Rate_Type_Code__c);
+        System.assert(performance.Location__c.contains('"site"'));
+        System.assertNotEquals(null, performance.Venue_Location__c);
+
+        Venue_Location__c location = [
+            SELECT Site_Id__c, Space_Id__c, Town__c, Address__c
+            FROM Venue_Location__c
+            WHERE Id = :performance.Venue_Location__c
+        ];
+        System.assertEquals(Decimal.valueOf('10228544852613'), location.Site_Id__c);
+        System.assertEquals(Decimal.valueOf('10228544852816'), location.Space_Id__c);
+        System.assertEquals('Milano', location.Town__c);
+        System.assertEquals('Via Pier Lombardo 14, Milano', location.Address__c);
     }
 
     @IsTest
@@ -305,7 +389,20 @@ private class CatalogEnrichmentTest {
             'ticketTypes' => new List<Object>{
                 new Map<String, Object>{ 'id' => 10228635444778L, 'code' => 'I1', 'name' => 'INTERO + prev.', 'kind' => 'FULL' }
             },
-            'salePeriods' => new List<Object>(),
+            'salePeriods' => new List<Object>{
+                new Map<String, Object>{
+                    'start' => '2026-06-01T09:00:00.000+02:00',
+                    'end' => '2026-07-23T20:45:00.000+02:00',
+                    'salesChannelId' => 10228452598405L,
+                    'salesChannelCode' => 'TS',
+                    'salePossible' => true,
+                    'reservationPossible' => false,
+                    'quotationPossible' => false,
+                    'postingResalePossible' => false,
+                    'type' => 'STANDARD',
+                    'audienceSubCatIds' => new List<Object>{ 10228635444778L }
+                }
+            },
             'performances' => new List<Object>{
                 new Map<String, Object>{
                     'id' => performanceId,
@@ -322,7 +419,34 @@ private class CatalogEnrichmentTest {
                     'physicalConfiguration' => new Map<String, Object>{ 'name' => '01 - SALA GRANDE' },
                     'logicalConfiguration' => new Map<String, Object>{ 'name' => 'SALA GRANDE' },
                     'rateType' => new Map<String, Object>{ 'name' => 'TEATRO' },
-                    'salePeriods' => new List<Object>()
+                    'salePeriods' => new List<Object>{
+                        new Map<String, Object>{
+                            'start' => '2026-06-01T09:00:00.000+02:00',
+                            'end' => '2026-07-23T20:45:00.000+02:00',
+                            'salesChannel' => new Map<String, Object>{
+                                'id' => 10228452598405L,
+                                'code' => 'TS',
+                                'name_it' => 'Biglietteria online'
+                            },
+                            'salePossible' => true,
+                            'type' => 'STANDARD',
+                            'tariffs' => new List<Object>{
+                                new Map<String, Object>{
+                                    'id' => 10228635444778L,
+                                    'code' => 'I1',
+                                    'name_it' => 'INTERO + prev.',
+                                    'kind' => 'FULL'
+                                }
+                            },
+                            'seatCategories' => new List<Object>{
+                                new Map<String, Object>{
+                                    'id' => 10228635451937L,
+                                    'code' => 'SA',
+                                    'name_it' => 'SETTORE A'
+                                }
+                            }
+                        }
+                    }
                 }
             },
             'advantages' => new List<Object>{

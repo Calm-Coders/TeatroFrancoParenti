@@ -40,10 +40,137 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         for subject in product["seasonTicket"].get("seasonTicketSubjects") or []
         if isinstance(subject, dict)
     ]
+    product_sale_periods = [
+        period
+        for product in products
+        for period in product.get("salePeriods") or []
+        if isinstance(period, dict)
+    ]
+    performance_sale_periods = [
+        period
+        for product in events
+        for performance in product["event"].get("performances") or []
+        if isinstance(performance, dict)
+        for period in performance.get("salePeriods") or []
+        if isinstance(period, dict)
+    ]
+
+    def restriction_count(periods: list[dict[str, Any]], keys: tuple[str, ...]) -> int:
+        total = 0
+        for period in periods:
+            values: set[str] = set()
+            for key in keys:
+                for value in period.get(key) or []:
+                    if isinstance(value, dict):
+                        external_id = value.get("id")
+                        code = value.get("code")
+                        normalized = str(external_id) if external_id is not None else str(code or "")
+                    else:
+                        normalized = str(value)
+                    if normalized:
+                        values.add(normalized)
+            total += len(values)
+        return total
+
+    all_sale_periods = product_sale_periods + performance_sale_periods
+    performance_prices = [
+        price
+        for product in events
+        for performance in product["event"].get("performances") or []
+        if isinstance(performance, dict)
+        for price in performance.get("prices") or []
+        if isinstance(price, dict)
+    ]
+    performance_price_charges = [
+        charge
+        for price in performance_prices
+        for charge in price.get("chargesAmounts") or []
+        if isinstance(charge, dict)
+    ]
+
+    def reference_keys(values: list[Any], id_key: str = "id", code_key: str = "code") -> set[str]:
+        keys: set[str] = set()
+        for value in values:
+            if isinstance(value, dict):
+                external_id = value.get(id_key)
+                code = value.get(code_key)
+                key = str(external_id) if external_id is not None else (f"CODE:{code}" if code else "")
+            else:
+                key = str(value) if value is not None else ""
+            if key:
+                keys.add(key)
+        return keys
+
+    audience_reference_keys = reference_keys(
+        [
+            value
+            for period in all_sale_periods
+            for key in ("audienceSubCatIds", "tariffs", "ticketTypes")
+            for value in period.get(key) or []
+        ]
+    )
+    audience_reference_keys.update(
+        str(price["audSubCatId"])
+        for price in performance_prices
+        if price.get("audSubCatId") is not None
+    )
+    charge_reference_keys = reference_keys(
+        performance_price_charges, id_key="chargesId", code_key="component"
+    )
+    performance_seat_category_keys: set[str] = set()
+    performance_seat_category_links = 0
+    venue_location_keys: set[str] = set()
+    for product in events:
+        for performance in product["event"].get("performances") or []:
+            if not isinstance(performance, dict):
+                continue
+            location = performance.get("location")
+            site = performance.get("site")
+            space = performance.get("space")
+            if any(isinstance(value, dict) for value in (location, site, space)):
+                location = location if isinstance(location, dict) else {}
+                site = site if isinstance(site, dict) else {}
+                space = space if isinstance(space, dict) else {}
+                site_code = site.get("code") or location.get("siteCode") or performance.get("siteCode") or "NONE"
+                space_code = space.get("code") or location.get("spaceCode") or performance.get("spaceCode") or "NONE"
+                venue_location_keys.add(f"{site_code}|{space_code}")
+            performance_keys: set[str] = set()
+            for category in performance.get("seatCategories") or []:
+                if not isinstance(category, dict):
+                    continue
+                category_id = category.get("id")
+                key = str(category_id) if category_id is not None else f"CODE:{category.get('code') or ''}"
+                if key and key != "CODE:":
+                    performance_keys.add(key)
+                    performance_seat_category_keys.add(key)
+            performance_seat_category_links += len(performance_keys)
     return {
         "inventories": len(products),
         "missing_season": 0,
         "missing_season_metadata": 0,
+        "inventory_sale_periods": len(product_sale_periods),
+        "performance_sale_periods": len(performance_sale_periods),
+        "sale_period_audiences": restriction_count(
+            all_sale_periods, ("audienceSubCatIds", "tariffs", "ticketTypes")
+        ),
+        "sale_period_seats": restriction_count(
+            all_sale_periods, ("seatCategoryIds", "seatCategories")
+        ),
+        "missing_sale_period_parent": 0,
+        "missing_sale_period_channel": 0,
+        "seat_categories": len(performance_seat_category_keys),
+        "performance_seat_categories": performance_seat_category_links,
+        "missing_performance_seat_category_lookup": 0,
+        "venue_locations": len(venue_location_keys),
+        "missing_performance_location_lookup": 0,
+        "audience_sub_categories": len(audience_reference_keys),
+        "missing_sale_period_audience_lookup": 0,
+        "performance_prices": len(performance_prices),
+        "missing_price_seat_lookup": 0,
+        "missing_price_audience_lookup": 0,
+        "charge_components": len(charge_reference_keys),
+        "performance_price_charges": len(performance_price_charges),
+        "missing_price_charge_lookup": 0,
         "events": len(events),
         "memberships": len(typed("membership")),
         "packs": len(typed("pack")),
@@ -103,6 +230,87 @@ def main() -> int:
             f"SELECT COUNT() FROM Inventory__c WHERE Inventory_Id__c IN {scope} "
             "AND (Season_Code__c = null OR Season_Name__c = null "
             "OR Season_Start__c = null OR Season_End__c = null)"
+        ),
+        "inventory_sale_periods": (
+            "SELECT COUNT() FROM Sale_Period__c "
+            f"WHERE Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "performance_sale_periods": (
+            "SELECT COUNT() FROM Sale_Period__c "
+            f"WHERE Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "sale_period_audiences": (
+            "SELECT COUNT() FROM Sale_Period_Audience__c WHERE "
+            f"Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "sale_period_seats": (
+            "SELECT COUNT() FROM Sale_Period_Seat_Category__c WHERE "
+            f"Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "missing_sale_period_parent": (
+            "SELECT COUNT() FROM Sale_Period__c WHERE Inventory__c = null AND Performance__c = null"
+        ),
+        "missing_sale_period_channel": (
+            "SELECT COUNT() FROM Sale_Period__c WHERE Sales_Channel__c = null AND ("
+            f"Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope})"
+        ),
+        "seat_categories": (
+            "SELECT Seat_Category__c FROM Performance_Seat_Category__c WHERE "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "GROUP BY Seat_Category__c"
+        ),
+        "performance_seat_categories": (
+            "SELECT COUNT() FROM Performance_Seat_Category__c WHERE "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "missing_performance_seat_category_lookup": (
+            "SELECT COUNT() FROM Performance_Seat_Category__c WHERE "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Seat_Category__c = null"
+        ),
+        "venue_locations": "SELECT COUNT() FROM Venue_Location__c",
+        "missing_performance_location_lookup": (
+            "SELECT COUNT() FROM Performance__c WHERE "
+            f"Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Venue_Location__c = null"
+        ),
+        "audience_sub_categories": "SELECT COUNT() FROM Audience_Sub_Category__c",
+        "missing_sale_period_audience_lookup": (
+            "SELECT COUNT() FROM Sale_Period_Audience__c WHERE "
+            f"(Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}) "
+            "AND Audience_Sub_Category__c = null"
+        ),
+        "performance_prices": (
+            "SELECT COUNT() FROM Performance_Price__c WHERE "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "missing_price_seat_lookup": (
+            "SELECT COUNT() FROM Performance_Price__c WHERE "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Seat_Category__c = null"
+        ),
+        "missing_price_audience_lookup": (
+            "SELECT COUNT() FROM Performance_Price__c WHERE "
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Audience_Sub_Category__c = null"
+        ),
+        "charge_components": (
+            "SELECT Charge_Component__c FROM Performance_Price_Charge__c WHERE "
+            f"Performance_Price__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "GROUP BY Charge_Component__c"
+        ),
+        "performance_price_charges": (
+            "SELECT COUNT() FROM Performance_Price_Charge__c WHERE "
+            f"Performance_Price__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "missing_price_charge_lookup": (
+            "SELECT COUNT() FROM Performance_Price_Charge__c WHERE "
+            f"Performance_Price__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Charge_Component__c = null"
         ),
         "events": (
             "SELECT COUNT() FROM Inventory_Event__c "

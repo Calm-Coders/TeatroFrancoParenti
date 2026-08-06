@@ -5,6 +5,103 @@
     <classAccesses><apexClass>CatalogEnrichmentRetryScheduler</apexClass><enabled>true</enabled></classAccesses>
     <classAccesses><apexClass>CatalogEnrichmentService</apexClass><enabled>true</enabled></classAccesses>
     <classAccesses><apexClass>SeasonTicketRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>SalePeriodRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>SeatCategoryRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>SeatCategoryBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>PerformancePriceRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>PerformancePriceBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>AudienceRelationshipBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>VenueLocationRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>VenueLocationBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Site_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Site_Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Space_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Space_Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Site_Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Site_Name_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Space_Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Space_Name_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Town__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Venue_Location__c.Address__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Venue_Location__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance__c.Venue_Location__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance__c.Site_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Audience_Subcategory_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Audience_Category_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Kind__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Rank__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Min_Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Max_Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Require_Attachment__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Exchangeable__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Audience_Sub_Category__c.Name_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Audience_Sub_Category__c.Required_Audience_Ids__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Audience_Sub_Category__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Charge_Component__c.Charge_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Charge_Component__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Charge_Component__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Seat_Category__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Audience_Sub_Category__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Seat_Category_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Institution_Seat_Category_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Audience_Subcategory_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Amount__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Min_Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Max_Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price__c.Sequence__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Performance_Price__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price_Charge__c.Charge_Component__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price_Charge__c.Charge_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price_Charge__c.Component_Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price_Charge__c.Amount__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Price_Charge__c.Sequence__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Performance_Price_Charge__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Audience__c.Audience_Sub_Category__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Seat_Category__c.Category_Key__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Seat_Category_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Institution_Category_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Category_Number__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Name_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Rank__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Text_Color__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Background_Color__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Same_Block_Restriction_Mode__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Seat_Category__c.Pre_Request_Logical_Seat_Category_Ids__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Seat_Category__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Performance_Seat_Category__c.Relationship_Key__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Performance_Seat_Category__c.Sequence__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Performance_Seat_Category__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Sales_Channel__c.Channel_Key__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sales_Channel__c.Channel_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sales_Channel__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sales_Channel__c.Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sales_Channel__c.Name_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Sale_Period__c.Relationship_Key__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Inventory__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Performance__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Parent_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Sequence__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Start__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.End__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.End_Relative__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Sales_Channel__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Sale_Possible__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Reservation_Possible__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Quotation_Possible__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period__c.Posting_Resale_Possible__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Sale_Period__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Audience__c.Audience_Subcategory_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Audience__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Audience__c.Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Audience__c.Kind__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Seat_Category__c.Seat_Category_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Seat_Category__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Sale_Period_Seat_Category__c.Name_IT__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Inventory__c.Catalog_Description_EN__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Inventory__c.Catalog_Description_IT__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Inventory__c.Catalog_Name_EN__c</field><readable>true</readable></fieldPermissions>
@@ -68,4 +165,16 @@
         <allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords>
         <object>Season_Ticket_Line__c</object><viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Sales_Channel__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Sale_Period__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Sale_Period_Audience__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Sale_Period_Seat_Category__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Seat_Category__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Performance_Seat_Category__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Performance__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Audience_Sub_Category__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Charge_Component__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Performance_Price__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Performance_Price_Charge__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Venue_Location__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
 </PermissionSet>

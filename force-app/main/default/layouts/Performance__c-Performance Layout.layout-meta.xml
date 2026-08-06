@@ -27,10 +27,12 @@
         <editHeading>true</editHeading>
         <label>Venue</label>
         <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Site_Id__c</field></layoutItems>
             <layoutItems><behavior>Edit</behavior><field>Site_Code__c</field></layoutItems>
             <layoutItems><behavior>Edit</behavior><field>Site_Name_IT__c</field></layoutItems>
             <layoutItems><behavior>Edit</behavior><field>Site_Name_EN__c</field></layoutItems>
             <layoutItems><behavior>Edit</behavior><field>Site_External_Name__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Venue_Location__c</field></layoutItems>
             <layoutItems><behavior>Edit</behavior><field>Location__c</field></layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -163,6 +165,20 @@
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
 
+    <relatedLists>
+        <fields>NAME</fields><fields>Start__c</fields><fields>End__c</fields>
+        <fields>Sales_Channel__c</fields><fields>Type__c</fields><fields>Sale_Possible__c</fields>
+        <relatedList>Sale_Period__c.Performance__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields><fields>Seat_Category__c</fields><fields>Sequence__c</fields>
+        <relatedList>Performance_Seat_Category__c.Performance__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields><fields>Seat_Category__c</fields><fields>Audience_Sub_Category__c</fields>
+        <fields>Amount__c</fields><fields>Min_Quantity__c</fields><fields>Max_Quantity__c</fields>
+        <relatedList>Performance_Price__c.Performance__c</relatedList>
+    </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>true</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>

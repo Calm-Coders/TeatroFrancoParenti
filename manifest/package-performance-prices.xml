@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>AudienceRelationshipBackfillBatch</members>
+        <members>CatalogEnrichmentService</members>
+        <members>InventoryRestResource</members>
+        <members>PerformancePriceBackfillBatch</members>
+        <members>PerformancePriceRelationshipService</members>
+        <members>PerformancePriceRelationshipServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Audience_Sub_Category__c</members>
+        <members>Charge_Component__c</members>
+        <members>Performance_Price__c</members>
+        <members>Performance_Price_Charge__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>Sale_Period_Audience__c.Audience_Sub_Category__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>Audience_Sub_Category__c-Audience Sub-Category Layout</members>
+        <members>Charge_Component__c-Charge Component Layout</members>
+        <members>Performance_Price__c-Performance Price Layout</members>
+        <members>Performance_Price_Charge__c-Performance Price Charge Layout</members>
+        <members>Performance__c-Performance Layout</members>
+        <members>Sale_Period_Audience__c-Sale Period Audience Layout</members>
+        <name>Layout</name>
+    </types>
+    <types><members>TFP_Catalog_Enrichment</members><name>PermissionSet</name></types>
+    <version>65.0</version>
+</Package>

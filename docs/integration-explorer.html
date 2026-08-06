@@ -676,9 +676,65 @@
               <li class="joinfield" data-edge="c-physconf">Physical_Configuration_Id__c</li>
               <li class="joinfield" data-edge="c-logconf">Logical_Configuration_Id__c</li>
               <li class="joinfield" data-edge="c-ratetypes">Rate_Type_Id__c / Rate_Type_Code__c</li>
-              <li class="joinfield" data-edge="c-sites">Site_Code__c / Space_Code__c</li>
-              <li class="jsonfield">Seat_Categories__c, Prices__c<span class="fnote">stored as raw JSON</span></li>
-              <li class="joinfield jsonfield" data-edge="c-channels" data-dashed="1">Sale_Periods__c<span class="fnote">JSON — salesChannelCode needs the setup legend</span></li>
+              <li class="joinfield" data-edge="c-sites">Site_Id__c / Site_Code__c / Space_Id__c / Space_Code__c</li>
+              <li class="joinfield">Venue_Location__c<span class="fnote">API site + space are authoritative; lookup keyed by nested codes</span></li>
+              <li class="joinfield jsonfield">Seat_Categories__c<span class="fnote">raw audit copy; normalized through Performance_Seat_Category__c lookups</span></li>
+              <li class="joinfield jsonfield">Prices__c<span class="fnote">raw audit copy; normalized into Performance_Price__c relationships</span></li>
+              <li class="joinfield jsonfield" data-edge="c-channels" data-dashed="1">Sale_Periods__c<span class="fnote">raw audit copy; normalized into Sale_Period__c relationships</span></li>
+            </ul>
+          </div>
+
+          <div class="ent child" id="e-perf-seat-category">
+            <div class="ent-head"><span class="ent-name">Performance_Seat_Category__c</span> <span class="ent-sub">junction: Performance__c &harr; Seat_Category__c</span></div>
+            <ul>
+              <li class="joinfield">Performance__c<span class="fnote">master-detail; appears in the Performance related list</span></li>
+              <li class="joinfield">Seat_Category__c<span class="fnote">lookup to the reusable category record</span></li>
+              <li>Sequence__c &middot; Relationship_Key__c</li>
+            </ul>
+          </div>
+
+          <div class="ent child" id="e-seat-category">
+            <div class="ent-head"><span class="ent-name">Seat_Category__c</span> <span class="ent-sub">reference object</span></div>
+            <ul>
+              <li class="keyfield">Seat_Category_Id__c<span class="fnote">unique external ID</span></li>
+              <li>Code__c &middot; Name_IT__c &middot; Name_EN__c &middot; Rank__c</li>
+              <li>Text_Color__c &middot; Background_Color__c &middot; Category_Number__c</li>
+            </ul>
+          </div>
+
+          <div class="ent child" id="e-performance-price">
+            <div class="ent-head"><span class="ent-name">Performance_Price__c</span> <span class="ent-sub">child of Performance__c</span></div>
+            <ul>
+              <li class="joinfield">Performance__c &middot; Seat_Category__c &middot; Audience_Sub_Category__c</li>
+              <li>Amount__c &middot; Min_Quantity__c &middot; Max_Quantity__c</li>
+              <li class="keyfield">Price_Key__c<span class="fnote">Performance + seat category + tariff</span></li>
+            </ul>
+          </div>
+
+          <div class="ent child" id="e-audience-sub-category">
+            <div class="ent-head"><span class="ent-name">Audience_Sub_Category__c</span> <span class="ent-sub">shared tariff reference</span></div>
+            <ul>
+              <li class="keyfield">Audience_Subcategory_Id__c<span class="fnote">unique external ID</span></li>
+              <li>Code__c &middot; Kind__c &middot; Name_IT__c &middot; Rank__c</li>
+              <li class="joinfield">also linked from Sale_Period_Audience__c</li>
+            </ul>
+          </div>
+
+          <div class="ent child" id="e-performance-price-charge">
+            <div class="ent-head"><span class="ent-name">Performance_Price_Charge__c</span> <span class="ent-sub">fee child of Performance_Price__c</span></div>
+            <ul>
+              <li class="joinfield">Performance_Price__c &middot; Charge_Component__c</li>
+              <li>Amount__c &middot; Component_Code__c &middot; Charge_Id__c</li>
+            </ul>
+          </div>
+
+          <div class="ent child" id="e-venue-location">
+            <div class="ent-head"><span class="ent-name">Venue_Location__c</span> <span class="ent-sub">shared Performance location</span></div>
+            <ul>
+              <li class="keyfield">Location_Key__c<span class="fnote">siteCode + spaceCode</span></li>
+              <li>Site_Id__c &middot; Site_Code__c &middot; Space_Id__c &middot; Space_Code__c</li>
+              <li>Site_Name_IT/EN__c &middot; Space_Name_IT/EN__c</li>
+              <li>Town__c &middot; Address__c &middot; Raw_JSON__c</li>
             </ul>
           </div>
 
@@ -824,7 +880,7 @@
               <li class="newf">Xlarge_Image_Url__c · Additional_State__c · Remark__c<span class="fnote">new</span></li>
               <li class="grp">JSON blobs</li>
               <li class="jsonfield">External/Internal/Short_Name__c · External_Description__c</li>
-              <li class="jsonfield">Sale_Periods__c · Sale_Close_Exceptions__c · Media__c</li>
+              <li class="jsonfield">Sale_Periods__c (audit copy; relational children in Sale_Period__c) · Sale_Close_Exceptions__c · Media__c</li>
               <li class="jsonfield">Event__c · Pack__c · Season_Ticket__c<span class="fnote">resized to 131k</span></li>
               <li class="jsonfield">Membership__c · Cross_Sell_Product_Links__c · Sub_Topic_Links__c</li>
               <li class="newf jsonfield">Sub_Topics__c · Redemption_Period__c · Redemption_Products__c<span class="fnote">new</span></li>
@@ -850,7 +906,10 @@
               <li>Physical / Logical_Configuration_Id__c · Sale_Configuration_Id__c</li>
               <li>Rate_Type_Id__c / _Code__c · Rates_Table_Id__c</li>
               <li>Site_Code__c · Space_Code__c / _Id__c · Numbered__c</li>
-              <li class="jsonfield">Seat_Categories__c · Prices__c · Location__c · Match__c…</li>
+              <li class="joinfield jsonfield">Seat_Categories__c · normalized into Performance_Seat_Category__c lookups</li>
+              <li class="joinfield jsonfield">Prices__c · normalized into Performance_Price__c lookups</li>
+              <li class="joinfield jsonfield">Venue_Location__c · Location__c retained as audit JSON</li>
+              <li class="jsonfield">Match__c…</li>
             </ul>
           </div>
           <div class="ent" id="inv-mem" data-edge="inv-main">
@@ -1272,7 +1331,7 @@
               <li class="joinfield" data-edge="res-perfobj">physicalConfiguration { id, name, securityGauge }<span class="fnote">key: Physical_Configuration_Id__c</span></li>
               <li class="joinfield" data-edge="res-perfobj">logicalConfiguration { id, name }<span class="fnote">key: Logical_Configuration_Id__c</span></li>
               <li class="joinfield" data-edge="res-perfobj">rateType { id, code, name, colors }<span class="fnote">key: Rate_Type_Id__c</span></li>
-              <li class="joinfield" data-edge="res-perfobj">site / space { code, name, town }<span class="fnote">key: Site_Code__c / Space_Code__c</span></li>
+              <li class="joinfield" data-edge="res-perfobj">site / space { id, code, name, town, address }<span class="fnote">nested API nodes are primary; flat fields remain fallback-only</span></li>
             </ul>
           </div>
 
@@ -1288,7 +1347,7 @@
           </div>
 
           <div class="ent catalog" id="res-sp">
-            <div class="ent-head"><span class="ent-name">salePeriods[]</span> <span class="ent-sub">sales windows — 55 in current export, product + performance level</span></div>
+            <div class="ent-head"><span class="ent-name">salePeriods[]</span> <span class="ent-sub">sales windows — 1,028 in current snapshot, product + performance level</span></div>
             <ul>
               <li class="joinfield" data-edge="res-inv">{ salesChannel, start, end, salePossible, type }<span class="fnote">channel legend from SecuTix setup (TS, B2C, BO…)</span></li>
               <li class="joinfield" data-edge="res-perfobj">restricted tariffs + seat categories resolved<span class="fnote">keys: audienceSubCatIds · seatCategoryIds</span></li>
@@ -1345,7 +1404,18 @@
               <li class="newf">Physical_Configuration_Name__c · Logical_Configuration_Name__c<span class="fnote">to create</span></li>
               <li class="newf">Rate_Type_Name__c · Site_Name__c · Space_Name__c<span class="fnote">to create</span></li>
               <li class="newf">Tariff_Legend__c (JSON)<span class="fnote">to create — id→name map so Prices__c becomes readable</span></li>
-              <li class="jsonfield">Sale_Periods__c<span class="fnote">already captured — resolve decodes channel + tariff/sector restrictions</span></li>
+              <li class="jsonfield">Sale_Periods__c<span class="fnote">raw audit copy; synchronized into related Sale_Period__c records</span></li>
+            </ul>
+          </div>
+
+          <div class="ent" id="res-saleperiod">
+            <div class="ent-head"><span class="ent-name">Sale_Period__c</span> <span class="ent-sub">relational sales window</span></div>
+            <ul>
+              <li class="joinfield">Inventory__c or Performance__c<span class="fnote">exactly one parent; 62 product + 966 performance periods</span></li>
+              <li class="joinfield">Sales_Channel__c<span class="fnote">lookup resolved from salesChannelId / salesChannelCode</span></li>
+              <li>Start__c · End__c · Type__c · Sale_Possible__c · Reservation_Possible__c</li>
+              <li class="joinfield">Sale_Period_Audience__c[]<span class="fnote">3,773 tariff/audience restrictions</span></li>
+              <li class="joinfield">Sale_Period_Seat_Category__c[]<span class="fnote">8,438 seat-category restrictions</span></li>
             </ul>
           </div>
 

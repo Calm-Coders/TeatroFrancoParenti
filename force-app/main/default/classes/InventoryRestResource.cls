@@ -224,6 +224,7 @@ global without sharing class InventoryRestResource {
             }
 
             if (!existingPerformancesToDelete.isEmpty()) {
+                SalePeriodRelationshipService.deleteForPerformances(existingPerformancesToDelete);
                 delete existingPerformancesToDelete;
             }
 
@@ -248,6 +249,26 @@ global without sharing class InventoryRestResource {
             if (!performanceRecords.isEmpty()) {
                 insert performanceRecords;
             }
+            SalePeriodRelationshipService.syncInventoryPayloads(
+                products,
+                inventoryRecords,
+                performanceRecords
+            );
+            SeatCategoryRelationshipService.syncInventoryPayloads(
+                products,
+                inventoryRecords,
+                performanceRecords
+            );
+            PerformancePriceRelationshipService.syncInventoryPayloads(
+                products,
+                inventoryRecords,
+                performanceRecords
+            );
+            VenueLocationRelationshipService.syncInventoryPayloads(
+                products,
+                inventoryRecords,
+                performanceRecords
+            );
 
             List<String> recordIds = new List<String>();
             for (Inventory__c recordItem : inventoryRecords) {

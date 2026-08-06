@@ -7,14 +7,29 @@
         <members>CatalogEnrichmentService</members>
         <members>CatalogEnrichmentTest</members>
         <members>InventoryRestResource</members>
+        <members>SalePeriodRelationshipService</members>
+        <members>SalePeriodRelationshipServiceTest</members>
+        <members>SeatCategoryBackfillBatch</members>
+        <members>SeatCategoryRelationshipService</members>
+        <members>SeatCategoryRelationshipServiceTest</members>
         <members>SeasonTicketRelationshipService</members>
         <members>SeasonTicketRelationshipServiceTest</members>
+        <members>VenueLocationBackfillBatch</members>
+        <members>VenueLocationRelationshipService</members>
+        <members>VenueLocationRelationshipServiceTest</members>
         <name>ApexClass</name>
     </types>
     <types>
         <members>Catalog_Enrichment_Setting__c</members>
+        <members>Sale_Period__c</members>
+        <members>Sale_Period_Audience__c</members>
+        <members>Sale_Period_Seat_Category__c</members>
+        <members>Sales_Channel__c</members>
+        <members>Seat_Category__c</members>
+        <members>Performance_Seat_Category__c</members>
         <members>Season_Ticket_Line__c</members>
         <members>Season_Ticket_Subject__c</members>
+        <members>Venue_Location__c</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -42,13 +57,16 @@
         <members>Inventory_Event__c.Activity_Name_EN__c</members>
         <members>Inventory_Event__c.Activity_Name_IT__c</members>
         <members>Performance__c.Logical_Configuration_Name__c</members>
+        <members>Performance__c.Location__c</members>
         <members>Performance__c.Physical_Configuration_Name__c</members>
         <members>Performance__c.Rate_Type_Name__c</members>
         <members>Performance__c.Site_Name_EN__c</members>
         <members>Performance__c.Site_Name_IT__c</members>
+        <members>Performance__c.Site_Id__c</members>
         <members>Performance__c.Space_Name_EN__c</members>
         <members>Performance__c.Space_Name_IT__c</members>
         <members>Performance__c.Tariff_Legend__c</members>
+        <members>Performance__c.Venue_Location__c</members>
         <members>Season_Ticket_Line__c.Allow_Seat_Category_Change__c</members>
         <members>Season_Ticket_Line__c.Mandatory_Event__c</members>
         <members>Season_Ticket_Line__c.Multiple_Performances__c</members>
@@ -78,9 +96,16 @@
         <members>Membership__c-Membership Layout</members>
         <members>Pack__c-Pack Layout</members>
         <members>Performance__c-Performance Layout</members>
+        <members>Sale_Period__c-Sale Period Layout</members>
+        <members>Sale_Period_Audience__c-Sale Period Audience Layout</members>
+        <members>Sale_Period_Seat_Category__c-Sale Period Seat Category Layout</members>
+        <members>Sales_Channel__c-Sales Channel Layout</members>
+        <members>Seat_Category__c-Seat Category Layout</members>
+        <members>Performance_Seat_Category__c-Performance Seat Category Layout</members>
         <members>Season_Ticket__c-Season Ticket Layout</members>
         <members>Season_Ticket_Line__c-Season Ticket Line Layout</members>
         <members>Season_Ticket_Subject__c-Season Ticket Subject Layout</members>
+        <members>Venue_Location__c-Venue Location Layout</members>
         <name>Layout</name>
     </types>
     <types>

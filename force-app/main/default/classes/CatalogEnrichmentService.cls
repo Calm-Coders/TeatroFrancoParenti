@@ -12,6 +12,18 @@ public without sharing class CatalogEnrichmentService {
         public Integer seasonTicketsUpdated = 0;
         public Integer seasonTicketSubjectsUpdated = 0;
         public Integer seasonTicketLinesUpdated = 0;
+        public Integer salesChannelsUpdated = 0;
+        public Integer salePeriodsUpdated = 0;
+        public Integer salePeriodAudiencesUpdated = 0;
+        public Integer salePeriodSeatCategoriesUpdated = 0;
+        public Integer seatCategoriesUpdated = 0;
+        public Integer performanceSeatCategoriesUpdated = 0;
+        public Integer audienceSubCategoriesUpdated = 0;
+        public Integer salePeriodAudiencesLinked = 0;
+        public Integer performancePricesUpdated = 0;
+        public Integer performancePriceChargesUpdated = 0;
+        public Integer venueLocationsUpdated = 0;
+        public Integer performanceLocationsLinked = 0;
         public List<String> errors = new List<String>();
 
         public Map<String, Object> toMap() {
@@ -26,16 +38,39 @@ public without sharing class CatalogEnrichmentService {
                 'seasonTicketsUpdated' => seasonTicketsUpdated,
                 'seasonTicketSubjectsUpdated' => seasonTicketSubjectsUpdated,
                 'seasonTicketLinesUpdated' => seasonTicketLinesUpdated,
+                'salesChannelsUpdated' => salesChannelsUpdated,
+                'salePeriodsUpdated' => salePeriodsUpdated,
+                'salePeriodAudiencesUpdated' => salePeriodAudiencesUpdated,
+                'salePeriodSeatCategoriesUpdated' => salePeriodSeatCategoriesUpdated,
+                'seatCategoriesUpdated' => seatCategoriesUpdated,
+                'performanceSeatCategoriesUpdated' => performanceSeatCategoriesUpdated,
+                'audienceSubCategoriesUpdated' => audienceSubCategoriesUpdated,
+                'salePeriodAudiencesLinked' => salePeriodAudiencesLinked,
+                'performancePricesUpdated' => performancePricesUpdated,
+                'performancePriceChargesUpdated' => performancePriceChargesUpdated,
+                'venueLocationsUpdated' => venueLocationsUpdated,
+                'performanceLocationsLinked' => performanceLocationsLinked,
                 'errors' => errors
             };
         }
     }
 
     public static Result applyResponse(Map<String, Object> responsePayload) {
-        if (responsePayload == null || !(responsePayload.get('order') instanceof List<Object>)) {
-            throw new CatalogEnrichmentException('The response must contain an order array.');
+        List<Object> products = responsePayload == null ? null : asList(responsePayload.get('order'));
+        if (products == null && responsePayload != null) {
+            products = asList(responsePayload.get('products'));
         }
-        return applyProducts((List<Object>) responsePayload.get('order'));
+        if (products == null && responsePayload != null) {
+            Map<String, Object> nestedResponse = asMap(responsePayload.get('response'));
+            products = nestedResponse == null ? null : asList(nestedResponse.get('order'));
+            if (products == null && nestedResponse != null) {
+                products = asList(nestedResponse.get('products'));
+            }
+        }
+        if (products == null) {
+            throw new CatalogEnrichmentException('The response must contain an order or products array.');
+        }
+        return applyProducts(products);
     }
 
     public static Result applyProducts(List<Object> rawProducts) {
@@ -47,6 +82,7 @@ public without sharing class CatalogEnrichmentService {
                 continue;
             }
             Map<String, Object> product = (Map<String, Object>) rawProduct;
+            normalizeProductPayload(product);
             Decimal productId = asDecimal(product.get('productId'));
             if (productId == null) {
                 result.errors.add('Ignored an order entry without productId.');
@@ -100,8 +136,8 @@ public without sharing class CatalogEnrichmentService {
             updateRecord.Audience_Type__c = truncate(asString(product.get('audienceType')), 80);
             updateRecord.State__c = truncate(asString(product.get('state')), 80);
             updateRecord.Waiting_List_Allowed__c = asBoolean(product.get('waitingListAllowed')) == true;
-            updateRecord.Catalog_Name_IT__c = truncate(asString(product.get('name_it')), 255);
-            updateRecord.Catalog_Name_EN__c = truncate(asString(product.get('name_en')), 255);
+            updateRecord.Catalog_Name_IT__c = truncate(firstValue(product, new List<String>{ 'name_it', 'name' }), 255);
+            updateRecord.Catalog_Name_EN__c = truncate(firstValue(product, new List<String>{ 'name_en', 'name' }), 255);
             updateRecord.Catalog_Description_IT__c = truncate(asString(product.get('description_it')), LONG_TEXT_LIMIT);
             updateRecord.Catalog_Description_EN__c = truncate(asString(product.get('description_en')), LONG_TEXT_LIMIT);
 
@@ -141,6 +177,26 @@ public without sharing class CatalogEnrichmentService {
 
         applyActivities(foundProductByInventoryId, result);
         applyPerformances(foundProductByInventoryId, result);
+        SalePeriodRelationshipService.Stats salePeriodStats =
+            SalePeriodRelationshipService.syncEnrichment(foundProductByInventoryId);
+        result.salesChannelsUpdated = salePeriodStats.salesChannelsUpserted;
+        result.salePeriodsUpdated = salePeriodStats.salePeriodsUpserted;
+        result.salePeriodAudiencesUpdated = salePeriodStats.audienceRestrictionsInserted;
+        result.salePeriodSeatCategoriesUpdated = salePeriodStats.seatRestrictionsInserted;
+        SeatCategoryRelationshipService.Stats seatCategoryStats =
+            SeatCategoryRelationshipService.syncEnrichment(foundProductByInventoryId);
+        result.seatCategoriesUpdated = seatCategoryStats.categoriesUpserted;
+        result.performanceSeatCategoriesUpdated = seatCategoryStats.linksUpserted;
+        PerformancePriceRelationshipService.Stats priceStats =
+            PerformancePriceRelationshipService.syncEnrichment(foundProductByInventoryId);
+        result.audienceSubCategoriesUpdated = priceStats.audiencesUpserted;
+        result.salePeriodAudiencesLinked = priceStats.salePeriodAudiencesLinked;
+        result.performancePricesUpdated = priceStats.pricesUpserted;
+        result.performancePriceChargesUpdated = priceStats.priceChargesUpserted;
+        VenueLocationRelationshipService.Stats locationStats =
+            VenueLocationRelationshipService.syncEnrichment(foundProductByInventoryId);
+        result.venueLocationsUpdated = locationStats.locationsUpserted;
+        result.performanceLocationsLinked = locationStats.performancesLinked;
         applySeasonTickets(foundProductByInventoryId, result);
         return result;
     }
@@ -224,7 +280,7 @@ public without sharing class CatalogEnrichmentService {
             }
             for (Object rawPerformance : performances) {
                 Map<String, Object> performance = asMap(rawPerformance);
-                Decimal performanceId = performance == null ? null : asDecimal(performance.get('id'));
+                Decimal performanceId = performanceExternalId(performance);
                 if (performanceId == null) {
                     continue;
                 }
@@ -257,20 +313,31 @@ public without sharing class CatalogEnrichmentService {
             Map<String, Object> logical = asMap(performance.get('logicalConfiguration'));
             Map<String, Object> rateType = asMap(performance.get('rateType'));
             Map<String, Object> product = productsByInventoryId.get(existing.Inventory_Event__r.Inventory__c);
+            String siteCode = preferredValue(site, performance, 'code', 'siteCode');
+            String spaceCode = preferredValue(space, performance, 'code', 'spaceCode');
+            Decimal siteId = preferredDecimal(site, performance, 'id', 'siteId');
+            Decimal spaceId = preferredDecimal(space, performance, 'id', 'spaceId');
             updates.add(new Performance__c(
                 Id = existing.Id,
                 Code__c = truncate(asString(performance.get('code')), 255),
                 Start__c = asDatetime(performance.get('start')),
                 Duration__c = asDecimal(performance.get('duration')),
-                Space_Code__c = truncate(asString(performance.get('spaceCode')), 255),
-                Site_Code__c = truncate(asString(performance.get('siteCode')), 255),
+                Space_Id__c = spaceId,
+                Space_Code__c = truncate(spaceCode, 255),
+                Site_Id__c = siteId,
+                Site_Code__c = truncate(siteCode, 255),
                 State__c = truncate(asString(performance.get('state')), 255),
                 Site_Name_IT__c = truncate(preferredName(performance, site, 'siteName_it', 'name_it'), 255),
                 Site_Name_EN__c = truncate(preferredName(performance, site, 'siteName_en', 'name_en'), 255),
                 Space_Name_IT__c = truncate(preferredName(performance, space, 'spaceName_it', 'name_it'), 255),
                 Space_Name_EN__c = truncate(preferredName(performance, space, 'spaceName_en', 'name_en'), 255),
+                Location__c = jsonValue(locationAudit(site, space, performance)),
+                Physical_Configuration_Id__c = asDecimal(physical == null ? null : physical.get('id')),
                 Physical_Configuration_Name__c = truncate(firstValue(physical, new List<String>{ 'name_it', 'name' }), 255),
+                Logical_Configuration_Id__c = asDecimal(logical == null ? null : logical.get('id')),
                 Logical_Configuration_Name__c = truncate(firstValue(logical, new List<String>{ 'name_it', 'name' }), 255),
+                Rate_Type_Id__c = asDecimal(rateType == null ? null : rateType.get('id')),
+                Rate_Type_Code__c = truncate(firstValue(rateType, new List<String>{ 'code' }), 255),
                 Rate_Type_Name__c = truncate(firstValue(rateType, new List<String>{ 'name_it', 'name' }), 255),
                 Sale_Periods__c = jsonValue(performance.get('salePeriods')),
                 Tariff_Legend__c = jsonValue(product == null ? null : product.get('ticketTypes'))
@@ -378,11 +445,78 @@ public without sharing class CatalogEnrichmentService {
     }
 
     private static String preferredName(Map<String, Object> flat, Map<String, Object> nested, String flatKey, String nestedKey) {
-        String value = flat == null ? null : asString(flat.get(flatKey));
+        String value = firstValue(nested, new List<String>{ nestedKey, 'name' });
         if (!String.isBlank(value)) {
             return value;
         }
-        return firstValue(nested, new List<String>{ nestedKey, 'name' });
+        return flat == null ? null : asString(flat.get(flatKey));
+    }
+
+    private static String preferredValue(
+        Map<String, Object> nested,
+        Map<String, Object> flat,
+        String nestedKey,
+        String flatKey
+    ) {
+        String value = nested == null ? null : asString(nested.get(nestedKey));
+        return String.isBlank(value) && flat != null ? asString(flat.get(flatKey)) : value;
+    }
+
+    private static Decimal preferredDecimal(
+        Map<String, Object> nested,
+        Map<String, Object> flat,
+        String nestedKey,
+        String flatKey
+    ) {
+        Decimal value = nested == null ? null : asDecimal(nested.get(nestedKey));
+        return value == null && flat != null ? asDecimal(flat.get(flatKey)) : value;
+    }
+
+    private static Map<String, Object> locationAudit(
+        Map<String, Object> site,
+        Map<String, Object> space,
+        Map<String, Object> performance
+    ) {
+        Map<String, Object> audit = new Map<String, Object>{
+            'site' => site,
+            'space' => space,
+            'siteCode' => preferredValue(site, performance, 'code', 'siteCode'),
+            'spaceCode' => preferredValue(space, performance, 'code', 'spaceCode')
+        };
+        return audit;
+    }
+
+    private static Decimal performanceExternalId(Map<String, Object> performance) {
+        if (performance == null) {
+            return null;
+        }
+        Decimal value = asDecimal(performance.get('id'));
+        return value == null ? asDecimal(performance.get('performanceId')) : value;
+    }
+
+    private static void normalizeProductPayload(Map<String, Object> product) {
+        if (product == null) {
+            return;
+        }
+        Map<String, Object> eventPayload = asMap(product.get('event'));
+        if (eventPayload != null) {
+            if (product.get('activity') == null && eventPayload.get('activity') != null) {
+                product.put('activity', eventPayload.get('activity'));
+            }
+            if (product.get('performances') == null && eventPayload.get('performances') != null) {
+                product.put('performances', eventPayload.get('performances'));
+            }
+        }
+        List<Object> performances = asList(product.get('performances'));
+        if (performances == null) {
+            return;
+        }
+        for (Object rawPerformance : performances) {
+            Map<String, Object> performance = asMap(rawPerformance);
+            if (performance != null && performance.get('id') == null && performance.get('performanceId') != null) {
+                performance.put('id', performance.get('performanceId'));
+            }
+        }
     }
 
     private static String firstValue(Map<String, Object> source, List<String> keys) {
