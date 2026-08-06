@@ -43,7 +43,7 @@ $RECYCLE.BIN/
 .env
 
 # Generated row catalog
-/docs/Row Catalog formatted.json
+/docs/RowCatalogformatted.json
 
 # Python Salesforce Functions
 **/__pycache__/
