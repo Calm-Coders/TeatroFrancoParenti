@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Source_Inventory__c</fullName><label>Source Inventory</label><referenceTo>Inventory__c</referenceTo><relationshipLabel>Cross Sell Product Links</relationshipLabel><relationshipName>CrossSellProductLinks</relationshipName><reparentableMasterDetail>true</reparentableMasterDetail><type>MasterDetail</type><writeRequiresMasterRead>false</writeRequiresMasterRead></CustomField>

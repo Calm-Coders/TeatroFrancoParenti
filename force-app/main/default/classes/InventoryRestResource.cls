@@ -78,6 +78,9 @@ global without sharing class InventoryRestResource {
             upsert recordsWithExternalId Inventory_Id__c;
             insert recordsWithoutExternalId;
 
+            CrossSellProductRelationshipService.syncInventoryPayloads(products, inventoryRecords);
+            CrossSellProductRelationshipService.backfillTargetInventories(inventoryRecords);
+
             Set<Id> inventoryIds = new Set<Id>();
             for (Inventory__c inventoryRecord : inventoryRecords) {
                 if (inventoryRecord.Id != null) {

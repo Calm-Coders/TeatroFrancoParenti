@@ -656,7 +656,7 @@
               <li>Vat_Code_Id__c<span class="fnote">catalog VAT table</span></li>
               <li>Charges_Table_Id__c<span class="fnote">empty in this export</span></li>
               <li class="joinfield" data-edge="c-seasons">Season_Id__c<span class="fnote">captured ✓ (890/971 filled by log replay)</span></li>
-              <li class="joinfield" data-edge="c-products" data-dashed="1">Cross_Sell_Product_Links__c<span class="fnote">arrives empty — filled by resolve (targetProductId → products)</span></li>
+              <li class="joinfield" data-edge="c-products">Cross_Sell_Product_Link__c<span class="fnote">Source_Inventory__c + Target_Inventory__c lookups; Cross_Sell_Product_Links__c retained as audit JSON</span></li>
               <li class="joinfield newf" data-edge="c-adv" data-dashed="1">Product_Advantages__c<span class="fnote">to create — advantages exist only in catalog</span></li>
             </ul>
           </div>
@@ -882,7 +882,7 @@
               <li class="jsonfield">External/Internal/Short_Name__c · External_Description__c</li>
               <li class="jsonfield">Sale_Periods__c (audit copy; relational children in Sale_Period__c) · Sale_Close_Exceptions__c · Media__c</li>
               <li class="jsonfield">Event__c · Pack__c · Season_Ticket__c<span class="fnote">resized to 131k</span></li>
-              <li class="jsonfield">Membership__c · Cross_Sell_Product_Links__c · Sub_Topic_Links__c</li>
+              <li class="jsonfield">Membership__c · Cross_Sell_Product_Links__c (audit; relational children in Cross_Sell_Product_Link__c) · Sub_Topic_Links__c</li>
               <li class="newf jsonfield">Sub_Topics__c · Redemption_Period__c · Redemption_Products__c<span class="fnote">new</span></li>
             </ul>
           </div>
@@ -1216,7 +1216,7 @@
               <li class="keyfield">Inventory_Id__c<span class="fnote">⚷ unique external ID = productId everywhere</span></li>
               <li>Season_Id__c</li>
               <li class="joinfield" data-edge="rel-acc" data-dashed="1">Partner / Contact_Product_Links contactNumbers ≙ Account</li>
-              <li>Cross_Sell_Product_Links__c<span class="fnote">targetProductId ≙ another Inventory__c (self-join by Inventory_Id__c)</span></li>
+              <li class="joinfield">Cross_Sell_Product_Link__c<span class="fnote">Source_Inventory__c → source Inventory; Target_Inventory__c → target Inventory resolved from targetProductId</span></li>
             </ul>
           </div>
           <div class="ent" id="rel-event" data-edge="rel-inv">
@@ -1435,10 +1435,11 @@
           </div>
 
           <div class="ent" id="res-xsellobj">
-            <div class="ent-head"><span class="ent-name">Cross-sell target</span> <span class="ent-sub">field exists — arrives empty from the webhook</span></div>
+            <div class="ent-head"><span class="ent-name">Cross-sell target</span> <span class="ent-sub">normalized Salesforce relationship</span></div>
             <ul>
-              <li>Inventory__c.Cross_Sell_Product_Links__c<span class="fnote">fill via resolve: target name + type + message</span></li>
-              <li class="fnote" style="padding:2px 11px;">targetProductId is joinable to the target Inventory__c record by Inventory_Id__c</li>
+              <li>Cross_Sell_Product_Link__c.Source_Inventory__c → Inventory__c</li>
+              <li>Cross_Sell_Product_Link__c.Target_Inventory__c → Inventory__c<span class="fnote">resolved from targetProductId ↔ Inventory_Id__c</span></li>
+              <li class="fnote" style="padding:2px 11px;">Inventory__c.Cross_Sell_Product_Links__c remains the raw JSON audit copy.</li>
             </ul>
           </div>
 

@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Cross_Sell_Product_Links__c</fullName>
     <externalId>false</externalId>
-    <label>Cross Sell Product Links</label>
+    <label>Cross Sell Product Links JSON (Audit)</label>
     <length>32768</length>
     <required>false</required>
     <trackTrending>false</trackTrending>

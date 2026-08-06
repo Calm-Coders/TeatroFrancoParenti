@@ -13,6 +13,23 @@
     <classAccesses><apexClass>AudienceRelationshipBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
     <classAccesses><apexClass>VenueLocationRelationshipService</apexClass><enabled>true</enabled></classAccesses>
     <classAccesses><apexClass>VenueLocationBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>CrossSellProductRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Source_Product_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Cross_Sell_Link_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Inventory__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Product_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Product_Name__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Link_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Message_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Message_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Start__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.End__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Base_Min_Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Product_Rank__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Quantity_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Same_Date_As_Base__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Sequence__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Cross_Sell_Product_Link__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Venue_Location__c.Site_Id__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Venue_Location__c.Site_Code__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Venue_Location__c.Space_Id__c</field><readable>true</readable></fieldPermissions>
@@ -177,4 +194,6 @@
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Performance_Price__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Performance_Price_Charge__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Venue_Location__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Cross_Sell_Product_Link__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Inventory__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
 </PermissionSet>

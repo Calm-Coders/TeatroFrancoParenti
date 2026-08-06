@@ -6,6 +6,8 @@
         <members>CatalogEnrichmentRetryScheduler</members>
         <members>CatalogEnrichmentService</members>
         <members>CatalogEnrichmentTest</members>
+        <members>CrossSellProductRelationshipService</members>
+        <members>CrossSellProductRelationshipServiceTest</members>
         <members>InventoryRestResource</members>
         <members>SalePeriodRelationshipService</members>
         <members>SalePeriodRelationshipServiceTest</members>
@@ -21,6 +23,7 @@
     </types>
     <types>
         <members>Catalog_Enrichment_Setting__c</members>
+        <members>Cross_Sell_Product_Link__c</members>
         <members>Sale_Period__c</members>
         <members>Sale_Period_Audience__c</members>
         <members>Sale_Period_Seat_Category__c</members>
@@ -38,6 +41,7 @@
         <members>Catalog_Enrichment_Setting__c.Named_Credential__c</members>
         <members>Catalog_Enrichment_Setting__c.Timeout_Milliseconds__c</members>
         <members>Inventory__c.Catalog_Description_EN__c</members>
+        <members>Inventory__c.Cross_Sell_Product_Links__c</members>
         <members>Inventory__c.Catalog_Description_IT__c</members>
         <members>Inventory__c.Catalog_Name_EN__c</members>
         <members>Inventory__c.Catalog_Name_IT__c</members>
@@ -92,6 +96,7 @@
     </types>
     <types>
         <members>Inventory_Event__c-Inventory Event Layout</members>
+        <members>Cross_Sell_Product_Link__c-Cross Sell Product Link Layout</members>
         <members>Inventory__c-Inventory Layout</members>
         <members>Membership__c-Membership Layout</members>
         <members>Pack__c-Pack Layout</members>

@@ -366,4 +366,14 @@
         <fields>Sales_Channel__c</fields><fields>Type__c</fields><fields>Sale_Possible__c</fields>
         <relatedList>Sale_Period__c.Inventory__c</relatedList>
     </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields><fields>Target_Inventory__c</fields><fields>Link_Type__c</fields>
+        <fields>Start__c</fields><fields>End__c</fields>
+        <relatedList>Cross_Sell_Product_Link__c.Source_Inventory__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields><fields>Source_Inventory__c</fields><fields>Link_Type__c</fields>
+        <fields>Start__c</fields><fields>End__c</fields>
+        <relatedList>Cross_Sell_Product_Link__c.Target_Inventory__c</relatedList>
+    </relatedLists>
 </Layout>

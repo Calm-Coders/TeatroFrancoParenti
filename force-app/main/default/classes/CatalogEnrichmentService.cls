@@ -24,6 +24,9 @@ public without sharing class CatalogEnrichmentService {
         public Integer performancePriceChargesUpdated = 0;
         public Integer venueLocationsUpdated = 0;
         public Integer performanceLocationsLinked = 0;
+        public Integer crossSellLinksUpdated = 0;
+        public Integer crossSellTargetsLinked = 0;
+        public Integer crossSellLinksDeleted = 0;
         public List<String> errors = new List<String>();
 
         public Map<String, Object> toMap() {
@@ -50,6 +53,9 @@ public without sharing class CatalogEnrichmentService {
                 'performancePriceChargesUpdated' => performancePriceChargesUpdated,
                 'venueLocationsUpdated' => venueLocationsUpdated,
                 'performanceLocationsLinked' => performanceLocationsLinked,
+                'crossSellLinksUpdated' => crossSellLinksUpdated,
+                'crossSellTargetsLinked' => crossSellTargetsLinked,
+                'crossSellLinksDeleted' => crossSellLinksDeleted,
                 'errors' => errors
             };
         }
@@ -197,6 +203,11 @@ public without sharing class CatalogEnrichmentService {
             VenueLocationRelationshipService.syncEnrichment(foundProductByInventoryId);
         result.venueLocationsUpdated = locationStats.locationsUpserted;
         result.performanceLocationsLinked = locationStats.performancesLinked;
+        CrossSellProductRelationshipService.Stats crossSellStats =
+            CrossSellProductRelationshipService.syncEnrichment(foundProductByInventoryId);
+        result.crossSellLinksUpdated = crossSellStats.linksUpserted;
+        result.crossSellTargetsLinked = crossSellStats.targetsLinked;
+        result.crossSellLinksDeleted = crossSellStats.linksDeleted;
         applySeasonTickets(foundProductByInventoryId, result);
         return result;
     }
