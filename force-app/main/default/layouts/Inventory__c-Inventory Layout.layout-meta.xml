@@ -198,6 +198,34 @@
         <customLabel>true</customLabel>
         <detailHeading>true</detailHeading>
         <editHeading>true</editHeading>
+        <label>Catalog Enrichment</label>
+        <layoutColumns>
+                <layoutItems><behavior>Edit</behavior><field>Enrichment_Status__c</field></layoutItems>
+                <layoutItems><behavior>Readonly</behavior><field>Enriched_On__c</field></layoutItems>
+                <layoutItems><behavior>Readonly</behavior><field>Last_Enrichment_Attempt__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Catalog_Name_IT__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Catalog_Name_EN__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Season_Code__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Season_Name__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Product_Type_Code__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Product_Type_Name__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+                <layoutItems><behavior>Edit</behavior><field>Season_Start__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Season_End__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Ticket_Model_Name__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Ticket_Types__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Product_Advantages__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Catalog_Description_IT__c</field></layoutItems>
+                <layoutItems><behavior>Edit</behavior><field>Catalog_Description_EN__c</field></layoutItems>
+                <layoutItems><behavior>Readonly</behavior><field>Enrichment_Error__c</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
         <label>Raw Payloads (JSON)</label>
         <layoutColumns>
                 <layoutItems>
@@ -215,10 +243,6 @@
                 <layoutItems>
                     <behavior>Edit</behavior>
                     <field>Event__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Season_Ticket__c</field>
                 </layoutItems>
                 <layoutItems>
                     <behavior>Edit</behavior>
@@ -298,11 +322,11 @@
                     <field>OwnerId</field>
                 </layoutItems>
                 <layoutItems>
-                    <behavior>Edit</behavior>
+                    <behavior>Readonly</behavior>
                     <field>CreatedById</field>
                 </layoutItems>
                 <layoutItems>
-                    <behavior>Edit</behavior>
+                    <behavior>Readonly</behavior>
                     <field>LastModifiedById</field>
                 </layoutItems>
         </layoutColumns>
@@ -313,18 +337,28 @@
     </layoutSections>
     <relatedLists>
         <fields>NAME</fields>
+        <fields>Activity_Code__c</fields>
+        <fields>Activity_Type__c</fields>
+        <fields>Activity_Name_IT__c</fields>
         <relatedList>Inventory_Event__c.Inventory__c</relatedList>
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
+        <fields>Ticket_Printing_Mode__c</fields>
+        <fields>Championship_Season_Ticket__c</fields>
+        <fields>Fixed_Seat__c</fields>
         <relatedList>Season_Ticket__c.Inventory__c</relatedList>
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
+        <fields>Ticket_Printing_Mode__c</fields>
         <relatedList>Pack__c.Inventory__c</relatedList>
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
+        <fields>Validity_Rule__c</fields>
+        <fields>Validity_Start_Date__c</fields>
+        <fields>Validity_End_Date__c</fields>
         <relatedList>Membership__c.Inventory__c</relatedList>
     </relatedLists>
 </Layout>

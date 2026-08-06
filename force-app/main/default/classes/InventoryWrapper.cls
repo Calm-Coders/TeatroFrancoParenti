@@ -45,6 +45,10 @@ global class InventoryWrapper {
     public Boolean waitingListAllowed;
     public Long partnerContactId;
     public String seasonId;
+    public String seasonCode;
+    public String seasonName;
+    public String seasonStart;
+    public String seasonEnd;
     public Object contactProductLinks;
     public Boolean grantedToTourPromoter;
     public Boolean exchangeable;

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Season_Ticket__c</fullName>
+    <label>Season Ticket</label>
+    <referenceTo>Season_Ticket__c</referenceTo>
+    <relationshipLabel>Season Ticket Lines</relationshipLabel>
+    <relationshipName>SeasonTicketLines</relationshipName>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

@@ -41,6 +41,7 @@ global without sharing class InventoryRestResource {
             }
 
             List<String> productIds = new List<String>();
+            List<Long> enrichmentProductIds = new List<Long>();
             List<String> productCodes = new List<String>();
             List<String> productStates = new List<String>();
             List<Inventory__c> inventoryRecords = new List<Inventory__c>();
@@ -51,6 +52,7 @@ global without sharing class InventoryRestResource {
 
                 if (inventoryWrapper.id != null) {
                     productIds.add(String.valueOf(inventoryWrapper.id));
+                    enrichmentProductIds.add(inventoryWrapper.id);
                 }
 
                 if (!String.isBlank(inventoryWrapper.code)) {
@@ -170,6 +172,40 @@ global without sharing class InventoryRestResource {
             upsert packRecords;
             upsert seasonTicketRecords;
 
+            Map<Id, Season_Ticket__c> seasonTicketByInventoryId = new Map<Id, Season_Ticket__c>();
+            for (Season_Ticket__c seasonTicketRecord : seasonTicketRecords) {
+                seasonTicketByInventoryId.put(seasonTicketRecord.Inventory__c, seasonTicketRecord);
+            }
+            Map<Id, Map<String, Object>> relationshipPayloadBySeasonTicketId =
+                new Map<Id, Map<String, Object>>();
+            Map<Id, Decimal> ownerProductIdBySeasonTicketId = new Map<Id, Decimal>();
+            for (Integer i = 0; i < products.size(); i++) {
+                Season_Ticket__c seasonTicketRecord = seasonTicketByInventoryId.get(inventoryRecords[i].Id);
+                if (
+                    seasonTicketRecord == null ||
+                    !(products[i].seasonTicket instanceof Map<String, Object>)
+                ) {
+                    continue;
+                }
+                relationshipPayloadBySeasonTicketId.put(
+                    seasonTicketRecord.Id,
+                    (Map<String, Object>) products[i].seasonTicket
+                );
+                if (products[i].id != null) {
+                    ownerProductIdBySeasonTicketId.put(
+                        seasonTicketRecord.Id,
+                        Decimal.valueOf(String.valueOf(products[i].id))
+                    );
+                }
+            }
+            SeasonTicketRelationshipService.sync(
+                relationshipPayloadBySeasonTicketId,
+                ownerProductIdBySeasonTicketId
+            );
+            // Lines can point to products arriving in a later API batch. Each
+            // batch backfills earlier lines as soon as their target Inventory exists.
+            SeasonTicketRelationshipService.backfillTargetInventories(inventoryRecords);
+
             List<Performance__c> existingPerformancesToDelete = new List<Performance__c>();
             Set<Id> eventIdsForPerformanceRefresh = new Set<Id>();
             for (Id inventoryId : desiredEventInventoryIds) {
@@ -217,6 +253,10 @@ global without sharing class InventoryRestResource {
             for (Inventory__c recordItem : inventoryRecords) {
                 recordIds.add(recordItem.Id);
             }
+
+            // The callout runs in a separate transaction after all inventory DML
+            // commits. When the org setting is disabled this is an intentional no-op.
+            CatalogEnrichmentQueueable.enqueueIfConfigured(enrichmentProductIds, false);
 
             setResponse(200, new Map<String, Object>{
                 'success' => true,
@@ -353,6 +393,10 @@ global without sharing class InventoryRestResource {
         setCustomField(recordItem, 'Waiting_List_Allowed__c', inventoryWrapper.waitingListAllowed);
         setCustomField(recordItem, 'Partner_Contact_Id__c', inventoryWrapper.partnerContactId);
         setCustomField(recordItem, 'Season_Id__c', inventoryWrapper.seasonId);
+        setCustomField(recordItem, 'Season_Code__c', truncateValue(inventoryWrapper.seasonCode, 80));
+        setCustomField(recordItem, 'Season_Name__c', truncateValue(inventoryWrapper.seasonName, 255));
+        setCustomField(recordItem, 'Season_Start__c', asDate(inventoryWrapper.seasonStart));
+        setCustomField(recordItem, 'Season_End__c', asDate(inventoryWrapper.seasonEnd));
         setCustomField(recordItem, 'Contact_Product_Links__c', serializeRawValue(inventoryWrapper.contactProductLinks, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Granted_To_Tour_Promoter__c', inventoryWrapper.grantedToTourPromoter);
         setCustomField(recordItem, 'Exchangeable__c', inventoryWrapper.exchangeable);
@@ -965,6 +1009,20 @@ global without sharing class InventoryRestResource {
             inventoryWrapper.waitingListAllowed = asBoolean(rawPayload.get('waitingListAllowed'));
             inventoryWrapper.partnerContactId = asLong(rawPayload.get('partnerContactId'));
             inventoryWrapper.seasonId = asString(rawPayload.get('seasonId'));
+            Object seasonRaw = rawPayload.get('season');
+            if (seasonRaw instanceof Map<String, Object>) {
+                Map<String, Object> seasonPayload = (Map<String, Object>) seasonRaw;
+                if (String.isBlank(inventoryWrapper.seasonId)) {
+                    inventoryWrapper.seasonId = asString(seasonPayload.get('id'));
+                }
+                inventoryWrapper.seasonCode = asString(seasonPayload.get('code'));
+                inventoryWrapper.seasonName = asString(seasonPayload.get('name_it'));
+                if (String.isBlank(inventoryWrapper.seasonName)) {
+                    inventoryWrapper.seasonName = asString(seasonPayload.get('name'));
+                }
+                inventoryWrapper.seasonStart = asString(seasonPayload.get('start'));
+                inventoryWrapper.seasonEnd = asString(seasonPayload.get('end'));
+            }
             inventoryWrapper.contactProductLinks = rawPayload.get('contactProductLinks');
             inventoryWrapper.grantedToTourPromoter = asBoolean(rawPayload.get('grantedToTourPromoter'));
             inventoryWrapper.exchangeable = asBoolean(rawPayload.get('exchangeable'));

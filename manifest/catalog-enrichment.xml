@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>CatalogEnrichmentQueueable</members>
+        <members>CatalogEnrichmentRestResource</members>
+        <members>CatalogEnrichmentRetryScheduler</members>
+        <members>CatalogEnrichmentService</members>
+        <members>CatalogEnrichmentTest</members>
+        <members>InventoryRestResource</members>
+        <members>SeasonTicketRelationshipService</members>
+        <members>SeasonTicketRelationshipServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Catalog_Enrichment_Setting__c</members>
+        <members>Season_Ticket_Line__c</members>
+        <members>Season_Ticket_Subject__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>Catalog_Enrichment_Setting__c.Enabled__c</members>
+        <members>Catalog_Enrichment_Setting__c.Endpoint_Path__c</members>
+        <members>Catalog_Enrichment_Setting__c.Named_Credential__c</members>
+        <members>Catalog_Enrichment_Setting__c.Timeout_Milliseconds__c</members>
+        <members>Inventory__c.Catalog_Description_EN__c</members>
+        <members>Inventory__c.Catalog_Description_IT__c</members>
+        <members>Inventory__c.Catalog_Name_EN__c</members>
+        <members>Inventory__c.Catalog_Name_IT__c</members>
+        <members>Inventory__c.Enriched_On__c</members>
+        <members>Inventory__c.Enrichment_Error__c</members>
+        <members>Inventory__c.Enrichment_Status__c</members>
+        <members>Inventory__c.Last_Enrichment_Attempt__c</members>
+        <members>Inventory__c.Product_Advantages__c</members>
+        <members>Inventory__c.Product_Type_Code__c</members>
+        <members>Inventory__c.Product_Type_Name__c</members>
+        <members>Inventory__c.Season_Code__c</members>
+        <members>Inventory__c.Season_End__c</members>
+        <members>Inventory__c.Season_Name__c</members>
+        <members>Inventory__c.Season_Start__c</members>
+        <members>Inventory__c.Ticket_Model_Name__c</members>
+        <members>Inventory__c.Ticket_Types__c</members>
+        <members>Inventory_Event__c.Activity_Name_EN__c</members>
+        <members>Inventory_Event__c.Activity_Name_IT__c</members>
+        <members>Performance__c.Logical_Configuration_Name__c</members>
+        <members>Performance__c.Physical_Configuration_Name__c</members>
+        <members>Performance__c.Rate_Type_Name__c</members>
+        <members>Performance__c.Site_Name_EN__c</members>
+        <members>Performance__c.Site_Name_IT__c</members>
+        <members>Performance__c.Space_Name_EN__c</members>
+        <members>Performance__c.Space_Name_IT__c</members>
+        <members>Performance__c.Tariff_Legend__c</members>
+        <members>Season_Ticket_Line__c.Allow_Seat_Category_Change__c</members>
+        <members>Season_Ticket_Line__c.Mandatory_Event__c</members>
+        <members>Season_Ticket_Line__c.Multiple_Performances__c</members>
+        <members>Season_Ticket_Line__c.Placement_Type__c</members>
+        <members>Season_Ticket_Line__c.Raw_JSON__c</members>
+        <members>Season_Ticket_Line__c.Relationship_Key__c</members>
+        <members>Season_Ticket_Line__c.Season_Ticket__c</members>
+        <members>Season_Ticket_Line__c.Season_Ticket_Line_Id__c</members>
+        <members>Season_Ticket_Line__c.Subject__c</members>
+        <members>Season_Ticket_Line__c.Subject_Code__c</members>
+        <members>Season_Ticket_Line__c.Target_Inventory__c</members>
+        <members>Season_Ticket_Line__c.Target_Product_Id__c</members>
+        <members>Season_Ticket_Subject__c.Max_Events__c</members>
+        <members>Season_Ticket_Subject__c.Min_Events__c</members>
+        <members>Season_Ticket_Subject__c.Name_EN__c</members>
+        <members>Season_Ticket_Subject__c.Name_IT__c</members>
+        <members>Season_Ticket_Subject__c.Rank__c</members>
+        <members>Season_Ticket_Subject__c.Raw_JSON__c</members>
+        <members>Season_Ticket_Subject__c.Relationship_Key__c</members>
+        <members>Season_Ticket_Subject__c.Season_Ticket__c</members>
+        <members>Season_Ticket_Subject__c.Subject_Code__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>Inventory_Event__c-Inventory Event Layout</members>
+        <members>Inventory__c-Inventory Layout</members>
+        <members>Membership__c-Membership Layout</members>
+        <members>Pack__c-Pack Layout</members>
+        <members>Performance__c-Performance Layout</members>
+        <members>Season_Ticket__c-Season Ticket Layout</members>
+        <members>Season_Ticket_Line__c-Season Ticket Line Layout</members>
+        <members>Season_Ticket_Subject__c-Season Ticket Subject Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>TFP_Catalog_Enrichment</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <layoutSections>
+        <customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading>
+        <label>Subject</label>
+        <layoutColumns>
+            <layoutItems><behavior>Required</behavior><field>Name</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Season_Ticket__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Subject_Code__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Rank__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Name_IT__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Name_EN__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Min_Events__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Max_Events__c</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading>
+        <label>Source Payload</label>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Relationship_Key__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Raw_JSON__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading>
+        <label>System</label>
+        <layoutColumns>
+            <layoutItems><behavior>Readonly</behavior><field>CreatedById</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Readonly</behavior><field>LastModifiedById</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <relatedLists>
+        <fields>NAME</fields><fields>Season_Ticket_Line_Id__c</fields><fields>Target_Inventory__c</fields>
+        <relatedList>Season_Ticket_Line__c.Subject__c</relatedList>
+    </relatedLists>
+    <showEmailCheckbox>false</showEmailCheckbox>
+    <showHighlightsPanel>true</showHighlightsPanel>
+    <showInteractionLogPanel>false</showInteractionLogPanel>
+    <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
+    <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
+</Layout>

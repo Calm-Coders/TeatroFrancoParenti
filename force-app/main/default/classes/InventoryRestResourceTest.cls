@@ -68,6 +68,41 @@ private class InventoryRestResourceTest {
     }
 
     @IsTest
+    static void receiveInventory_populatesSeasonMetadataFromInitialLoad() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/v1/inventories';
+        req.resourcePath = '/v1/inventories';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"id":10228689876617,"code":"0127","productFamilyType":"SINGLE_ENTRY",' +
+            '"productFamilySubType":"SIMPLE_TICKET","state":"RUNNING",' +
+            '"externalName":{"translations":[{"locale":"it","value":"TEST STAGIONE"}]},' +
+            '"season":{"id":10228683117776,"code":"2627","name_it":"STAGIONE 26-27",' +
+            '"start":"2026-06-01T00:00:00.000+02:00","end":"2027-07-31T00:00:00.000+02:00"}}'
+        );
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        InventoryRestResource.receiveInventory();
+        Test.stopTest();
+
+        System.assertEquals(200, RestContext.response.statusCode);
+        Decimal productId = Decimal.valueOf('10228689876617');
+        Inventory__c inventory = [
+            SELECT Season_Id__c, Season_Code__c, Season_Name__c, Season_Start__c, Season_End__c
+            FROM Inventory__c
+            WHERE Inventory_Id__c = :productId
+            LIMIT 1
+        ];
+        System.assertEquals('10228683117776', inventory.Season_Id__c);
+        System.assertEquals('2627', inventory.Season_Code__c);
+        System.assertEquals('STAGIONE 26-27', inventory.Season_Name__c);
+        System.assertEquals(Date.newInstance(2026, 6, 1), inventory.Season_Start__c);
+        System.assertEquals(Date.newInstance(2027, 7, 31), inventory.Season_End__c);
+    }
+
+    @IsTest
     static void receiveInventory_rejectsInvalidJson() {
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/v1/inventory';

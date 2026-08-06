@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
+        <label>Season Ticket</label>
+        <layoutColumns>
+            <layoutItems><behavior>Required</behavior><field>Name</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Inventory__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Championship_Season_Ticket__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Ticket_Printing_Mode__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Fixed_Seat__c</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
+        <label>System</label>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>OwnerId</field></layoutItems>
+            <layoutItems><behavior>Readonly</behavior><field>CreatedById</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Readonly</behavior><field>LastModifiedById</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Subject_Code__c</fields>
+        <fields>Name_IT__c</fields>
+        <fields>Min_Events__c</fields>
+        <fields>Max_Events__c</fields>
+        <relatedList>Season_Ticket_Subject__c.Season_Ticket__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Placement_Type__c</fields>
+        <fields>Subject__c</fields>
+        <fields>Target_Inventory__c</fields>
+        <fields>Mandatory_Event__c</fields>
+        <relatedList>Season_Ticket_Line__c.Season_Ticket__c</relatedList>
+    </relatedLists>
+    <showEmailCheckbox>false</showEmailCheckbox>
+    <showHighlightsPanel>true</showHighlightsPanel>
+    <showInteractionLogPanel>false</showInteractionLogPanel>
+    <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
+    <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
+</Layout>
