@@ -656,6 +656,8 @@
               <li>Vat_Code_Id__c<span class="fnote">catalog VAT table</span></li>
               <li>Charges_Table_Id__c<span class="fnote">empty in this export</span></li>
               <li class="joinfield" data-edge="c-seasons">Season_Id__c<span class="fnote">captured ✓ (890/971 filled by log replay)</span></li>
+              <li class="joinfield" data-edge="c-products" data-dashed="1">Cross_Sell_Product_Links__c<span class="fnote">arrives empty — filled by resolve (targetProductId → products)</span></li>
+              <li class="joinfield newf" data-edge="c-adv" data-dashed="1">Product_Advantages__c<span class="fnote">to create — advantages exist only in catalog</span></li>
             </ul>
           </div>
 
@@ -676,6 +678,7 @@
               <li class="joinfield" data-edge="c-ratetypes">Rate_Type_Id__c / Rate_Type_Code__c</li>
               <li class="joinfield" data-edge="c-sites">Site_Code__c / Space_Code__c</li>
               <li class="jsonfield">Seat_Categories__c, Prices__c<span class="fnote">stored as raw JSON</span></li>
+              <li class="joinfield jsonfield" data-edge="c-channels" data-dashed="1">Sale_Periods__c<span class="fnote">JSON — salesChannelCode needs the setup legend</span></li>
             </ul>
           </div>
 
@@ -692,6 +695,7 @@
             <ul>
               <li class="joinfield jsonfield" data-edge="c-products">Season_Ticket_Lines__c<span class="fnote">JSON: targetProductId → products</span></li>
               <li class="joinfield jsonfield" data-edge="c-pricelevels">&nbsp;<span style="margin-left:-7px">itemPrices.priceLevelId</span></li>
+              <li class="jsonfield">Season_Ticket_Subjects__c<span class="fnote">fixed-seat subjects (4 STs, e.g. ABB1)</span></li>
             </ul>
           </div>
 
@@ -754,6 +758,16 @@
           <div class="ent catalog" id="c-sites">
             <div class="ent-head"><span class="ent-name">seasons[].sites[] + spaces</span> <span class="ent-sub">3 sites</span></div>
             <ul><li>id · code · name · town · spaces[]</li></ul>
+          </div>
+
+          <div class="ent catalog" id="c-adv">
+            <div class="ent-head"><span class="ent-name">seasons[].advantages[]</span> <span class="ent-sub">43 discount schemes — catalog only</span></div>
+            <ul><li>id · code · name · targetType · accessCode · discounted price grids per product</li></ul>
+          </div>
+
+          <div class="ent catalog" id="c-channels">
+            <div class="ent-head"><span class="ent-name">salesChannels</span> <span class="ent-sub">SecuTix setup — not in catalog (TS, B2C, BO…)</span></div>
+            <ul><li>referenced by salePeriods[].salesChannelCode · static map in middleware</li></ul>
           </div>
 
           <div class="ent catalog" id="c-contacts">
@@ -1143,6 +1157,7 @@
               <li class="keyfield">Inventory_Id__c<span class="fnote">⚷ unique external ID = productId everywhere</span></li>
               <li>Season_Id__c</li>
               <li class="joinfield" data-edge="rel-acc" data-dashed="1">Partner / Contact_Product_Links contactNumbers ≙ Account</li>
+              <li>Cross_Sell_Product_Links__c<span class="fnote">targetProductId ≙ another Inventory__c (self-join by Inventory_Id__c)</span></li>
             </ul>
           </div>
           <div class="ent" id="rel-event" data-edge="rel-inv">
@@ -1155,7 +1170,15 @@
           </div>
           <div class="ent" id="rel-types" data-edge="rel-inv">
             <div class="ent-head"><span class="ent-name">Membership__c · Pack__c · Season_Ticket__c</span> <span class="ent-sub">children</span></div>
-            <ul><li>Inventory__c lookup each</li></ul>
+            <ul><li>Inventory__c lookup each · Season_Ticket_Subjects__c (fixed seats)</li></ul>
+          </div>
+          <div class="ent" id="rel-catonly" data-edge="rel-inv">
+            <div class="ent-head"><span class="ent-name">Catalog-only entities</span> <span class="ent-sub">reach Salesforce only via the resolve API</span></div>
+            <ul>
+              <li>advantages (43) · tariff legend + dependency rules</li>
+              <li>salePeriods (55) · salesChannels + ticketModels (SecuTix setup)</li>
+              <li>productTypes · venue/rate names</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -1177,63 +1200,13 @@
       <b style="color:var(--ref)">middleware catalog API</b>, <b style="color:var(--t-array)">webhook replay</b>, and <b style="color:var(--t-string)">SecuTix setup</b>.
     </p>
 
-    <div class="plan-h">1 · What is missing on the records today</div>
     <p class="map-intro" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <button id="dlContractBtn" class="dl-btn">⬇ Download the complete middleware example (JSON)</button>
+      <button id="cpContractBtn" class="dl-btn">📋 Copy JSON</button>
       <span>Full node structure, ready to hand to the middleware team: the request plus a resolved response for all 10 real products (every family, sale periods, advantages, cross-sells, fixed-seat subjects, tariff grids) and the <code>found:false</code> case.</span>
     </p>
-    <div class="plan-grid">
-      <div class="gap-card">
-        <span class="gc-tag replay">webhook replay</span>
-        <h3>New fields — backfilled via log replay (890/971) ✓</h3>
-        <p>Done 2026-07-14 by replaying the latest Integration_Log__c body per product. 81 records remain blank (truncated or pre-seasonId logs).</p>
-        <div class="gc-how"><b>Remaining:</b> ask the middleware to re-send the 81 leftover products (mostly the &gt;131k season tickets) — the upsert by Inventory_Id__c makes replay safe and idempotent.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">catalog API</span>
-        <h3>productTypeId arrives null</h3>
-        <p>Only 2 of 1,324 payloads carried it. The product type lives in the catalog (seasons[].productTypes, 18 entries), not in the webhook.</p>
-        <div class="gc-how"><b>How:</b> resolve per product via <code>/catalog/products/resolve</code> and write Product_Type_Id__c + name.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">catalog API</span>
-        <h3>Tariff &amp; venue names</h3>
-        <p>Performance__c stores prices/seat grids with bare ids (audSubCatId, seatCatId, priceLevelId, physical/logicalConfigurationId, siteCode).</p>
-        <div class="gc-how"><b>How:</b> the resolve response carries small lookup lists (tariff legend, venue, rate types) — ~100 entries total across the whole catalog.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">catalog API</span>
-        <h3>22 products &gt; 6 MB never ingested</h3>
-        <p>Payloads over Apex's 6 MB string limit failed on every retry, and the log body is null so they are untraceable from Salesforce.</p>
-        <div class="gc-how"><b>How:</b> middleware sends those products with <code>event.performances</code> split into chunks (e.g. 200 performances per call), or strips prices[] and lets the resolve API serve them on demand.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">catalog API</span>
-        <h3>Advantages never reach Salesforce</h3>
-        <p>43 discount schemes (Ridotto, UNDER30, RINNOVO…) live only in the catalog: each targets specific products with its own discounted price grid, an access code or contact eligibility, and purchase limits. The inventory webhook carries none of it.</p>
-        <div class="gc-how"><b>How:</b> include <code>advantages[]</code> per product in the resolve response (key: <code>advantage.products[].id</code>) — see the Resolve mapping tab for the target options.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">catalog API</span>
-        <h3>Cross-sells arrive empty</h3>
-        <p>The webhook sends crossSellProductLinks as an empty array; the real links (UP_SELL prompts like “VUOI RISPARMIARE? SCEGLI UNA CARD!” with their target products) live on the season-ticket line products inside the catalog, plus season-level conditionalCrossSells groups.</p>
-        <div class="gc-how"><b>How:</b> resolve response includes <code>crossSellProductLinks[]</code> per product (targetProductId → target name); Salesforce fills the existing <code>Cross_Sell_Product_Links__c</code> field.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag secutix">SecuTix setup</span>
-        <h3>ticketModelId is a dangling id</h3>
-        <p>No ticketModels[] collection exists in the catalog — ticket models are institution-level configuration.</p>
-        <div class="gc-how"><b>How:</b> middleware keeps a tiny static id→name map fetched once from SecuTix setup (only a handful of distinct ids exist, e.g. 634688343).</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">catalog API</span>
-        <h3>Season names &amp; dates</h3>
-        <p>Season_Id__c now stores the id (e.g. 10228683117776) but Salesforce has nothing to display for it.</p>
-        <div class="gc-how"><b>How:</b> include season {id, code, name, start, end} in every resolve response — or sync the 2-row season list once per day.</div>
-      </div>
-    </div>
 
-    <div class="plan-h">2 · The middleware API to build — POST /catalog/products/resolve</div>
+    <div class="plan-h">1 · The middleware API to build — POST /catalog/products/resolve</div>
     <p class="map-intro">One batched endpoint. Salesforce sends up to 50 product ids; the middleware joins the catalog JSON (the 109 relations mapped in the “Relations graph” tab) and returns everything already resolved — Salesforce never walks the catalog tree.</p>
     <div class="codeblock"><span class="cc">// request — batch of external product ids (max 50)</span>
 { <span class="ck">"productIds"</span>: [<span class="cv">10228636435680</span>, <span class="cv">10228636435676</span>, <span class="cv">10228682346339</span>, <span class="cv">10228636523446</span>, <span class="cv">10228683831060</span>, <span class="cv">10228680140505</span>, <span class="cv">10228676772860</span>, <span class="cv">10228687124788</span>, <span class="cv">10228656709105</span>, <span class="cv">10228635491731</span>, <span class="cv">10228683831063</span>] }</div>
@@ -1241,7 +1214,7 @@
     <div class="codeblock jsontree" id="contractExample"></div>
     <p class="map-intro" style="margin-top:-6px;">Rules: flatten <code>translations[]</code> to one it/en string per name (most of the payload bulk) · keep each object shallow (id, code, name + a few business fields) · idempotent, so Salesforce can retry freely · cap at 50 ids per request.</p>
 
-    <div class="plan-h">3 · The Salesforce side — async enrichment</div>
+    <div class="plan-h">2 · The Salesforce side — async enrichment</div>
     <div class="flow-strip">
       <div class="flow-step"><div class="fs-n">Trigger</div><div class="fs-t">After webhook commit</div><div class="fs-d">receiveInventory() enqueues a Queueable (callouts are forbidden in the same transaction as DML).</div></div>
       <div class="flow-arrow">→</div>
@@ -1252,34 +1225,7 @@
       <div class="flow-step"><div class="fs-n">Retry</div><div class="fs-t">Scheduled sweep</div><div class="fs-d">Nightly job re-enriches records where the enrichment fields are still empty — middleware downtime never loses data.</div></div>
     </div>
 
-    <div class="plan-h">4 · Backfilling the 971 existing records (deduped 2026-07-14)</div>
-    <div class="plan-grid">
-      <div class="gap-card">
-        <span class="gc-tag replay">option A · recommended first</span>
-        <h3>Full webhook resync — keep the records</h3>
-        <p>Middleware re-sends every product through the existing /v1/inventories endpoint. The atomic upsert on the now-unique Inventory_Id__c rewrites all 58 fields in place and creates the child records (Inventory_Event__c, Performance__c…) — a delete is not needed to get a clean mapping.</p>
-        <div class="gc-how"><b>Covers:</b> everything the webhook carries, with zero side effects. <b>Doesn't cover:</b> productType, tariff/venue names, ticket models.</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag replay">option A′ · delete + retrigger</span>
-        <h3>Clean slate — only with a re-link step</h3>
-        <p>Deleting Inventory__c first purges obsolete products, but <b style="color:var(--ref)">294,379 Order_Operation_Data__c records hold Inventory__c lookups (SetNull on delete)</b> — an inventory resync does not restore them; they are only linked when an order is ingested.</p>
-        <div class="gc-how"><b>If you delete:</b> after the resync, run a one-off re-link batch matching Order_Operation_Data__c.Product_Id__c → Inventory__c.Inventory_Id__c (same logic the Order API already uses). Access_Control__c is safe today (0 linked).</div>
-      </div>
-      <div class="gap-card">
-        <span class="gc-tag middleware">option B · after A</span>
-        <h3>Batch enrichment sweep</h3>
-        <p>A one-off Batchable iterates Inventory__c where the enrichment fields are empty, calling /catalog/products/resolve in batches of 50 (≈20 callouts for 971 records) and writing the resolved names/ids back.</p>
-        <div class="gc-how"><b>Covers:</b> the catalog-only data. Reuses the same Queueable/service class as the live flow — write it once.</div>
-      </div>
-    </div>
-
-    <div class="plan-h">5 · Decision to make</div>
-    <p class="map-intro">
-      Where should the resolved catalog entities live? <b>Option 1 — fields on Inventory__c/Performance__c</b> (e.g. Product_Type_Name__c, Site_Name__c): simplest, good for reports, denormalized.
-      <b>Option 2 — small reference objects</b> (Product_Type__c, Rate_Type__c, Site__c… with external ids, converted to lookups): proper model, clickable in the UI, ~100 records total, slightly more work.
-      If the catalog changes rarely, option 2 with a daily sync is the cleaner long-term shape; option 1 ships faster. Both reuse the same middleware endpoint.
-    </p>
+    
   </main>
 </section>
 
@@ -1386,6 +1332,7 @@
               <li class="newf">Season_Code__c · Season_Name__c<span class="fnote">to create</span></li>
               <li class="newf">Product_Type_Name__c<span class="fnote">to create</span></li>
               <li class="newf">Ticket_Model_Name__c<span class="fnote">to create</span></li>
+              <li class="newf">Product_Advantages__c<span class="fnote">to create — resolved discount schemes JSON</span></li>
               <li class="newf">Enriched_On__c<span class="fnote">to create — timestamp drives the retry sweep</span></li>
             </ul>
           </div>
@@ -1398,6 +1345,7 @@
               <li class="newf">Physical_Configuration_Name__c · Logical_Configuration_Name__c<span class="fnote">to create</span></li>
               <li class="newf">Rate_Type_Name__c · Site_Name__c · Space_Name__c<span class="fnote">to create</span></li>
               <li class="newf">Tariff_Legend__c (JSON)<span class="fnote">to create — id→name map so Prices__c becomes readable</span></li>
+              <li class="jsonfield">Sale_Periods__c<span class="fnote">already captured — resolve decodes channel + tariff/sector restrictions</span></li>
             </ul>
           </div>
 
@@ -1493,6 +1441,21 @@
             <ul>
               <li class="joinfield" data-edge="rex-perfobj">audienceSubCategories:<br>&nbsp;&nbsp;I1 "INTERO + prev." · I5 "intero OVER 65 + prev." · I3 "intero UNDER 30 + prev."</li>
               <li class="joinfield" data-edge="rex-perfobj">seatCategories: SETTORE A · SETTORE B · SETTORE C</li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="rex-sp">
+            <div class="ent-head"><span class="ent-name">salePeriods[0] of performance</span> <span class="ent-sub">sales window, resolved</span></div>
+            <ul>
+              <li class="joinfield" data-edge="rex-perfobj">channel TS · 2025-09-16 00:00 → 2026-07-19 17:45 · salePossible: true<br><span class="fnote">tariffs: INTERO + prev. · UNDER 30 · OVER 65 — sectors: SETTORE A, B, C</span></li>
+            </ul>
+          </div>
+
+          <div class="ent catalog" id="rex-adv">
+            <div class="ent-head"><span class="ent-name">advantages[]</span> <span class="ent-sub">discount schemes including 0185 — internal name not in catalog</span></div>
+            <ul>
+              <li class="joinfield" data-edge="rex-inv" data-main="1">RID50 "Riduzione 50%" · CONTACT<br><span class="fnote">RIDOTTO 50%: SETTORE A = €215.00 · SETTORE B = €160.00</span></li>
+              <li class="joinfield" data-edge="rex-inv">CB0010 "Riduzione 30%" · CODE (accessCode CB0010)<br><span class="fnote">RIDOTTO PROMO: SETTORE B = €220.00</span></li>
             </ul>
           </div>
 
@@ -1834,23 +1797,59 @@ const CONTRACT_EXAMPLE = {"products":[{"productId":10228636435680,"found":true,"
   }
   rootEl.appendChild(node(undefined, CONTRACT_EXAMPLE, 0, true));
 
-  // download button: full request + response as a standalone JSON file
+  // download / copy: full request + response as a standalone JSON payload
+  function contractPayloadText() {
+    return JSON.stringify({
+      endpoint: "POST /catalog/products/resolve",
+      generatedFrom: "TFP catalog export 2026-07-17 (docs/Row Catalog formatted.json) — all values real and resolved",
+      request: { productIds: CONTRACT_EXAMPLE.products.map(function (p) { return p.productId; }) },
+      response: CONTRACT_EXAMPLE
+    }, null, 2);
+  }
+  function showFallback(text) {
+    let panel = document.getElementById("dlFallback");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "dlFallback";
+      panel.innerHTML =
+        '<p class="map-intro" style="margin:8px 0 4px;">If the download was blocked by the browser sandbox, copy the JSON from here (select all + copy works too):</p>' +
+        '<textarea readonly style="width:100%;height:220px;font:11px ui-monospace,Consolas,monospace;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px;"></textarea>';
+      const anchor = document.getElementById("dlContractBtn").closest("p");
+      anchor.parentNode.insertBefore(panel, anchor.nextSibling);
+    }
+    const ta = panel.querySelector("textarea");
+    ta.value = text;
+    ta.focus();
+    ta.select();
+  }
   const dlBtn = document.getElementById("dlContractBtn");
   if (dlBtn) {
     dlBtn.addEventListener("click", function () {
-      const payload = {
-        endpoint: "POST /catalog/products/resolve",
-        generatedFrom: "TFP catalog export 2026-07-17 (docs/Row Catalog formatted.json) — all values real and resolved",
-        request: { productIds: CONTRACT_EXAMPLE.products.map(function (p) { return p.productId; }) },
-        response: CONTRACT_EXAMPLE
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "tfp-catalog-resolve-example.json";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      const text = contractPayloadText();
+      try {
+        const blob = new Blob([text], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "tfp-catalog-resolve-example.json";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      } catch (e) { /* sandboxed — fallback below */ }
+      showFallback(text);
+    });
+  }
+  const cpBtn = document.getElementById("cpContractBtn");
+  if (cpBtn) {
+    cpBtn.addEventListener("click", function () {
+      const text = contractPayloadText();
+      function done(ok) {
+        cpBtn.textContent = ok ? "✓ copied to clipboard" : "copy failed — use the panel below";
+        setTimeout(function () { cpBtn.textContent = "📋 Copy JSON"; }, 2500);
+        if (!ok) showFallback(text);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else { done(false); }
     });
   }
 })();
