@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <layoutSections><customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading><label>Seat Category</label>
+        <layoutColumns>
+            <layoutItems><behavior>Required</behavior><field>Name</field></layoutItems>
+            <layoutItems><behavior>Readonly</behavior><field>Category_Key__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Seat_Category_Id__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Code__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Category_Number__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Institution_Category_Id__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Name_IT__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Name_EN__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Rank__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Text_Color__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Background_Color__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Same_Block_Restriction_Mode__c</field></layoutItems>
+        </layoutColumns><style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections><customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading><label>Source</label>
+        <layoutColumns><layoutItems><behavior>Edit</behavior><field>Pre_Request_Logical_Seat_Category_Ids__c</field></layoutItems></layoutColumns>
+        <layoutColumns><layoutItems><behavior>Readonly</behavior><field>Raw_JSON__c</field></layoutItems></layoutColumns><style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <relatedLists><fields>NAME</fields><fields>Performance__c</fields><fields>Sequence__c</fields><relatedList>Performance_Seat_Category__c.Seat_Category__c</relatedList></relatedLists>
+    <showEmailCheckbox>false</showEmailCheckbox><showHighlightsPanel>true</showHighlightsPanel><showInteractionLogPanel>false</showInteractionLogPanel><showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox><showSubmitAndAttachButton>false</showSubmitAndAttachButton>
+</Layout>

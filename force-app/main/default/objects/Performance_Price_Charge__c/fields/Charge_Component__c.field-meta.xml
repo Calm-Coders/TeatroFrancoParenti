@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Charge_Component__c</fullName><deleteConstraint>Restrict</deleteConstraint><label>Charge Component</label><referenceTo>Charge_Component__c</referenceTo><relationshipLabel>Performance Price Charges</relationshipLabel><relationshipName>PerformancePriceCharges</relationshipName><required>false</required><type>Lookup</type></CustomField>

@@ -3,7 +3,7 @@
     <fullName>Pack__c</fullName>
     <externalId>false</externalId>
     <label>Pack</label>
-    <length>32768</length>
+    <length>131072</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>

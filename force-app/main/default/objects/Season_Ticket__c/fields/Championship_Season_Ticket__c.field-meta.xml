@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Championship_Season_Ticket__c</fullName>
+    <defaultValue>false</defaultValue>
+    <label>Championship Season Ticket</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

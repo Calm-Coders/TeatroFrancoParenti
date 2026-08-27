@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities><enableBulkApi>true</enableBulkApi><enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory><enableReports>true</enableReports><enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing><enableStreamingApi>true</enableStreamingApi>
+    <externalSharingModel>Private</externalSharingModel>
+    <label>Audience Sub-Category</label>
+    <nameField><label>Audience Sub-Category Name</label><type>Text</type></nameField>
+    <pluralLabel>Audience Sub-Categories</pluralLabel>
+    <sharingModel>ReadWrite</sharingModel><visibility>Public</visibility>
+</CustomObject>

@@ -3,7 +3,7 @@
     <fullName>Event__c</fullName>
     <externalId>false</externalId>
     <label>Event</label>
-    <length>32768</length>
+    <length>131072</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>

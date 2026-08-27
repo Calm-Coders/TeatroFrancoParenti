@@ -1,0 +1,226 @@
+# Local catalog → Salesforce sync
+
+The local integration connects the TFP catalog, the normalized MySQL database, and the existing Salesforce inventory API without exposing MySQL to the internet.
+
+```mermaid
+flowchart LR
+    A[TFP catalog endpoint] --> B[import_catalog.py]
+    B --> C[(Local MySQL: tfp_catalog)]
+    C --> D[sync_catalog_to_salesforce.py]
+    D --> E[Salesforce REST: /v1/inventories]
+    E --> F[Inventory__c]
+    E --> G[Inventory_Event__c / Membership__c / Pack__c / Season_Ticket__c]
+    G --> H[Performance__c]
+```
+
+The join key remains `products[].id = Inventory__c.Inventory_Id__c`. The Salesforce endpoint performs an external-ID upsert, so rerunning the sync updates existing inventories instead of creating duplicates. Its current Apex logic also refreshes the typed child and performance records.
+
+SecuTix occasionally reuses one product ID in overlapping seasons. Because Salesforce permits only one `Inventory__c` row for that external ID, the bridge deterministically sends the payload from the season with the latest start date. The dry-run summary reports both the season-scoped row count and the resulting unique product count.
+
+In the full catalog export, season membership is expressed by nesting a product under `seasons[]`; the individual product object does not always repeat `seasonId`. The bridge adds that relational key to the outbound webhook payload so `Inventory__c.Season_Id__c` is populated.
+
+## Safety
+
+- Every REST request is executed through the authenticated Salesforce CLI; no access token is exported or saved by the bridge.
+- The project's configured target is `TFA UAT` in `.sf/config.json`.
+- The script refuses production writes unless `--allow-production` is supplied explicitly.
+- MySQL remains bound locally and is never called from Salesforce Cloud.
+
+## Commands
+
+Run these commands from the Salesforce project root.
+
+Validate the current MySQL snapshot and Salesforce authentication without changing Salesforce:
+
+```powershell
+python scripts/catalog/sync_catalog_to_salesforce.py --check-auth
+```
+
+Refresh MySQL from the web catalog and validate the resulting Salesforce batches, without changing Salesforce:
+
+```powershell
+python scripts/catalog/refresh_and_sync.py
+```
+
+Refresh MySQL and upsert the complete latest snapshot to UAT:
+
+```powershell
+python scripts/catalog/refresh_and_sync.py --execute
+```
+
+Verify that every latest-snapshot inventory and typed child count matches UAT:
+
+```powershell
+python scripts/catalog/verify_catalog_sync.py
+```
+
+For a small UAT verification, sync one product from the already-imported snapshot:
+
+```powershell
+python scripts/catalog/sync_catalog_to_salesforce.py --execute --product-id 10228687124782
+```
+
+Production remains an intentional separate operation:
+
+```powershell
+python scripts/catalog/sync_catalog_to_salesforce.py --execute --target-org "TFA Prod" --allow-production
+```
+
+Use production only after reviewing the UAT result. The sync is idempotent for `Inventory__c`, but the existing Apex service intentionally deletes and rebuilds a product's `Performance__c` children on every update.
+
+## Verified UAT result — 2026-08-06
+
+Snapshot `9` contained 166 season-scoped product rows and 164 unique external product IDs. The complete UAT sync accepted all 164 products. The relationship audit matched the outbound catalog exactly: 164 inventories, 112 inventory events, 984 performances, 2 memberships, 50 season tickets, 0 packs, and 0 inventories missing `Season_Id__c`.
+
+The Salesforce performance count is intentionally 19 lower than the 1,003 season-scoped MySQL rows: two external product IDs occur in both overlapping seasons, and Salesforce's unique `Inventory_Id__c` retains only each product's newest-season payload.
+
+## Relational membership items
+
+`Membership__c.Items__c` remains the lossless raw JSON audit copy, but membership
+items are also synchronized into reportable Salesforce relationships:
+
+```text
+Membership__c
+  -> Membership_Item__c
+       -> Membership_Item_Price__c
+            -> Audience_Sub_Category__c
+            -> Sale_Period__c
+                 -> Sales_Channel__c
+                 -> Sale_Period_Audience__c
+                      -> Audience_Sub_Category__c
+```
+
+The item relationship key combines the Salesforce Membership ID and the source
+`itemId`. Price keys combine the item key, audience subcategory, and duplicate
+occurrence. Replaying a payload therefore updates the same records and removes
+stale items, prices, sale periods, and restrictions. Source integer amounts are
+minor currency units, so `10000` is stored as `100.00` in the Salesforce Currency
+field. The scalar source fragments remain available in each record's `Raw_JSON__c`.
+
+The initial inventory API performs this synchronization automatically. Existing
+stored `Items__c` values can be normalized without calling the catalog endpoint:
+
+```apex
+Database.executeBatch(new MembershipRelationshipBackfillBatch(), 100);
+```
+
+### UAT verification — 2026-08-27
+
+Validated deployment `0AfMA00000CaP100AF` ran seven passing tests. Quick deployment
+`0AfMA00000CaPiX0AV` created the two membership relationship objects and extended
+sale periods with a Membership Item Price parent. Replaying the two current
+membership products twice left exactly 2 Membership Items, 2 Membership Item
+Prices, 2 membership Sale Periods, and 2 audience restrictions, demonstrating
+idempotency. Both price and sale-period audience lookups are populated.
+
+The complete snapshot `9` audit matched UAT across all 164 unique inventories,
+including 984 performances, 112 performance prices, 2 membership items, 2
+membership item prices, 1,030 total sale periods, and 3,775 sale-period audience
+restrictions. Production was not changed.
+
+## Relational package lines
+
+`Pack__c.Package_Lines__c` remains the lossless raw JSON audit copy. Each source
+entry is also synchronized into a reportable relationship:
+
+```text
+Pack__c
+  -> Package_Line__c
+       -> Inventory__c (the target product)
+       -> Audience_Sub_Category__c (the forced audience, when supplied)
+       -> Package_Line__c (the parent line, when supplied)
+```
+
+The relationship key combines the Salesforce Pack ID and source
+`packageLineId`. A refresh updates the same records and removes stale lines.
+Quantity, optional status, rank, sequence, target product ID/code, forced
+audience ID, and parent line ID are stored as typed fields. The large embedded
+product and performance payload is not duplicated on every line; the line links
+to the target `Inventory__c` when that product is present. If the target product
+arrives in a later API batch, the lookup is filled automatically.
+
+Existing stored Package Lines JSON can be normalized without calling the catalog
+endpoint:
+
+```apex
+Database.executeBatch(new PackageLineRelationshipBackfillBatch(), 100);
+```
+
+### UAT verification — 2026-08-27
+
+Validated deployment `0AfMA00000CaOrK0AV` ran five passing tests. Quick deployment
+`0AfMA00000CaQl40AF` created `Package_Line__c`, added the Pack related list, and
+integrated line synchronization into the inventory endpoint. Replaying the
+existing UAT Pack twice left exactly 5 Package Lines: all 5 source IDs matched,
+no duplicates were created, and every forced-audience lookup was populated. The
+five target Inventory lookups remain pending because target product
+`10228683831060` has not been loaded as a top-level UAT Inventory; they will
+backfill when it arrives. Production was inspected read-only (35 Packs and 112
+Package Lines) and was not changed.
+
+## Ongoing catalog enrichment
+
+The first load continues to use the local MySQL bridge above. After an inventory is inserted or updated, `InventoryRestResource` asks `CatalogEnrichmentQueueable` to enrich its product ID only when the org configuration is enabled. Calls are split into groups of at most 50 IDs, matching the provider limit, and additional groups are chained as separate queueable jobs.
+
+The provider response is handled by `CatalogEnrichmentService`. It updates the matching `Inventory__c`, its `Inventory_Event__c`, and existing `Performance__c` records. It never creates a replacement inventory and does not delete data when the provider returns `found: false`; instead, it records `Not Found` and the provider note in the enrichment status fields. Request and response summaries are written to `Integration_Log__c`.
+
+Season Ticket Subjects and Lines are relational Salesforce records:
+
+```text
+Inventory__c
+  -> Season_Ticket__c
+       -> Season_Ticket_Subject__c
+       -> Season_Ticket_Line__c
+            -> Season_Ticket_Subject__c (when placementType = subject)
+            -> Inventory__c (the target product)
+```
+
+The initial `/v1/inventories` bootstrap always processes these collections from the full MySQL catalog. `CatalogEnrichmentService` uses the same relationship service when an enrichment product contains a `seasonTicket` object with `seasonTicketSubjects` or `seasonTicketLines`. The provider response example supplied by email does not show `seasonTicket`, so this must be confirmed with the provider before assuming the ongoing resolve API will refresh these relationships.
+
+An authenticated bootstrap or replay can post the exact provider response envelope to:
+
+```text
+/services/apexrest/v1/catalog-enrichment
+```
+
+The payload must contain a top-level `order` array. The `started` and `excectution` properties are accepted but ignored by the mapper.
+
+### Activation checklist
+
+The UAT implementation is deliberately inactive until the provider supplies the real resolve endpoint and authentication details.
+
+1. In UAT Setup, create an External Credential and a Named Credential for the provider. Do not store a password, token, or API key in this repository.
+2. Assign the `TFP Catalog Enrichment` permission set to every Salesforce user that needs to inspect the fields or invoke the inbound endpoint.
+3. Create the hierarchy custom-setting org default in **Setup → Custom Settings → Catalog Enrichment Setting → Manage**:
+   - `Enabled`: leave unchecked for the first test.
+   - `Named Credential`: the Named Credential developer name, without `callout:`.
+   - `Endpoint Path`: the provider's resolve path, for example `/catalog/products/resolve`.
+   - `Timeout Milliseconds`: `120000`.
+4. Run one product manually in Execute Anonymous, replacing the ID with an active UAT inventory ID:
+
+```apex
+System.enqueueJob(new CatalogEnrichmentQueueable(
+    new List<Long>{ 10228689876617L },
+    false
+));
+```
+
+5. Confirm a successful `Integration_Log__c` entry and verify the Inventory, Inventory Event, and Performance enrichment fields.
+6. Check `Enabled` only after the one-product test succeeds. From then on, the inventory webhook automatically enqueues enrichment.
+7. Optionally schedule retries for records that are not enriched or are older than 20 hours:
+
+```apex
+System.schedule(
+    'TFP Catalog Enrichment Nightly',
+    '0 15 2 * * ?',
+    new CatalogEnrichmentRetryScheduler()
+);
+```
+
+Use `forceRefresh = true` only for a deliberate manual run. Normal webhook and scheduled calls use the provider's nightly cache.
+
+### UAT smoke test — 2026-08-06
+
+Deployment `0AfMA00000CVqcv0AD` installed the Apex, fields, custom setting, and layout with 11 passing tests. Permission-set deployment `0AfMA00000CVqhl0AD` exposed the new fields to the UAT user. A real authenticated POST to `/services/apexrest/v1/catalog-enrichment` processed one inventory, one inventory event, and one performance with zero errors. No outbound provider request was made because the custom setting has no enabled org-default record.
+
+Deployment `0AfMA00000CVql00AD` added the relational Season Ticket Subject and Line model with 13 passing tests. Replaying MySQL snapshot `9` produced 50 Season Tickets, 8 Subjects, and 2,182 Lines in UAT. Every subject-placed Line has its Subject lookup, and every Line has its target Inventory lookup.

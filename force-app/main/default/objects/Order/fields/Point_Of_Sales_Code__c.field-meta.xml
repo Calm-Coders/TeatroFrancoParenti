@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Point_Of_Sales_Code__c</fullName>
+    <label>Point Of Sales Code</label>
+    <length>80</length>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+</CustomField>

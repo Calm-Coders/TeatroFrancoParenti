@@ -3,6 +3,66 @@ global without sharing class ContactRestResource {
     private static final Integer MAX_LOG_LENGTH = 131072;
     private static final Integer MAX_SECUTIX_LONG_TEXT_LENGTH = 32768;
     private static final String FLOW_NAME = 'ContactRestResource.receiveContact';
+    private static final String FALLBACK_ACCOUNT_RECORD_TYPE = 'Fallback_Account';
+    private static final String INDIVIDUAL_ACCOUNT_RECORD_TYPE = 'IndividualAccount';
+    private static final String STRUCTURE_ACCOUNT_RECORD_TYPE = 'StructureAccount';
+    private static final Set<String> REQUIRED_ACCOUNT_FIELDS = new Set<String>{
+        'Active__c',
+        'Addresses__c',
+        'Advantages__c',
+        'Authorizations__c',
+        'Birthdate__c',
+        'Contact_Ballot_Data__c',
+        'Contact_Connections__c',
+        'Contact_Criteria__c',
+        'Contact_Id__c',
+        'Contact_Number__c',
+        'Contact_Origin__c',
+        'Contact_Origin_Translations__c',
+        'Contact_Origin_Detail__c',
+        'Contact_Permission__c',
+        'Contact_Qualities__c',
+        'Country_Code__c',
+        'Created_From__c',
+        'Creation_Date__c',
+        'Date_Last_Modified__c',
+        'Email__c',
+        'End_Validity_Date__c',
+        'Guest__c',
+        'Has_Advantages__c',
+        'Has_Warning__c',
+        'Indicators__c',
+        'Individual_Address_Salutation__c',
+        'Individual_Alt_Emails__c',
+        'Individual_Blocked__c',
+        'Individual_Cell_Phone_Verified__c',
+        'Individual_Confidentiality_Level__c',
+        'Individual_Contact_Number__c',
+        'Individual_Contact__c',
+        'Individual_Country_Code__c',
+        'Individual_Email_Ver_Status__c',
+        'Individual_Firstname__c',
+        'Individual_Guest__c',
+        'Individual_Handicap_Type__c',
+        'Individual_Lastname__c',
+        'Individual_Letter_Salutation__c',
+        'Individual_Login__c',
+        'Individual_Preferred_Language__c',
+        'Individual_Prospect__c',
+        'Individual_Req_Acc_Ver_Email__c',
+        'Individual_Title__c',
+        'Individual_Verified_Email__c',
+        'Invalidated_Contact_Qualities__c',
+        'Login__c',
+        'Login_Last_Update_Time__c',
+        'Login_Last_Update_User__c',
+        'Mobile_Phone__c',
+        'Role__c',
+        'Social_Connections__c',
+        'State__c',
+        'Structure_Contact__c',
+        'Structure_Type_Id__c'
+    };
 
     @HttpPost
     global static void receiveContact() {
@@ -39,15 +99,15 @@ global without sharing class ContactRestResource {
             }
 
             Savepoint sp = Database.setSavepoint();
-            List<String> createdContactIds = new List<String>();
+            List<String> createdAccountIds = new List<String>();
             List<String> externalContactNumbers = new List<String>();
 
             try {
-                for (ContactWrapper contactWrapper : payloads) {
+                for (ContactWrapper contactWrapper : prioritizeStructurePayloads(payloads)) {
                     validatePayload(contactWrapper);
-                    Contact newContact = createContact(contactWrapper);
+                    Id accountId = upsertAccount(contactWrapper);
 
-                    createdContactIds.add(newContact.Id);
+                    createdAccountIds.add(accountId);
                     if (!String.isBlank(contactWrapper.payload.contactNumber)) {
                         externalContactNumbers.add(contactWrapper.payload.contactNumber);
                     }
@@ -60,7 +120,7 @@ global without sharing class ContactRestResource {
             Map<String, Object> resp = new Map<String, Object>{
                 'success' => true,
                 'processedContacts' => payloads.size(),
-                'contactIds' => createdContactIds,
+                'accountIds' => createdAccountIds,
                 'externalContactNumbers' => externalContactNumbers,
                 'message' => 'Contact payload accepted.'
             };
@@ -77,129 +137,6 @@ global without sharing class ContactRestResource {
         } finally {
             insert logRec;
         }
-    }
-
-    private static Contact buildContact(ContactWrapper contactWrapper) {
-        ContactWrapper.Payload payload = contactWrapper.payload;
-        Map<String, Object> rawPayload = contactWrapper.rawPayload;
-        Contact contactRecord = new Contact();
-        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
-
-        contactRecord.FirstName = individual == null ? null : individual.individualFirstname;
-        contactRecord.LastName = deriveLastName(payload);
-        contactRecord.Email = deriveEmail(payload);
-        contactRecord.MobilePhone = deriveMobilePhone(payload);
-        contactRecord.Title = individual == null ? null : individual.individualTitle;
-        contactRecord.Active__c = individual == null ? null : individual.active;
-
-        Date birthdate = parseDate(individual == null ? null : individual.individualBirthdate);
-        if (birthdate != null) {
-            contactRecord.Birthdate__c = birthdate;
-        }
-
-        ContactWrapper.AddressPayload primaryAddress = selectPrimaryAddress(payload.addresses);
-        if (primaryAddress != null) {
-            contactRecord.MailingStreet = buildStreet(primaryAddress);
-            contactRecord.MailingCity = primaryAddress.town;
-            contactRecord.MailingPostalCode = primaryAddress.zipCode;
-        }
-
-        contactRecord.Contact_Id__c = truncateValue(
-            payload.contactId == null ? null : String.valueOf(payload.contactId),
-            30
-        );
-        contactRecord.Contact_Number__c = truncateValue(payload.contactNumber, 80);
-        contactRecord.Contact_Origin__c = truncateValue(
-            payload.contactOrigin == null ? null : payload.contactOrigin.code,
-            80
-        );
-        contactRecord.State__c = truncateValue(payload.state, 40);
-        contactRecord.Type__c = truncateValue(payload.type, 40);
-        contactRecord.Country_Code__c = truncateValue(
-            primaryAddress == null ? null : primaryAddress.countryCode,
-            10
-        );
-        contactRecord.Authorizations__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('authorizations'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Contact_Ballot_Data__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('contactBallotData'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Contact_Connections__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('contactConnections'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Contact_Criteria__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('contactCriteria'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Contact_Origin_Detail__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('contactOrigin'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Contact_Permission__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('contactPermission'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Contact_Qualities__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('contactQualities'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Created_From__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('createdFrom'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Addresses__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('addresses'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Advantages__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('advantages'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Individual_Contact__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('individualContact'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Indicators__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('indicators'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Invalidated_Contact_Qualities__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('invalidatedContactQualities'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Social_Connections__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('socialConnections'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-        contactRecord.Structure_Contact__c = serializeRawValue(
-            rawPayload == null ? null : rawPayload.get('structureContact'),
-            MAX_SECUTIX_LONG_TEXT_LENGTH
-        );
-
-        contactRecord.Creation_Date__c = truncateValue(payload.creationDate, 40);
-        contactRecord.Date_Last_Modified__c = truncateValue(payload.dateLastModified, 40);
-        contactRecord.End_Validity_Date__c = truncateValue(payload.endValidityDate, 40);
-        contactRecord.Has_Advantages__c = payload.hasAdvantages;
-        contactRecord.Has_Warning__c = payload.hasWarning;
-        contactRecord.Guest__c = payload.guest;
-        contactRecord.Login__c = truncateValue(payload.login, 255);
-        contactRecord.Login_Last_Update_Time__c = truncateValue(payload.loginLastUpdateTime, 40);
-        contactRecord.Login_Last_Update_User__c = truncateValue(payload.loginLastUpdateUser, 80);
-        contactRecord.Role__c = truncateValue(payload.role, 40);
-
-        String description = buildDescription(payload, primaryAddress);
-        if (!String.isBlank(description)) {
-            contactRecord.Description__c = truncateValue(
-                description,
-                MAX_SECUTIX_LONG_TEXT_LENGTH
-            );
-        }
-
-        return contactRecord;
     }
 
     private static List<ContactWrapper> deserializePayloads(String rawBody) {
@@ -290,13 +227,19 @@ global without sharing class ContactRestResource {
 
             Map<String, Object> rawAddressMap = (Map<String, Object>) rawAddress;
             ContactWrapper.AddressPayload address = new ContactWrapper.AddressPayload();
+            address.contactAddressId = asLong(rawAddressMap.get('contactAddressId'));
             address.billingAddress = asBoolean(rawAddressMap.get('billingAddress'));
             address.countryCode = asString(rawAddressMap.get('countryCode'));
+            address.documentFormattedAddress = asString(rawAddressMap.get('documentFormattedAddress'));
             address.formattedAddress = asString(rawAddressMap.get('formattedAddress'));
             address.line1 = asString(rawAddressMap.get('line1'));
             address.line2 = asString(rawAddressMap.get('line2'));
             address.line3 = asString(rawAddressMap.get('line3'));
+            address.localityCriteriaElements = asObjectList(rawAddressMap.get('localityCriteriaElements'));
             address.main = asBoolean(rawAddressMap.get('main'));
+            address.name = asString(rawAddressMap.get('name'));
+            address.normalizationRating = asString(rawAddressMap.get('normalizationRating'));
+            address.normalizationState = asString(rawAddressMap.get('normalizationState'));
             address.shippingAddress = asBoolean(rawAddressMap.get('shippingAddress'));
             address.street1 = asString(rawAddressMap.get('street1'));
             address.street2 = asString(rawAddressMap.get('street2'));
@@ -317,6 +260,9 @@ global without sharing class ContactRestResource {
         Map<String, Object> rawContactOriginMap = (Map<String, Object>) rawContactOrigin;
         ContactWrapper.ContactOriginPayload contactOrigin = new ContactWrapper.ContactOriginPayload();
         contactOrigin.code = asString(rawContactOriginMap.get('code'));
+        contactOrigin.translations = rawContactOriginMap.get('translations') instanceof Map<String, Object>
+            ? (Map<String, Object>) rawContactOriginMap.get('translations')
+            : null;
         return contactOrigin;
     }
 
@@ -328,13 +274,31 @@ global without sharing class ContactRestResource {
         Map<String, Object> rawIndividualMap = (Map<String, Object>) rawIndividualContact;
         ContactWrapper.IndividualContactPayload individual = new ContactWrapper.IndividualContactPayload();
         individual.active = asBoolean(rawIndividualMap.get('active'));
+        individual.addressSalutation = asString(rawIndividualMap.get('addressSalutation'));
         individual.alternativeEmails = asStringList(rawIndividualMap.get('alternativeEmails'));
+        individual.blocked = asBoolean(rawIndividualMap.get('blocked'));
         individual.cellPhoneNumber = asString(rawIndividualMap.get('cellPhoneNumber'));
+        individual.cellPhoneNumberVerified = asBoolean(rawIndividualMap.get('cellPhoneNumberVerified'));
+        individual.confidentialityLevelEnum = asString(rawIndividualMap.get('confidentialityLevelEnum'));
+        individual.contactNumber = asString(rawIndividualMap.get('contactNumber'));
+        individual.countryCode = asString(rawIndividualMap.get('countryCode'));
         individual.email = asString(rawIndividualMap.get('email'));
+        individual.email1VerificationStatus = asString(rawIndividualMap.get('email1VerificationStatus'));
+        individual.endValidityDate = asString(rawIndividualMap.get('endValidityDate'));
+        individual.guest = asBoolean(rawIndividualMap.get('guest'));
+        individual.handicapType = asString(rawIndividualMap.get('handicapType'));
         individual.individualBirthdate = asString(rawIndividualMap.get('individualBirthdate'));
         individual.individualFirstname = asString(rawIndividualMap.get('individualFirstname'));
         individual.individualLastname = asString(rawIndividualMap.get('individualLastname'));
+        individual.individualPreferredLanguage = asString(rawIndividualMap.get('individualPreferredLanguage'));
         individual.individualTitle = asString(rawIndividualMap.get('individualTitle'));
+        individual.letterSalutation = asString(rawIndividualMap.get('letterSalutation'));
+        individual.login = asString(rawIndividualMap.get('login'));
+        individual.prospect = asBoolean(rawIndividualMap.get('prospect'));
+        individual.requiredAccountVerificationEmail = asBoolean(rawIndividualMap.get('requiredAccountVerificationEmail'));
+        individual.role = asString(rawIndividualMap.get('role'));
+        individual.verifiedEmail = asBoolean(rawIndividualMap.get('verifiedEmail'));
+        individual.zipCode = asString(rawIndividualMap.get('zipCode'));
         return individual;
     }
 
@@ -345,15 +309,27 @@ global without sharing class ContactRestResource {
 
         Map<String, Object> rawStructureMap = (Map<String, Object>) rawStructureContact;
         ContactWrapper.StructureContactPayload structure = new ContactWrapper.StructureContactPayload();
+        structure.addressSalutation = asString(rawStructureMap.get('addressSalutation'));
         structure.alternativeEmails = asStringList(rawStructureMap.get('alternativeEmails'));
         structure.companyName = asString(rawStructureMap.get('companyName'));
         structure.cellPhoneNumber = asString(rawStructureMap.get('cellPhoneNumber'));
+        structure.community = asBoolean(rawStructureMap.get('community'));
+        structure.confidentialityLevelEnum = asString(rawStructureMap.get('confidentialityLevelEnum'));
+        structure.contactNumber = asString(rawStructureMap.get('contactNumber'));
         structure.displayName = asString(rawStructureMap.get('displayName'));
         structure.email = asString(rawStructureMap.get('email'));
+        structure.email1VerificationStatus = asString(rawStructureMap.get('email1VerificationStatus'));
         structure.legalName = asString(rawStructureMap.get('legalName'));
+        structure.letterSalutation = asString(rawStructureMap.get('letterSalutation'));
         structure.name = asString(rawStructureMap.get('name'));
         structure.organizationName = asString(rawStructureMap.get('organizationName'));
+        structure.prospect = asBoolean(rawStructureMap.get('prospect'));
+        structure.requiredAccountVerificationEmail = asBoolean(rawStructureMap.get('requiredAccountVerificationEmail'));
+        structure.role = asString(rawStructureMap.get('role'));
+        structure.structureOfficialName = asString(rawStructureMap.get('structureOfficialName'));
         structure.structureName = asString(rawStructureMap.get('structureName'));
+        structure.structureTypeId = asLong(rawStructureMap.get('structureTypeId'));
+        structure.verifiedEmail = asBoolean(rawStructureMap.get('verifiedEmail'));
         return structure;
     }
 
@@ -363,36 +339,290 @@ global without sharing class ContactRestResource {
         }
     }
 
-    private static Contact createContact(ContactWrapper contactWrapper) {
+    private static Id upsertAccount(ContactWrapper contactWrapper) {
         ContactWrapper.Payload payload = contactWrapper.payload;
-        Contact contactRecord = buildContact(contactWrapper);
+        validateRequiredAccountFields();
+        Account accountRecord = buildAccount(contactWrapper);
+        if (String.isBlank(payload == null ? null : payload.contactNumber)) {
+            throw new ContactWebhookException('contactNumber is required for account upsert.');
+        }
 
-        try {
-            insert contactRecord;
-            return contactRecord;
-        } catch (DmlException e) {
-            if (!shouldRetryWithFallbackAccount(e)) {
-                throw e;
+        upsert accountRecord Contact_Number__c;
+        return accountRecord.Id;
+    }
+
+    private static Account buildAccount(ContactWrapper contactWrapper) {
+        ContactWrapper.Payload payload = contactWrapper == null ? null : contactWrapper.payload;
+        Map<String, Object> rawPayload = contactWrapper == null ? null : contactWrapper.rawPayload;
+        Account accountRecord = new Account();
+        Id accountRecordTypeId = getInboundAccountRecordTypeId(payload);
+        if (accountRecordTypeId != null) {
+            accountRecord.RecordTypeId = accountRecordTypeId;
+        }
+        accountRecord.Name = deriveAccountName(payload);
+        Id parentStructureAccountId = resolveParentStructureAccountId(payload);
+        if (parentStructureAccountId != null) {
+            accountRecord.ParentId = parentStructureAccountId;
+        }
+
+        ContactWrapper.AddressPayload primaryAddress = selectPrimaryAddress(payload == null ? null : payload.addresses);
+        if (primaryAddress != null) {
+            accountRecord.BillingStreet = buildStreet(primaryAddress);
+            accountRecord.BillingCity = primaryAddress.town;
+            accountRecord.BillingPostalCode = primaryAddress.zipCode;
+            accountRecord.BillingCountry = primaryAddress.countryCode;
+        }
+
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        String resolvedCountryCode = firstNonBlankValue(new List<String>{
+            primaryAddress == null ? null : primaryAddress.countryCode,
+            individual == null ? null : individual.countryCode
+        });
+        setSObjectField(accountRecord, 'Individual_Firstname__c', truncateValue(individual == null ? null : individual.individualFirstname, 80));
+        setSObjectField(accountRecord, 'Individual_Lastname__c', truncateValue(deriveLastName(payload), 80));
+        setSObjectField(accountRecord, 'Individual_Title__c', truncateValue(individual == null ? null : individual.individualTitle, 80));
+        setSObjectField(accountRecord, 'Email__c', deriveEmail(payload));
+        setSObjectField(accountRecord, 'Mobile_Phone__c', deriveMobilePhone(payload));
+        setSObjectField(accountRecord, 'Active__c', individual == null ? null : individual.active);
+        accountRecord.Type = truncateValue(payload == null ? null : payload.type, 40);
+        accountRecord.AccountSource = 'Secutix';
+
+        Date birthdate = parseDate(individual == null ? null : individual.individualBirthdate);
+        if (birthdate != null) {
+            setSObjectField(accountRecord, 'Birthdate__c', birthdate);
+        }
+
+        setSObjectField(
+            accountRecord,
+            'Contact_Id__c',
+            truncateValue(payload == null || payload.contactId == null ? null : String.valueOf(payload.contactId), 30)
+        );
+        setSObjectField(accountRecord, 'Contact_Number__c', truncateValue(payload == null ? null : payload.contactNumber, 80));
+        setSObjectField(
+            accountRecord,
+            'Contact_Origin__c',
+            truncateValue(payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.code, 80)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Origin_Translations__c',
+            serializeRawValue(payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.translations, MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(accountRecord, 'State__c', truncateValue(payload == null ? null : payload.state, 40));
+        setSObjectField(
+            accountRecord,
+            'Country_Code__c',
+            truncateValue(resolvedCountryCode, 10)
+        );
+        setSObjectField(
+            accountRecord,
+            'Authorizations__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('authorizations'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Ballot_Data__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('contactBallotData'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Connections__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('contactConnections'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Criteria__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('contactCriteria'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Origin_Detail__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('contactOrigin'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Permission__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('contactPermission'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Contact_Qualities__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('contactQualities'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Created_From__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('createdFrom'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Addresses__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('addresses'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Advantages__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('advantages'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Contact__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('individualContact'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Indicators__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('indicators'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Invalidated_Contact_Qualities__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('invalidatedContactQualities'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Social_Connections__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('socialConnections'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(
+            accountRecord,
+            'Structure_Contact__c',
+            serializeRawValue(rawPayload == null ? null : rawPayload.get('structureContact'), MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        setSObjectField(accountRecord, 'Creation_Date__c', truncateValue(payload == null ? null : payload.creationDate, 40));
+        setSObjectField(accountRecord, 'Date_Last_Modified__c', truncateValue(payload == null ? null : payload.dateLastModified, 40));
+        setSObjectField(accountRecord, 'End_Validity_Date__c', truncateValue(deriveEndValidityDate(payload), 40));
+        setSObjectField(accountRecord, 'Has_Advantages__c', payload == null ? null : payload.hasAdvantages);
+        setSObjectField(accountRecord, 'Has_Warning__c', payload == null ? null : payload.hasWarning);
+        setSObjectField(accountRecord, 'Guest__c', payload == null ? null : payload.guest);
+        setSObjectField(accountRecord, 'Login__c', truncateValue(payload == null ? null : payload.login, 255));
+        setSObjectField(accountRecord, 'Login_Last_Update_Time__c', truncateValue(payload == null ? null : payload.loginLastUpdateTime, 40));
+        setSObjectField(accountRecord, 'Login_Last_Update_User__c', truncateValue(payload == null ? null : payload.loginLastUpdateUser, 80));
+        setSObjectField(accountRecord, 'Role__c', truncateValue(deriveRole(payload), 40));
+        setSObjectField(accountRecord, 'Structure_Type_Id__c', structure == null ? null : structure.structureTypeId);
+        setSObjectField(
+            accountRecord,
+            'Individual_Contact_Number__c',
+            truncateValue(individual == null ? null : individual.contactNumber, 80)
+        );
+        setSObjectField(accountRecord, 'Individual_Login__c', truncateValue(individual == null ? null : individual.login, 255));
+        setSObjectField(
+            accountRecord,
+            'Individual_Preferred_Language__c',
+            truncateValue(individual == null ? null : individual.individualPreferredLanguage, 40)
+        );
+        setSObjectField(accountRecord, 'Individual_Prospect__c', individual == null ? null : individual.prospect);
+        setSObjectField(
+            accountRecord,
+            'Individual_Country_Code__c',
+            truncateValue(individual == null ? null : individual.countryCode, 10)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Email_Ver_Status__c',
+            truncateValue(individual == null ? null : individual.email1VerificationStatus, 80)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Handicap_Type__c',
+            truncateValue(individual == null ? null : individual.handicapType, 255)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Address_Salutation__c',
+            truncateValue(individual == null ? null : individual.addressSalutation, 255)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Letter_Salutation__c',
+            truncateValue(individual == null ? null : individual.letterSalutation, 255)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Confidentiality_Level__c',
+            truncateValue(individual == null ? null : individual.confidentialityLevelEnum, 80)
+        );
+        setSObjectField(
+            accountRecord,
+            'Individual_Cell_Phone_Verified__c',
+            individual == null ? null : individual.cellPhoneNumberVerified
+        );
+        setSObjectField(accountRecord, 'Individual_Blocked__c', individual == null ? null : individual.blocked);
+        setSObjectField(accountRecord, 'Individual_Verified_Email__c', individual == null ? null : individual.verifiedEmail);
+        setSObjectField(
+            accountRecord,
+            'Individual_Req_Acc_Ver_Email__c',
+            individual == null ? null : individual.requiredAccountVerificationEmail
+        );
+        setSObjectField(accountRecord, 'Individual_Guest__c', individual == null ? null : individual.guest);
+        setSObjectField(
+            accountRecord,
+            'Individual_Alt_Emails__c',
+            serializeRawValue(individual == null ? null : individual.alternativeEmails, MAX_SECUTIX_LONG_TEXT_LENGTH)
+        );
+        return accountRecord;
+    }
+
+    private static void validateRequiredAccountFields() {
+        Map<String, SObjectField> fieldMap = Account.SObjectType.getDescribe().fields.getMap();
+        List<String> missingFields = new List<String>();
+
+        for (String fieldApiName : REQUIRED_ACCOUNT_FIELDS) {
+            if (!fieldMap.containsKey(fieldApiName)) {
+                missingFields.add(fieldApiName);
             }
+        }
 
-            Savepoint sp = Database.setSavepoint();
-            try {
-                Account fallbackAccount = new Account(
-                    Name = buildFallbackAccountName(payload)
-                );
-                insert fallbackAccount;
-
-                contactRecord.AccountId = fallbackAccount.Id;
-                insert contactRecord;
-                return contactRecord;
-            } catch (DmlException retryException) {
-                Database.rollback(sp);
-                throw retryException;
-            }
+        if (!missingFields.isEmpty()) {
+            missingFields.sort();
+            throw new ContactWebhookException(
+                'Missing required Account fields for ContactRestResource: ' + String.join(missingFields, ', ')
+            );
         }
     }
 
+    private static Id getInboundAccountRecordTypeId(ContactWrapper.Payload payload) {
+        Map<String, Schema.RecordTypeInfo> recordTypesByDeveloperName =
+            Account.SObjectType.getDescribe().getRecordTypeInfosByDeveloperName();
+        if (recordTypesByDeveloperName == null || recordTypesByDeveloperName.isEmpty()) {
+            return null;
+        }
+
+        for (String preferredDeveloperName : preferredRecordTypeDeveloperNames(payload)) {
+            Schema.RecordTypeInfo preferredRecordType = recordTypesByDeveloperName.get(preferredDeveloperName);
+            if (
+                preferredRecordType != null &&
+                preferredRecordType.isAvailable() &&
+                preferredDeveloperName != FALLBACK_ACCOUNT_RECORD_TYPE
+            ) {
+                return preferredRecordType.getRecordTypeId();
+            }
+        }
+
+        for (String developerName : recordTypesByDeveloperName.keySet()) {
+            Schema.RecordTypeInfo recordTypeInfo = recordTypesByDeveloperName.get(developerName);
+            if (
+                recordTypeInfo != null &&
+                recordTypeInfo.isAvailable() &&
+                developerName != FALLBACK_ACCOUNT_RECORD_TYPE
+            ) {
+                return recordTypeInfo.getRecordTypeId();
+            }
+        }
+
+        return null;
+    }
+
     private static String deriveLastName(ContactWrapper.Payload payload) {
+        if (isIndividualPayload(payload)) {
+            ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+            String individualLastName = individual == null ? null : individual.individualLastname;
+            if (!String.isBlank(individualLastName)) {
+                return truncateValue(individualLastName, 80);
+            }
+        }
+
         List<String> candidates = new List<String>();
         ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
         ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
@@ -420,10 +650,7 @@ global without sharing class ContactRestResource {
             }
         }
 
-        return truncateValue(
-            firstNonBlankValue(candidates) == null ? 'Secutix Contact' : firstNonBlankValue(candidates),
-            80
-        );
+        return truncateValue(firstNonBlankValue(candidates) == null ? 'Secutix Account' : firstNonBlankValue(candidates), 80);
     }
 
     private static String deriveEmail(ContactWrapper.Payload payload) {
@@ -460,31 +687,125 @@ global without sharing class ContactRestResource {
         return firstNonBlankValue(candidates);
     }
 
-    private static Boolean shouldRetryWithFallbackAccount(DmlException e) {
-        String message = e == null ? null : e.getMessage();
-        if (String.isBlank(message)) {
-            return false;
-        }
+    private static String deriveEndValidityDate(ContactWrapper.Payload payload) {
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
 
-        String normalizedMessage = message.toLowerCase();
-        return (normalizedMessage.contains('accountid') || normalizedMessage.contains('account')) &&
-            (normalizedMessage.contains('required') || normalizedMessage.contains('missing'));
+        return firstNonBlankValue(new List<String>{
+            payload == null ? null : payload.endValidityDate,
+            individual == null ? null : individual.endValidityDate
+        });
     }
 
-    private static String buildFallbackAccountName(ContactWrapper.Payload payload) {
-        List<String> nameParts = new List<String>();
+    private static String deriveRole(ContactWrapper.Payload payload) {
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
 
+        return firstNonBlankValue(new List<String>{
+            payload == null ? null : payload.role,
+            individual == null ? null : individual.role,
+            structure == null ? null : structure.role
+        });
+    }
+
+    private static String deriveAccountName(ContactWrapper.Payload payload) {
+        if (isStructurePayload(payload)) {
+            String structureAccountName = deriveStructureAccountName(payload);
+            if (!String.isBlank(structureAccountName)) {
+                return structureAccountName;
+            }
+        }
+
+        List<String> nameParts = new List<String>();
         if (payload != null && payload.individualContact != null) {
             addDistinctValue(nameParts, payload.individualContact.individualFirstname);
             addDistinctValue(nameParts, payload.individualContact.individualLastname);
         }
 
-        String baseName = nameParts.isEmpty() ? 'Secutix Contact' : String.join(nameParts, ' ');
-        if (payload != null && !String.isBlank(payload.contactNumber)) {
-            baseName += ' (' + payload.contactNumber + ')';
+        String baseName = nameParts.isEmpty() ? 'Secutix Account' : String.join(nameParts, ' ');
+        return truncateValue(baseName, 255);
+    }
+
+    private static String deriveStructureAccountName(ContactWrapper.Payload payload) {
+        List<String> nameParts = new List<String>();
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
+
+        if (structure != null) {
+            if (!String.isBlank(structure.structureOfficialName)) {
+                return truncateValue(structure.structureOfficialName, 255);
+            }
+
+            addDistinctValue(nameParts, structure.name);
+            addDistinctValue(nameParts, structure.structureName);
+            addDistinctValue(nameParts, structure.companyName);
+            addDistinctValue(nameParts, structure.organizationName);
+            addDistinctValue(nameParts, structure.legalName);
+            addDistinctValue(nameParts, structure.displayName);
         }
 
-        return ('Secutix - ' + baseName).left(255);
+        return nameParts.isEmpty() ? null : truncateValue(String.join(nameParts, ' '), 255);
+    }
+
+    private static List<ContactWrapper> prioritizeStructurePayloads(List<ContactWrapper> payloads) {
+        List<ContactWrapper> prioritizedPayloads = new List<ContactWrapper>();
+        if (payloads == null || payloads.isEmpty()) {
+            return prioritizedPayloads;
+        }
+
+        for (ContactWrapper payloadWrapper : payloads) {
+            if (isStructurePayload(payloadWrapper == null ? null : payloadWrapper.payload)) {
+                prioritizedPayloads.add(payloadWrapper);
+            }
+        }
+
+        for (ContactWrapper payloadWrapper : payloads) {
+            if (!isStructurePayload(payloadWrapper == null ? null : payloadWrapper.payload)) {
+                prioritizedPayloads.add(payloadWrapper);
+            }
+        }
+
+        return prioritizedPayloads;
+    }
+
+    private static Id resolveParentStructureAccountId(ContactWrapper.Payload payload) {
+        if (!isIndividualPayload(payload)) {
+            return null;
+        }
+
+        ContactWrapper.StructureContactPayload structure = payload == null ? null : payload.structureContact;
+        String structureContactNumber = structure == null ? null : structure.contactNumber;
+        if (String.isBlank(structureContactNumber)) {
+            return null;
+        }
+
+        List<Account> matchingStructures = [
+            SELECT Id
+            FROM Account
+            WHERE Contact_Number__c = :structureContactNumber
+            ORDER BY LastModifiedDate DESC
+            LIMIT 1
+        ];
+        return matchingStructures.isEmpty() ? null : matchingStructures[0].Id;
+    }
+
+    private static Boolean isStructurePayload(ContactWrapper.Payload payload) {
+        return payload != null && payload.type == 'STRUCTURE';
+    }
+
+    private static Boolean isIndividualPayload(ContactWrapper.Payload payload) {
+        return payload != null && payload.type == 'INDIVIDUAL';
+    }
+
+    private static List<String> preferredRecordTypeDeveloperNames(ContactWrapper.Payload payload) {
+        List<String> developerNames = new List<String>();
+        if (isStructurePayload(payload)) {
+            developerNames.add(STRUCTURE_ACCOUNT_RECORD_TYPE);
+        }
+
+        if (isIndividualPayload(payload)) {
+            developerNames.add(INDIVIDUAL_ACCOUNT_RECORD_TYPE);
+        }
+
+        return developerNames;
     }
 
     private static ContactWrapper.AddressPayload selectPrimaryAddress(List<ContactWrapper.AddressPayload> addresses) {
@@ -532,6 +853,105 @@ global without sharing class ContactRestResource {
         addLabelValue(lines, 'Secutix countryCode', address == null ? null : address.countryCode);
 
         return lines.isEmpty() ? null : String.join(lines, '\n');
+    }
+
+    private static String buildAccountDescription(ContactWrapper.Payload payload, ContactWrapper.AddressPayload address) {
+        List<String> lines = new List<String>();
+        ContactWrapper.IndividualContactPayload individual = payload == null ? null : payload.individualContact;
+
+        addLabelValue(lines, 'Secutix firstName', individual == null ? null : individual.individualFirstname);
+        addLabelValue(lines, 'Secutix lastName', individual == null ? null : individual.individualLastname);
+        addLabelValue(lines, 'Secutix title', individual == null ? null : individual.individualTitle);
+        addLabelValue(lines, 'Secutix email', deriveEmail(payload));
+        addLabelValue(lines, 'Secutix mobilePhone', deriveMobilePhone(payload));
+        addLabelValue(lines, 'Secutix birthdate', individual == null ? null : individual.individualBirthdate);
+
+        String baseDescription = buildDescription(payload, address);
+        if (!String.isBlank(baseDescription)) {
+            lines.add(baseDescription);
+        }
+
+        return lines.isEmpty() ? null : truncateValue(String.join(lines, '\n'), MAX_SECUTIX_LONG_TEXT_LENGTH);
+    }
+
+    private static void setSObjectField(SObject recordItem, String fieldApiName, Object value) {
+        if (recordItem == null || String.isBlank(fieldApiName) || value == null) {
+            return;
+        }
+
+        Map<String, SObjectField> fieldMap = recordItem.getSObjectType().getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApiName)) {
+            return;
+        }
+
+        DescribeFieldResult fieldDescribe = fieldMap.get(fieldApiName).getDescribe();
+        Object coercedValue = coerceFieldValue(fieldDescribe, value);
+        if (coercedValue != null) {
+            recordItem.put(fieldApiName, coercedValue);
+        }
+    }
+
+    private static Object coerceFieldValue(DescribeFieldResult fieldDescribe, Object value) {
+        if (fieldDescribe == null || value == null) {
+            return null;
+        }
+
+        if (value instanceof Date && fieldDescribe.getType() == DisplayType.Date) {
+            return value;
+        }
+
+        if (value instanceof Boolean && fieldDescribe.getType() == DisplayType.Boolean) {
+            return value;
+        }
+
+        String stringValue = String.valueOf(value);
+        DisplayType fieldType = fieldDescribe.getType();
+
+        if (
+            fieldType == DisplayType.String ||
+            fieldType == DisplayType.TextArea ||
+            fieldType == DisplayType.EncryptedString ||
+            fieldType == DisplayType.Phone ||
+            fieldType == DisplayType.Url ||
+            fieldType == DisplayType.Email ||
+            fieldType == DisplayType.Picklist ||
+            fieldType == DisplayType.MultiPicklist ||
+            fieldType == DisplayType.Reference ||
+            fieldType == DisplayType.Id
+        ) {
+            return truncateValue(stringValue, fieldDescribe.getLength());
+        }
+
+        if (
+            fieldType == DisplayType.Integer ||
+            fieldType == DisplayType.Double ||
+            fieldType == DisplayType.Currency ||
+            fieldType == DisplayType.Percent
+        ) {
+            try {
+                return Decimal.valueOf(stringValue);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        if (fieldType == DisplayType.Boolean) {
+            if (stringValue == 'true') {
+                return true;
+            }
+
+            if (stringValue == 'false') {
+                return false;
+            }
+
+            return null;
+        }
+
+        if (fieldType == DisplayType.Date) {
+            return parseDate(stringValue);
+        }
+
+        return null;
     }
 
     private static Date parseDate(String rawValue) {
@@ -632,6 +1052,10 @@ global without sharing class ContactRestResource {
         }
 
         return values;
+    }
+
+    private static List<Object> asObjectList(Object value) {
+        return value instanceof List<Object> ? (List<Object>) value : new List<Object>();
     }
 
     private static String truncateValue(String value, Integer maxLength) {

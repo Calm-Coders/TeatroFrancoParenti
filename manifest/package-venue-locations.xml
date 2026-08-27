@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>CatalogEnrichmentService</members>
+        <members>CatalogEnrichmentTest</members>
+        <members>VenueLocationBackfillBatch</members>
+        <members>VenueLocationRelationshipService</members>
+        <members>VenueLocationRelationshipServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types><members>Venue_Location__c</members><name>CustomObject</name></types>
+    <types>
+        <members>Performance__c.Location__c</members>
+        <members>Performance__c.Site_Id__c</members>
+        <members>Performance__c.Venue_Location__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>Performance__c-Performance Layout</members>
+        <members>Venue_Location__c-Venue Location Layout</members>
+        <name>Layout</name>
+    </types>
+    <types><members>TFP_Catalog_Enrichment</members><name>PermissionSet</name></types>
+    <version>65.0</version>
+</Package>

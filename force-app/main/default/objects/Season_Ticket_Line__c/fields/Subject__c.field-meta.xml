@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Subject__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Subject</label>
+    <referenceTo>Season_Ticket_Subject__c</referenceTo>
+    <relationshipLabel>Season Ticket Lines</relationshipLabel>
+    <relationshipName>SubjectLines</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

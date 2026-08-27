@@ -1,0 +1,2541 @@
+{
+  "endpoint": "POST /catalog/products/resolve",
+  "generatedFrom": "TFP catalog export 2026-07-17 (docs/Row Catalog formatted.json) — all values real and resolved",
+  "request": {
+    "productIds": [
+      10228636435680,
+      10228636435676,
+      10228682346339,
+      10228636523446,
+      10228683831060,
+      10228680140505,
+      10228676772860,
+      10228687124788,
+      10228656709105,
+      10228635491731,
+      10228683831063
+    ]
+  },
+  "response": {
+    "products": [
+      {
+        "productId": 10228636435680,
+        "found": true,
+        "code": "CRD6",
+        "name": "CARD 4 INGRESSI SETTORE B 2025/26",
+        "family": "SEASONTICKET / SEASONTICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": {
+          "id": 10228635445271,
+          "code": "01",
+          "name": "ABBONAMENTI E CARD"
+        },
+        "ticketModel": {
+          "id": 10228635519101,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142016485,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228636436185,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "crossSellProductLinks": [
+          {
+            "id": 10228650126024,
+            "type": "UP_SELL",
+            "message": "VUOI RISPARMIARE? SCEGLI UNA CARD!",
+            "targetProduct": {
+              "id": 10228636435680,
+              "name": "CARD 4 INGRESSI SETTORE B 2025/26"
+            }
+          }
+        ],
+        "seasonTicket": {
+          "priceType": "PREDEFINED",
+          "itemPrices": [
+            {
+              "tariff": {
+                "id": 10228635444787,
+                "code": "RL",
+                "name": "RIDOTTO CONVENZIONATI",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€800.00"
+            },
+            {
+              "tariff": {
+                "id": 10228635444781,
+                "code": "IA",
+                "name": "INTERO",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€960.00"
+            },
+            {
+              "tariff": {
+                "id": 10228636323264,
+                "code": "RJ",
+                "name": "RIDOTTO UNDER 30",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€800.00"
+            },
+            {
+              "tariff": {
+                "id": 10228635444783,
+                "code": "RK",
+                "name": "RIDOTTO OVER 65",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€800.00"
+            }
+          ],
+          "lines": [
+            {
+              "product": {
+                "id": 10228638570318,
+                "code": "0108",
+                "name": "ANNA CAPPELLI",
+                "isCatalogProduct": false
+              },
+              "performances": 12
+            },
+            {
+              "product": {
+                "id": 10228638570314,
+                "code": "0104",
+                "name": "CAPINERA",
+                "isCatalogProduct": false
+              },
+              "performances": 6
+            },
+            {
+              "product": {
+                "id": 10228638570311,
+                "code": "0101",
+                "name": "CHI COME ME",
+                "isCatalogProduct": false
+              },
+              "performances": 103
+            },
+            {
+              "product": {
+                "id": 10228638581122,
+                "code": "0125",
+                "name": "COME DIVENTARE RICCHI E FAMOSI DA UN MOMENTO ALL'ALTRO",
+                "isCatalogProduct": false
+              },
+              "performances": 11
+            }
+          ],
+          "lineCount": 71
+        },
+        "advantages": [
+          {
+            "id": 10228636995724,
+            "code": "CB08160",
+            "name": "PROMO CORPORATE BENEFITS",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "CB08160"
+          },
+          {
+            "id": 10228636549002,
+            "code": "PCC80160",
+            "name": "RIDOTTO PROMO 80€/160€",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "PCC80160"
+          }
+        ],
+        "conditionalCrossSellWith": [
+          "CARD 8 INGRESSI SETTORE A 2025/26",
+          "CARD 8 INGRESSI SETTORE B 2025/26",
+          "CARD 6 INGRESSI SETTORE A 2025/26",
+          "CARD 6 INGRESSI SETTORE B 2025/26"
+        ]
+      },
+      {
+        "productId": 10228636435676,
+        "found": true,
+        "code": "CRD2",
+        "name": "CARD 8 INGRESSI SETTORE B 2025/26",
+        "family": "SEASONTICKET / SEASONTICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": {
+          "id": 10228635445271,
+          "code": "01",
+          "name": "ABBONAMENTI E CARD"
+        },
+        "ticketModel": {
+          "id": 10228635519101,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142016442,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228636436181,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "crossSellProductLinks": [
+          {
+            "id": 10228650126024,
+            "type": "UP_SELL",
+            "message": "VUOI RISPARMIARE? SCEGLI UNA CARD!",
+            "targetProduct": {
+              "id": 10228636435680,
+              "name": "CARD 4 INGRESSI SETTORE B 2025/26"
+            }
+          }
+        ],
+        "seasonTicket": {
+          "priceType": "PREDEFINED",
+          "itemPrices": [
+            {
+              "tariff": {
+                "id": 10228635444787,
+                "code": "RL",
+                "name": "RIDOTTO CONVENZIONATI",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€1600.00"
+            },
+            {
+              "tariff": {
+                "id": 10228635444811,
+                "code": "OJ",
+                "name": "OMAGGIO CARD/ABBO",
+                "kind": "FREE"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€0.00"
+            },
+            {
+              "tariff": {
+                "id": 10228635444781,
+                "code": "IA",
+                "name": "INTERO",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€1760.00"
+            },
+            {
+              "tariff": {
+                "id": 10228636323264,
+                "code": "RJ",
+                "name": "RIDOTTO UNDER 30",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€1600.00"
+            }
+          ],
+          "lines": [
+            {
+              "product": {
+                "id": 10228638570318,
+                "code": "0108",
+                "name": "ANNA CAPPELLI",
+                "isCatalogProduct": false
+              },
+              "performances": 12
+            },
+            {
+              "product": {
+                "id": 10228638570314,
+                "code": "0104",
+                "name": "CAPINERA",
+                "isCatalogProduct": false
+              },
+              "performances": 6
+            },
+            {
+              "product": {
+                "id": 10228638570311,
+                "code": "0101",
+                "name": "CHI COME ME",
+                "isCatalogProduct": false
+              },
+              "performances": 103
+            },
+            {
+              "product": {
+                "id": 10228638581122,
+                "code": "0125",
+                "name": "COME DIVENTARE RICCHI E FAMOSI DA UN MOMENTO ALL'ALTRO",
+                "isCatalogProduct": false
+              },
+              "performances": 11
+            }
+          ],
+          "lineCount": 71
+        },
+        "advantages": [
+          {
+            "id": 10228636995724,
+            "code": "CB08160",
+            "name": "PROMO CORPORATE BENEFITS",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "CB08160"
+          },
+          {
+            "id": 10228636549002,
+            "code": "PCC80160",
+            "name": "RIDOTTO PROMO 80€/160€",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "PCC80160"
+          }
+        ],
+        "conditionalCrossSellWith": [
+          "CARD 4 INGRESSI SETTORE B 2025/26",
+          "CARD 8 INGRESSI SETTORE A 2025/26",
+          "CARD 6 INGRESSI SETTORE A 2025/26",
+          "CARD 6 INGRESSI SETTORE B 2025/26"
+        ]
+      },
+      {
+        "productId": 10228682346339,
+        "found": true,
+        "code": "0190",
+        "name": "LA LOCANDIERA A LONG PLAY",
+        "family": "SINGLE_ENTRY / SIMPLE_TICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": null,
+        "ticketModel": {
+          "id": 634688343,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142809811,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228682451681,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "event": {
+          "activity": {
+            "id": 10228635444869,
+            "code": "1",
+            "name": "TEATRO"
+          },
+          "performances": [
+            {
+              "performanceId": 10228682361696,
+              "code": "0190",
+              "start": "2026-07-28 20:00",
+              "state": "RUNNING",
+              "site": {
+                "code": "1",
+                "id": 10228544852613,
+                "name": "Teatro Franco Parenti",
+                "town": "Milano"
+              },
+              "space": {
+                "code": "GRANDE",
+                "name": "SALA GRANDE"
+              },
+              "physicalConfiguration": {
+                "id": 10228544670213,
+                "name": "01 - SALA GRANDE (STANDARD)",
+                "site": "Teatro Franco Parenti",
+                "space": "SALA GRANDE",
+                "gauge": 1000,
+                "town": "Milano"
+              },
+              "logicalConfiguration": {
+                "id": 10228635451835,
+                "code": "0001",
+                "name": "SALA GRANDE"
+              },
+              "rateType": {
+                "id": 10228635445070,
+                "code": "1",
+                "name": "TEATRO"
+              },
+              "priceGrid": [
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€345.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€45.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€250.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444765,
+                    "code": "I7",
+                    "name": "intero CONVENZIONATI + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€180.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€20.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€180.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€20.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444765,
+                    "code": "I7",
+                    "name": "intero CONVENZIONATI + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€180.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€20.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€180.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€20.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€180.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€20.00"
+                    }
+                  ]
+                }
+              ],
+              "salePeriods": [
+                {
+                  "salesChannel": {
+                    "id": 10228452598405,
+                    "code": "TS"
+                  },
+                  "start": "2025-09-16 00:00",
+                  "end": "2026-07-28 19:45",
+                  "type": "STANDARD",
+                  "salePossible": true,
+                  "reservationPossible": false,
+                  "tariffs": [
+                    {
+                      "id": 10228635444778,
+                      "code": "I1",
+                      "name": "INTERO + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444793,
+                      "code": "I3",
+                      "name": "intero UNDER 30 + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444776,
+                      "code": "I5",
+                      "name": "intero OVER 65 + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444765,
+                      "code": "I7",
+                      "name": "intero CONVENZIONATI + prev.",
+                      "kind": "FULL"
+                    }
+                  ],
+                  "seatCategories": [
+                    {
+                      "id": 10228635451938,
+                      "name": "SETTORE C"
+                    },
+                    {
+                      "id": 10228635451937,
+                      "name": "SETTORE A"
+                    },
+                    {
+                      "id": 10228635451936,
+                      "name": "SETTORE B"
+                    },
+                    {
+                      "id": 10228653181683
+                    },
+                    {
+                      "id": 10228635451975
+                    },
+                    {
+                      "id": 10228635451974
+                    },
+                    {
+                      "id": 10228635451947
+                    },
+                    {
+                      "id": 10228635451946
+                    },
+                    {
+                      "id": 10228635451944
+                    },
+                    {
+                      "id": 10228635451950
+                    },
+                    {
+                      "id": 10228635451955
+                    },
+                    {
+                      "id": 10228635451952
+                    },
+                    {
+                      "id": 10228645674651
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "advantages": [
+          {
+            "id": 10228652653246,
+            "code": "RID50",
+            "name": "Riduzione 50%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451937,
+                  "name": "SETTORE A"
+                },
+                "amount": "€170.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€100.00"
+              }
+            ]
+          },
+          {
+            "id": 10228643726974,
+            "code": "LP200",
+            "name": "Ridotto 40%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "LP200",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444806,
+                  "code": "R9",
+                  "name": "RIDOTTO 40%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€145.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444806,
+                  "code": "R9",
+                  "name": "RIDOTTO 40%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€125.00"
+              }
+            ]
+          },
+          {
+            "id": 10228653611943,
+            "code": "U35NP",
+            "name": "Under 30",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€100.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€125.00"
+              }
+            ]
+          },
+          {
+            "id": 10228647538204,
+            "code": "ST2526",
+            "name": "ALLIEVI SCUOLE DI TEATRO 2025/26",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444809,
+                  "code": "RD",
+                  "name": "RIDOTTO SCUOLE DI TEATRO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€125.00"
+              }
+            ]
+          },
+          {
+            "id": 10228644663854,
+            "code": "ABBO30",
+            "name": "Riduzione 30%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "maxOrderQuantity": 2,
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€140.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€175.00"
+              }
+            ]
+          },
+          {
+            "id": 10228664738001,
+            "code": "PP15DD",
+            "name": "Riduzione 30%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "PUBLIC",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€140.00"
+              }
+            ]
+          }
+        ],
+        "advantagesNote": "5 more advantages omitted"
+      },
+      {
+        "productId": 10228636523446,
+        "found": true,
+        "code": "BBB3",
+        "name": "LIBERO X6 CONV. 2025/26",
+        "family": "SEASONTICKET / SEASONTICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": {
+          "id": 10228635445271,
+          "code": "01",
+          "name": "ABBONAMENTI E CARD"
+        },
+        "ticketModel": {
+          "id": 10228635519101,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142017274,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228636524052,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "crossSellProductLinks": [
+          {
+            "id": 10228650126024,
+            "type": "UP_SELL",
+            "message": "VUOI RISPARMIARE? SCEGLI UNA CARD!",
+            "targetProduct": {
+              "id": 10228636435680,
+              "name": "CARD 4 INGRESSI SETTORE B 2025/26"
+            }
+          }
+        ],
+        "seasonTicket": {
+          "priceType": "PREDEFINED",
+          "itemPrices": [
+            {
+              "tariff": {
+                "id": 10228635444781,
+                "code": "IA",
+                "name": "INTERO",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€1500.00"
+            },
+            {
+              "tariff": {
+                "id": 10228635444787,
+                "code": "RL",
+                "name": "RIDOTTO CONVENZIONATI",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€1080.00"
+            }
+          ],
+          "lines": [
+            {
+              "product": {
+                "id": 10228638570318,
+                "code": "0108",
+                "name": "ANNA CAPPELLI",
+                "isCatalogProduct": false
+              },
+              "performances": 12
+            },
+            {
+              "product": {
+                "id": 10228638570314,
+                "code": "0104",
+                "name": "CAPINERA",
+                "isCatalogProduct": false
+              },
+              "performances": 6
+            },
+            {
+              "product": {
+                "id": 10228638570311,
+                "code": "0101",
+                "name": "CHI COME ME",
+                "isCatalogProduct": false
+              },
+              "performances": 103
+            },
+            {
+              "product": {
+                "id": 10228638581122,
+                "code": "0125",
+                "name": "COME DIVENTARE RICCHI E FAMOSI DA UN MOMENTO ALL'ALTRO",
+                "isCatalogProduct": false
+              },
+              "performances": 11
+            }
+          ],
+          "lineCount": 63
+        },
+        "advantages": [
+          {
+            "id": 10228636995722,
+            "code": "CB01612",
+            "name": "PROMO CORPORATE BENEFITS",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "CB01612"
+          },
+          {
+            "id": 10228636549000,
+            "code": "AIC612",
+            "name": "108€/216€",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "AIC612"
+          }
+        ]
+      },
+      {
+        "productId": 10228683831060,
+        "found": true,
+        "code": "0507",
+        "name": "È TEMPO DI INDIE",
+        "family": "SINGLE_ENTRY / SIMPLE_TICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": null,
+        "ticketModel": {
+          "id": 634688343,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142870842,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228684567125,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "crossSellProductLinks": [
+          {
+            "id": 10228689198177,
+            "type": "UP_SELL",
+            "message": "ALTRE PROPOSTE",
+            "targetProduct": {
+              "id": 10228682346339,
+              "name": "LA LOCANDIERA A LONG PLAY"
+            }
+          }
+        ],
+        "event": {
+          "activity": {
+            "id": 10228635444867,
+            "code": "5",
+            "name": "MUSICA E DANZA"
+          },
+          "performances": [
+            {
+              "performanceId": 10228683826819,
+              "code": "0507",
+              "start": "2026-07-22 20:30",
+              "state": "RUNNING",
+              "site": {
+                "code": "1",
+                "id": 10228544852613,
+                "name": "Teatro Franco Parenti",
+                "town": "Milano"
+              },
+              "space": {
+                "code": "BAGNI150",
+                "name": "BAGNI MISTERIOSI"
+              },
+              "physicalConfiguration": {
+                "id": 10228644676165,
+                "name": "11 - BAGNI MISTERIOSI (CAPIENZA 150)",
+                "site": "Teatro Franco Parenti",
+                "space": "BAGNI MISTERIOSI",
+                "gauge": 999,
+                "town": "Milano"
+              },
+              "logicalConfiguration": {
+                "id": 10228644671116,
+                "code": "0010",
+                "name": "10 - BAGNI MISTERIOSI (CAPIENZA 150)"
+              },
+              "rateType": {
+                "id": 10228635445073,
+                "code": "5",
+                "name": "MUSICA E DANZA"
+              },
+              "priceGrid": [
+                {
+                  "seatCategory": {
+                    "id": 10228644677074,
+                    "name": "POSTO UNICO"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€160.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€10.00"
+                    }
+                  ]
+                }
+              ],
+              "salePeriods": [
+                {
+                  "salesChannel": {
+                    "id": 10228452598405,
+                    "code": "TS"
+                  },
+                  "start": "2026-04-14 09:00",
+                  "end": "2026-07-22 20:15",
+                  "type": "STANDARD",
+                  "salePossible": true,
+                  "reservationPossible": false,
+                  "tariffs": [
+                    {
+                      "id": 10228635444778,
+                      "code": "I1",
+                      "name": "INTERO + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444793,
+                      "code": "I3",
+                      "name": "intero UNDER 30 + prev.",
+                      "kind": "FULL"
+                    }
+                  ],
+                  "seatCategories": [
+                    {
+                      "id": 10228644677074,
+                      "name": "POSTO UNICO"
+                    },
+                    {
+                      "id": 10228635451950
+                    },
+                    {
+                      "id": 10228680136056
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "productId": 10228680140505,
+        "found": true,
+        "code": "0506",
+        "name": "PINK FLOYD: WISH YOU WERE HERE",
+        "family": "SINGLE_ENTRY / SIMPLE_TICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": null,
+        "ticketModel": {
+          "id": 634688343,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142728482,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228680436023,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "event": {
+          "activity": {
+            "id": 10228635444867,
+            "code": "5",
+            "name": "MUSICA E DANZA"
+          },
+          "performances": [
+            {
+              "performanceId": 10228680141016,
+              "code": "0506",
+              "start": "2026-07-23 21:00",
+              "state": "RUNNING",
+              "site": {
+                "code": "CASSFO",
+                "id": 10228583654187,
+                "name": "Castello Sforzesco",
+                "town": "Milano"
+              },
+              "space": {
+                "code": "CASTELLO",
+                "name": "CASTELLO SFORZESCO"
+              },
+              "physicalConfiguration": {
+                "id": 10228680404512,
+                "name": "17 - CASTELLO SFORZESCO 25/26",
+                "site": "Castello Sforzesco",
+                "space": "CASTELLO SFORZESCO",
+                "gauge": 1000,
+                "town": "Milano"
+              },
+              "logicalConfiguration": {
+                "id": 10228680135955,
+                "code": "1901",
+                "name": "CASTELLO SFORZESCO"
+              },
+              "rateType": {
+                "id": 10228635445073,
+                "code": "5",
+                "name": "MUSICA E DANZA"
+              },
+              "priceGrid": [
+                {
+                  "seatCategory": {
+                    "id": 10228680136056,
+                    "name": "POSTO UNICO"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€285.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€35.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228680136056,
+                    "name": "POSTO UNICO"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                }
+              ],
+              "salePeriods": [
+                {
+                  "salesChannel": {
+                    "id": 10228452598405,
+                    "code": "TS"
+                  },
+                  "start": "2026-04-14 09:00",
+                  "end": "2026-07-23 20:45",
+                  "type": "STANDARD",
+                  "salePossible": true,
+                  "reservationPossible": false,
+                  "tariffs": [
+                    {
+                      "id": 10228635444778,
+                      "code": "I1",
+                      "name": "INTERO + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444793,
+                      "code": "I3",
+                      "name": "intero UNDER 30 + prev.",
+                      "kind": "FULL"
+                    }
+                  ],
+                  "seatCategories": [
+                    {
+                      "id": 10228644677074
+                    },
+                    {
+                      "id": 10228635451950
+                    },
+                    {
+                      "id": 10228680136056,
+                      "name": "POSTO UNICO"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "advantages": [
+          {
+            "id": 10228654430053,
+            "code": "AAR2526",
+            "name": "Ridotto 10€",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228639474566,
+                  "code": "RI",
+                  "name": "RIDOTTO 10 EURO",
+                  "kind": "FULL"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€100.00"
+              }
+            ]
+          },
+          {
+            "id": 10228643726974,
+            "code": "LP200",
+            "name": "Ridotto 40%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "LP200",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444806,
+                  "code": "R9",
+                  "name": "RIDOTTO 40%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€170.00"
+              }
+            ]
+          },
+          {
+            "id": 10228653611943,
+            "code": "U35NP",
+            "name": "Under 30",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€140.00"
+              }
+            ]
+          },
+          {
+            "id": 10228644663854,
+            "code": "ABBO30",
+            "name": "Riduzione 30%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "maxOrderQuantity": 2,
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€200.00"
+              }
+            ]
+          },
+          {
+            "id": 10228643939675,
+            "code": "LPUNIV",
+            "name": "Ridotto 30% e 50%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "LPUNIV",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€200.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€140.00"
+              }
+            ]
+          },
+          {
+            "id": 10228646191470,
+            "code": "NRC30",
+            "name": "Ridotto 30%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "NRC30",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228680136056,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€200.00"
+              }
+            ]
+          }
+        ],
+        "advantagesNote": "4 more advantages omitted"
+      },
+      {
+        "productId": 10228676772860,
+        "found": true,
+        "code": "0185",
+        "name": "NAPOLI NOBILISSIMA",
+        "family": "SINGLE_ENTRY / SIMPLE_TICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": null,
+        "ticketModel": {
+          "id": 634688343,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10228676785581,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          },
+          {
+            "id": 10142629457,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          }
+        ],
+        "event": {
+          "activity": {
+            "id": 10228635444869,
+            "code": "1",
+            "name": "TEATRO"
+          },
+          "performances": [
+            {
+              "performanceId": 10228676773176,
+              "code": "0185",
+              "start": "2026-07-19 18:00",
+              "state": "RUNNING",
+              "site": {
+                "code": "1",
+                "id": 10228544852613,
+                "name": "Teatro Franco Parenti",
+                "town": "Milano"
+              },
+              "space": {
+                "code": "GRANDE",
+                "name": "SALA GRANDE"
+              },
+              "physicalConfiguration": {
+                "id": 10228544670213,
+                "name": "01 - SALA GRANDE (STANDARD)",
+                "site": "Teatro Franco Parenti",
+                "space": "SALA GRANDE",
+                "gauge": 1000,
+                "town": "Milano"
+              },
+              "logicalConfiguration": {
+                "id": 10228635451835,
+                "code": "0001",
+                "name": "SALA GRANDE"
+              },
+              "rateType": {
+                "id": 10228635445070,
+                "code": "1",
+                "name": "TEATRO"
+              },
+              "priceGrid": [
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€430.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€50.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€320.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€40.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€320.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€40.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€320.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€40.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€235.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€235.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€235.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                }
+              ],
+              "salePeriods": [
+                {
+                  "salesChannel": {
+                    "id": 10228452598405,
+                    "code": "TS"
+                  },
+                  "start": "2025-09-16 00:00",
+                  "end": "2026-07-19 17:45",
+                  "type": "STANDARD",
+                  "salePossible": true,
+                  "reservationPossible": false,
+                  "tariffs": [
+                    {
+                      "id": 10228635444778,
+                      "code": "I1",
+                      "name": "INTERO + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444793,
+                      "code": "I3",
+                      "name": "intero UNDER 30 + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444776,
+                      "code": "I5",
+                      "name": "intero OVER 65 + prev.",
+                      "kind": "FULL"
+                    }
+                  ],
+                  "seatCategories": [
+                    {
+                      "id": 10228635451938,
+                      "name": "SETTORE C"
+                    },
+                    {
+                      "id": 10228635451937,
+                      "name": "SETTORE A"
+                    },
+                    {
+                      "id": 10228635451936,
+                      "name": "SETTORE B"
+                    },
+                    {
+                      "id": 10228635451975
+                    },
+                    {
+                      "id": 10228635451942
+                    },
+                    {
+                      "id": 10228635451974
+                    },
+                    {
+                      "id": 10228635451947
+                    },
+                    {
+                      "id": 10228672334308
+                    },
+                    {
+                      "id": 10228635451946
+                    },
+                    {
+                      "id": 10228635451944
+                    },
+                    {
+                      "id": 10228635451950
+                    },
+                    {
+                      "id": 10228635451955
+                    },
+                    {
+                      "id": 10228635451952
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "performanceId": 10228676773177,
+              "code": "0185",
+              "start": "2026-07-21 20:00",
+              "state": "RUNNING",
+              "site": {
+                "code": "1",
+                "id": 10228544852613,
+                "name": "Teatro Franco Parenti",
+                "town": "Milano"
+              },
+              "space": {
+                "code": "GRANDE",
+                "name": "SALA GRANDE"
+              },
+              "physicalConfiguration": {
+                "id": 10228544670213,
+                "name": "01 - SALA GRANDE (STANDARD)",
+                "site": "Teatro Franco Parenti",
+                "space": "SALA GRANDE",
+                "gauge": 1000,
+                "town": "Milano"
+              },
+              "logicalConfiguration": {
+                "id": 10228635451835,
+                "code": "0001",
+                "name": "SALA GRANDE"
+              },
+              "rateType": {
+                "id": 10228635445070,
+                "code": "1",
+                "name": "TEATRO"
+              },
+              "priceGrid": [
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€430.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€50.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€320.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€40.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451937,
+                    "name": "SETTORE A"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€320.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€40.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€320.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€40.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444765,
+                    "code": "I7",
+                    "name": "intero CONVENZIONATI + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€250.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€235.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451936,
+                    "name": "SETTORE B"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€235.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444778,
+                    "code": "I1",
+                    "name": "INTERO + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€235.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€30.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444765,
+                    "code": "I7",
+                    "name": "intero CONVENZIONATI + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444776,
+                    "code": "I5",
+                    "name": "intero OVER 65 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                },
+                {
+                  "seatCategory": {
+                    "id": 10228635451938,
+                    "name": "SETTORE C"
+                  },
+                  "tariff": {
+                    "id": 10228635444793,
+                    "code": "I3",
+                    "name": "intero UNDER 30 + prev.",
+                    "kind": "FULL"
+                  },
+                  "amount": "€205.00",
+                  "fees": [
+                    {
+                      "component": "PREV",
+                      "amount": "€25.00"
+                    }
+                  ]
+                }
+              ],
+              "salePeriods": [
+                {
+                  "salesChannel": {
+                    "id": 10228452598405,
+                    "code": "TS"
+                  },
+                  "start": "2025-09-16 00:00",
+                  "end": "2026-07-21 19:45",
+                  "type": "STANDARD",
+                  "salePossible": true,
+                  "reservationPossible": false,
+                  "tariffs": [
+                    {
+                      "id": 10228635444778,
+                      "code": "I1",
+                      "name": "INTERO + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444793,
+                      "code": "I3",
+                      "name": "intero UNDER 30 + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444776,
+                      "code": "I5",
+                      "name": "intero OVER 65 + prev.",
+                      "kind": "FULL"
+                    },
+                    {
+                      "id": 10228635444765,
+                      "code": "I7",
+                      "name": "intero CONVENZIONATI + prev.",
+                      "kind": "FULL"
+                    }
+                  ],
+                  "seatCategories": [
+                    {
+                      "id": 10228635451938,
+                      "name": "SETTORE C"
+                    },
+                    {
+                      "id": 10228635451937,
+                      "name": "SETTORE A"
+                    },
+                    {
+                      "id": 10228635451936,
+                      "name": "SETTORE B"
+                    },
+                    {
+                      "id": 10228653181683
+                    },
+                    {
+                      "id": 10228635451975
+                    },
+                    {
+                      "id": 10228635451974
+                    },
+                    {
+                      "id": 10228635451947
+                    },
+                    {
+                      "id": 10228635451946
+                    },
+                    {
+                      "id": 10228635451944
+                    },
+                    {
+                      "id": 10228635451950
+                    },
+                    {
+                      "id": 10228635451955
+                    },
+                    {
+                      "id": 10228635451952
+                    },
+                    {
+                      "id": 10228645674651
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "advantages": [
+          {
+            "id": 10228652653246,
+            "code": "RID50",
+            "name": "Riduzione 50%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451937,
+                  "name": "SETTORE A"
+                },
+                "amount": "€215.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€160.00"
+              }
+            ]
+          },
+          {
+            "id": 10228643704545,
+            "code": "CB0010",
+            "name": "Riduzione 30%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "CB0010",
+            "maxOrderQuantity": 999999,
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€220.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444805,
+                  "code": "R8",
+                  "name": "RIDOTTO PROMO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€220.00"
+              }
+            ]
+          },
+          {
+            "id": 10228654430053,
+            "code": "AAR2526",
+            "name": "Ridotto 10€",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228639474566,
+                  "code": "RI",
+                  "name": "RIDOTTO 10 EURO",
+                  "kind": "FULL"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€100.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228639474566,
+                  "code": "RI",
+                  "name": "RIDOTTO 10 EURO",
+                  "kind": "FULL"
+                },
+                "seatCategory": {
+                  "id": 10228635451939,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€100.00"
+              }
+            ]
+          },
+          {
+            "id": 10228643726974,
+            "code": "LP200",
+            "name": "Ridotto 40%",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CODE",
+            "accessCode": "LP200",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444806,
+                  "code": "R9",
+                  "name": "RIDOTTO 40%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€140.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444806,
+                  "code": "R9",
+                  "name": "RIDOTTO 40%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451939,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€140.00"
+              }
+            ]
+          },
+          {
+            "id": 10228653611943,
+            "code": "U35NP",
+            "name": "Under 30",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451936,
+                  "name": "SETTORE B"
+                },
+                "amount": "€160.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444816,
+                  "code": "RA",
+                  "name": "RIDOTTO 50%",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€120.00"
+              }
+            ]
+          },
+          {
+            "id": 10228647538204,
+            "code": "ST2526",
+            "name": "ALLIEVI SCUOLE DI TEATRO 2025/26",
+            "internalName": "(not in catalog export — SecuTix sends code + externalName only)",
+            "targetType": "CONTACT",
+            "discountedPrices": [
+              {
+                "tariff": {
+                  "id": 10228635444809,
+                  "code": "RD",
+                  "name": "RIDOTTO SCUOLE DI TEATRO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451939,
+                  "name": "POSTO UNICO"
+                },
+                "amount": "€125.00"
+              },
+              {
+                "tariff": {
+                  "id": 10228635444809,
+                  "code": "RD",
+                  "name": "RIDOTTO SCUOLE DI TEATRO",
+                  "kind": "REDUCED"
+                },
+                "seatCategory": {
+                  "id": 10228635451938,
+                  "name": "SETTORE C"
+                },
+                "amount": "€125.00"
+              }
+            ]
+          }
+        ],
+        "advantagesNote": "11 more advantages omitted"
+      },
+      {
+        "productId": 10228687124788,
+        "found": true,
+        "code": "1",
+        "name": "MEMBERSHIP UNDER30",
+        "family": "MEMBERSHIP / MEMBERSHIP",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228683117776,
+          "code": "2627",
+          "name": "STAGIONE 26-27"
+        },
+        "productType": {
+          "id": 10228687303726,
+          "code": "7",
+          "name": "MEMBERSHIP"
+        },
+        "ticketModel": {
+          "id": 10228638467696,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849895,
+        "contactProductLinks": [
+          {
+            "id": 10142991257,
+            "contactNumber": "12900",
+            "type": "RESPONSIBLE"
+          }
+        ],
+        "salePeriods": [
+          {
+            "salesChannel": {
+              "id": 10228452598405,
+              "code": "TS"
+            },
+            "start": "2026-07-03 09:00",
+            "end": "no end",
+            "type": "STANDARD",
+            "salePossible": true,
+            "reservationPossible": false,
+            "tariffs": [
+              {
+                "id": 10228687152442,
+                "code": "OM",
+                "name": "OMAGGIO UNDER30",
+                "kind": "FREE"
+              }
+            ]
+          }
+        ],
+        "membership": {
+          "validity": " → undefined ",
+          "items": [
+            {
+              "itemPrices": [
+                {
+                  "tariff": {
+                    "id": 10228687152442,
+                    "code": "OM",
+                    "name": "OMAGGIO UNDER30",
+                    "kind": "FREE"
+                  },
+                  "amount": "€0.00",
+                  "maxQty": 1
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "productId": 10228656709105,
+        "found": true,
+        "code": "SC2526",
+        "name": "PARENTI SOCIAL CARD 2026",
+        "family": "MEMBERSHIP / MEMBERSHIP",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": {
+          "id": 10228656709709,
+          "code": "11",
+          "name": "PARENTI SOCIAL CARD"
+        },
+        "ticketModel": {
+          "id": 10228657349140,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849896,
+        "contactProductLinks": [
+          {
+            "id": 10142230692,
+            "contactNumber": "12900",
+            "type": "RESPONSIBLE"
+          }
+        ],
+        "salePeriods": [
+          {
+            "salesChannel": {
+              "id": 10228452598405,
+              "code": "TS"
+            },
+            "start": "2025-11-18 09:00",
+            "end": "no end",
+            "type": "STANDARD",
+            "salePossible": true,
+            "reservationPossible": false,
+            "tariffs": [
+              {
+                "id": 10228635444777,
+                "code": "I2",
+                "name": "INTERO",
+                "kind": "FULL"
+              }
+            ]
+          }
+        ],
+        "membership": {
+          "validity": "2025-11-21T00:00:00.000+01:00 → 2026-12-31T00:00:00.000+01:00",
+          "items": [
+            {
+              "itemPrices": [
+                {
+                  "tariff": {
+                    "id": 10228635444777,
+                    "code": "I2",
+                    "name": "INTERO",
+                    "kind": "FULL"
+                  },
+                  "amount": "€100.00",
+                  "maxQty": 10
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "productId": 10228635491731,
+        "found": true,
+        "code": "ABB1",
+        "name": "PROMO ESTATE 2025/26",
+        "family": "SEASONTICKET / SEASONTICKET",
+        "state": "RUNNING",
+        "season": {
+          "id": 10228635444462,
+          "code": "2526",
+          "name": "STAGIONE 25-26"
+        },
+        "productType": {
+          "id": 10228635445271,
+          "code": "01",
+          "name": "ABBONAMENTI E CARD"
+        },
+        "ticketModel": {
+          "id": 10228635519101,
+          "name": "(from middleware static map — not in catalog)"
+        },
+        "vatCodeId": 20849893,
+        "contactProductLinks": [
+          {
+            "id": 10142007868,
+            "contactNumber": "22",
+            "type": "RESPONSIBLE"
+          },
+          {
+            "id": 10228635506375,
+            "contactNumber": "12900",
+            "type": "OBSERVER"
+          }
+        ],
+        "seasonTicket": {
+          "priceType": "PREDEFINED",
+          "itemPrices": [
+            {
+              "tariff": {
+                "id": 10228635444781,
+                "code": "IA",
+                "name": "INTERO",
+                "kind": "FULL"
+              },
+              "priceLevel": {
+                "id": 10228635445169,
+                "code": "ABBONATO",
+                "category": "SUBSCRIBER"
+              },
+              "amount": "€1800.00"
+            }
+          ],
+          "lines": [],
+          "lineCount": 0,
+          "seasonTicketSubjects": {
+            "count": 2,
+            "note": "fixed-seat subjects, each with its own seasonTicketLines"
+          }
+        }
+      },
+      {
+        "productId": 10228683831063,
+        "found": false,
+        "note": "PAC3 — removed on SecuTix after 2026-07-10; found:false lets Salesforce flag the record as obsolete instead of failing the batch. When packs exist, the entry carries pack: { priceType, linkedTariffs[], packageLine[] with the underlying event + performances } as in the Resolved examples tab."
+      }
+    ]
+  }
+}

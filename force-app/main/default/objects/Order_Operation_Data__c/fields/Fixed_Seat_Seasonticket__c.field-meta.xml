@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fixed_Seat_Seasonticket__c</fullName>
+    <defaultValue>false</defaultValue>
+    <label>Fixed Seat Seasonticket</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

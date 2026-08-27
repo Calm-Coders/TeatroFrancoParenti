@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>InventoryRestResource</members>
+        <members>PackageLineRelationshipBackfillBatch</members>
+        <members>PackageLineRelationshipService</members>
+        <members>PackageLineRelationshipServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Package_Line__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>Pack__c-Pack Layout</members>
+        <members>Package_Line__c-Package Line Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>TFP_Catalog_Enrichment</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

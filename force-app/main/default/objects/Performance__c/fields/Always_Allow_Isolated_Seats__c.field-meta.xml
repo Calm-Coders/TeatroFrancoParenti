@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Always_Allow_Isolated_Seats__c</fullName>
+    <defaultValue>false</defaultValue>
+    <label>Always Allow Isolated Seats</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

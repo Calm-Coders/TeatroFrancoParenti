@@ -1,5 +1,9 @@
 # Salesforce DX Project: Next Steps
 
+## TFP local catalog integration
+
+The local MySQL catalog can now be refreshed and synchronized through the existing Salesforce inventory REST service. See [Local catalog → Salesforce sync](docs/local-catalog-salesforce-sync.md) for the architecture, safety controls, and commands.
+
 Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
 
 ## How Do You Plan to Deploy Your Changes?

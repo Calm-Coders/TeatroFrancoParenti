@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Seat_Category__c</fullName><deleteConstraint>Restrict</deleteConstraint><label>Seat Category</label><referenceTo>Seat_Category__c</referenceTo><relationshipLabel>Performance Prices</relationshipLabel><relationshipName>PerformancePrices</relationshipName><required>false</required><type>Lookup</type></CustomField>

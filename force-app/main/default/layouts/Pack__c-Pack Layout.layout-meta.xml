@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
+        <label>Pack</label>
+        <layoutColumns>
+            <layoutItems><behavior>Required</behavior><field>Name</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Inventory__c</field></layoutItems>
+            <layoutItems><behavior>Edit</behavior><field>Ticket_Printing_Mode__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Linked_Audience_Sub_Category_Ids__c</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
+        <label>Package Lines (JSON)</label>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>Package_Lines__c</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
+        <label>System</label>
+        <layoutColumns>
+            <layoutItems><behavior>Edit</behavior><field>OwnerId</field></layoutItems>
+            <layoutItems><behavior>Readonly</behavior><field>CreatedById</field></layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems><behavior>Readonly</behavior><field>LastModifiedById</field></layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Target_Inventory__c</fields>
+        <fields>Quantity__c</fields>
+        <fields>Optional__c</fields>
+        <fields>Forced_Audience_Sub_Category__c</fields>
+        <relatedList>Package_Line__c.Pack__c</relatedList>
+    </relatedLists>
+
+    <showEmailCheckbox>false</showEmailCheckbox>
+    <showHighlightsPanel>true</showHighlightsPanel>
+    <showInteractionLogPanel>false</showInteractionLogPanel>
+    <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
+    <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
+</Layout>
