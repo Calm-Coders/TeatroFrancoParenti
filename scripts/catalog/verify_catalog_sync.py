@@ -35,7 +35,14 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
 
     events = typed("event")
     memberships = typed("membership")
+    packs = typed("pack")
     season_tickets = typed("seasonTicket")
+    package_lines = [
+        line
+        for product in packs
+        for line in product["pack"].get("packageLine") or []
+        if isinstance(line, dict) and line.get("packageLineId") is not None
+    ]
     season_ticket_subjects = [
         subject
         for product in season_tickets
@@ -136,6 +143,11 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         for price in performance_prices + membership_item_prices
         if price.get("audSubCatId") is not None
     )
+    audience_reference_keys.update(
+        str(line["forcedAudSubCatId"])
+        for line in package_lines
+        if line.get("forcedAudSubCatId") is not None
+    )
     charge_reference_keys = reference_keys(
         performance_price_charges, id_key="chargesId", code_key="component"
     )
@@ -199,7 +211,11 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         "missing_price_charge_lookup": 0,
         "events": len(events),
         "memberships": len(memberships),
-        "packs": len(typed("pack")),
+        "packs": len(packs),
+        "package_lines": len(package_lines),
+        "missing_package_line_audience": 0,
+        "missing_package_line_target": 0,
+        "missing_package_line_parent": 0,
         "season_tickets": len(season_tickets),
         "season_ticket_subjects": len(season_ticket_subjects),
         "season_ticket_lines": (
@@ -251,6 +267,60 @@ def main() -> int:
     session = sync.load_salesforce_session(target_org)
     ids = ",".join(f"{int(product['id'])}.0" for product in snapshot.products)
     scope = f"({ids})"
+    expected_audience_keys = {
+        str(value.get("id")) if isinstance(value, dict) and value.get("id") is not None
+        else f"CODE:{value.get('code')}" if isinstance(value, dict) and value.get("code")
+        else str(value) if value is not None and not isinstance(value, dict)
+        else ""
+        for product in snapshot.products
+        for period in (
+            list(product.get("salePeriods") or [])
+            + [
+                nested_period
+                for performance in (product.get("event") or {}).get("performances") or []
+                if isinstance(performance, dict)
+                for nested_period in performance.get("salePeriods") or []
+            ]
+            + [
+                nested_period
+                for item in (product.get("membership") or {}).get("items") or []
+                if isinstance(item, dict)
+                for price in item.get("itemPrices") or []
+                if isinstance(price, dict)
+                for nested_period in price.get("salePeriods") or []
+            ]
+        )
+        if isinstance(period, dict)
+        for key in ("audienceSubCatIds", "tariffs", "ticketTypes")
+        for value in period.get(key) or []
+    }
+    expected_audience_keys.update(
+        str(price["audSubCatId"])
+        for product in snapshot.products
+        for performance in (product.get("event") or {}).get("performances") or []
+        if isinstance(performance, dict)
+        for price in performance.get("prices") or []
+        if isinstance(price, dict) and price.get("audSubCatId") is not None
+    )
+    expected_audience_keys.update(
+        str(price["audSubCatId"])
+        for product in snapshot.products
+        for item in (product.get("membership") or {}).get("items") or []
+        if isinstance(item, dict)
+        for price in item.get("itemPrices") or []
+        if isinstance(price, dict) and price.get("audSubCatId") is not None
+    )
+    expected_audience_keys.update(
+        str(line["forcedAudSubCatId"])
+        for product in snapshot.products
+        for line in (product.get("pack") or {}).get("packageLine") or []
+        if isinstance(line, dict) and line.get("forcedAudSubCatId") is not None
+    )
+    expected_audience_keys.discard("")
+    audience_scope = ",".join(
+        f"'{key.replace(chr(39), chr(92) + chr(39))}'"
+        for key in sorted(expected_audience_keys)
+    ) or "'__NONE__'"
     queries = {
         "inventories": f"SELECT COUNT() FROM Inventory__c WHERE Inventory_Id__c IN {scope}",
         "missing_season": (
@@ -316,7 +386,10 @@ def main() -> int:
             f"Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
             "AND Venue_Location__c = null"
         ),
-        "audience_sub_categories": "SELECT COUNT() FROM Audience_Sub_Category__c",
+        "audience_sub_categories": (
+            "SELECT COUNT() FROM Audience_Sub_Category__c "
+            f"WHERE Audience_Key__c IN ({audience_scope})"
+        ),
         "missing_sale_period_audience_lookup": (
             "SELECT COUNT() FROM Sale_Period_Audience__c WHERE "
             f"(Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
@@ -374,6 +447,26 @@ def main() -> int:
             f"WHERE Inventory__r.Inventory_Id__c IN {scope}"
         ),
         "packs": f"SELECT COUNT() FROM Pack__c WHERE Inventory__r.Inventory_Id__c IN {scope}",
+        "package_lines": (
+            "SELECT COUNT() FROM Package_Line__c "
+            f"WHERE Pack__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "missing_package_line_audience": (
+            "SELECT COUNT() FROM Package_Line__c "
+            f"WHERE Pack__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Forced_Audience_Subcategory_Id__c != null "
+            "AND Forced_Audience_Sub_Category__c = null"
+        ),
+        "missing_package_line_target": (
+            "SELECT COUNT() FROM Package_Line__c "
+            f"WHERE Pack__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Target_Product_Id__c != null AND Target_Inventory__c = null"
+        ),
+        "missing_package_line_parent": (
+            "SELECT COUNT() FROM Package_Line__c "
+            f"WHERE Pack__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Parent_Package_Line_Id__c != null AND Parent_Package_Line__c = null"
+        ),
         "season_tickets": (
             "SELECT COUNT() FROM Season_Ticket__c "
             f"WHERE Inventory__r.Inventory_Id__c IN {scope}"

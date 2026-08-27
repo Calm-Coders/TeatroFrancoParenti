@@ -12,6 +12,9 @@
         <members>MembershipRelationshipBackfillBatch</members>
         <members>MembershipRelationshipService</members>
         <members>MembershipRelationshipServiceTest</members>
+        <members>PackageLineRelationshipBackfillBatch</members>
+        <members>PackageLineRelationshipService</members>
+        <members>PackageLineRelationshipServiceTest</members>
         <members>SalePeriodRelationshipService</members>
         <members>SalePeriodRelationshipServiceTest</members>
         <members>SeatCategoryBackfillBatch</members>
@@ -29,6 +32,7 @@
         <members>Cross_Sell_Product_Link__c</members>
         <members>Membership_Item__c</members>
         <members>Membership_Item_Price__c</members>
+        <members>Package_Line__c</members>
         <members>Sale_Period__c</members>
         <members>Sale_Period_Audience__c</members>
         <members>Sale_Period_Seat_Category__c</members>
@@ -77,6 +81,21 @@
         <members>Performance__c.Tariff_Legend__c</members>
         <members>Performance__c.Venue_Location__c</members>
         <members>Sale_Period__c.Membership_Item_Price__c</members>
+        <members>Package_Line__c.Forced_Audience_Subcategory_Id__c</members>
+        <members>Package_Line__c.Forced_Audience_Sub_Category__c</members>
+        <members>Package_Line__c.Optional__c</members>
+        <members>Package_Line__c.Package_Line_Id__c</members>
+        <members>Package_Line__c.Pack__c</members>
+        <members>Package_Line__c.Parent_Package_Line_Id__c</members>
+        <members>Package_Line__c.Parent_Package_Line__c</members>
+        <members>Package_Line__c.Quantity__c</members>
+        <members>Package_Line__c.Rank__c</members>
+        <members>Package_Line__c.Raw_JSON__c</members>
+        <members>Package_Line__c.Relationship_Key__c</members>
+        <members>Package_Line__c.Sequence__c</members>
+        <members>Package_Line__c.Target_Inventory__c</members>
+        <members>Package_Line__c.Target_Product_Code__c</members>
+        <members>Package_Line__c.Target_Product_Id__c</members>
         <members>Season_Ticket_Line__c.Allow_Seat_Category_Change__c</members>
         <members>Season_Ticket_Line__c.Mandatory_Event__c</members>
         <members>Season_Ticket_Line__c.Multiple_Performances__c</members>
@@ -108,6 +127,7 @@
         <members>Membership_Item__c-Membership Item Layout</members>
         <members>Membership_Item_Price__c-Membership Item Price Layout</members>
         <members>Pack__c-Pack Layout</members>
+        <members>Package_Line__c-Package Line Layout</members>
         <members>Performance__c-Performance Layout</members>
         <members>Sale_Period__c-Sale Period Layout</members>
         <members>Sale_Period_Audience__c-Sale Period Audience Layout</members>

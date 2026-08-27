@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Parent_Package_Line__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Parent Package Line</label>
+    <referenceTo>Package_Line__c</referenceTo>
+    <relationshipLabel>Child Package Lines</relationshipLabel>
+    <relationshipName>ChildPackageLines</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

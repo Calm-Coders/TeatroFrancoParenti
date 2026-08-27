@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pack__c</fullName>
+    <label>Pack</label>
+    <referenceTo>Pack__c</referenceTo>
+    <relationshipLabel>Package Lines</relationshipLabel>
+    <relationshipName>PackageLines</relationshipName>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

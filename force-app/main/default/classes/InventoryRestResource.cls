@@ -180,6 +180,11 @@ global without sharing class InventoryRestResource {
                 inventoryRecords,
                 membershipRecords
             );
+            PackageLineRelationshipService.syncInventoryPayloads(
+                products,
+                inventoryRecords,
+                packRecords
+            );
 
             Map<Id, Season_Ticket__c> seasonTicketByInventoryId = new Map<Id, Season_Ticket__c>();
             for (Season_Ticket__c seasonTicketRecord : seasonTicketRecords) {
@@ -214,6 +219,7 @@ global without sharing class InventoryRestResource {
             // Lines can point to products arriving in a later API batch. Each
             // batch backfills earlier lines as soon as their target Inventory exists.
             SeasonTicketRelationshipService.backfillTargetInventories(inventoryRecords);
+            PackageLineRelationshipService.backfillTargetInventories(inventoryRecords);
 
             List<Performance__c> existingPerformancesToDelete = new List<Performance__c>();
             Set<Id> eventIdsForPerformanceRefresh = new Set<Id>();

@@ -118,6 +118,46 @@ including 984 performances, 112 performance prices, 2 membership items, 2
 membership item prices, 1,030 total sale periods, and 3,775 sale-period audience
 restrictions. Production was not changed.
 
+## Relational package lines
+
+`Pack__c.Package_Lines__c` remains the lossless raw JSON audit copy. Each source
+entry is also synchronized into a reportable relationship:
+
+```text
+Pack__c
+  -> Package_Line__c
+       -> Inventory__c (the target product)
+       -> Audience_Sub_Category__c (the forced audience, when supplied)
+       -> Package_Line__c (the parent line, when supplied)
+```
+
+The relationship key combines the Salesforce Pack ID and source
+`packageLineId`. A refresh updates the same records and removes stale lines.
+Quantity, optional status, rank, sequence, target product ID/code, forced
+audience ID, and parent line ID are stored as typed fields. The large embedded
+product and performance payload is not duplicated on every line; the line links
+to the target `Inventory__c` when that product is present. If the target product
+arrives in a later API batch, the lookup is filled automatically.
+
+Existing stored Package Lines JSON can be normalized without calling the catalog
+endpoint:
+
+```apex
+Database.executeBatch(new PackageLineRelationshipBackfillBatch(), 100);
+```
+
+### UAT verification — 2026-08-27
+
+Validated deployment `0AfMA00000CaOrK0AV` ran five passing tests. Quick deployment
+`0AfMA00000CaQl40AF` created `Package_Line__c`, added the Pack related list, and
+integrated line synchronization into the inventory endpoint. Replaying the
+existing UAT Pack twice left exactly 5 Package Lines: all 5 source IDs matched,
+no duplicates were created, and every forced-audience lookup was populated. The
+five target Inventory lookups remain pending because target product
+`10228683831060` has not been loaded as a top-level UAT Inventory; they will
+backfill when it arrives. Production was inspected read-only (35 Packs and 112
+Package Lines) and was not changed.
+
 ## Ongoing catalog enrichment
 
 The first load continues to use the local MySQL bridge above. After an inventory is inserted or updated, `InventoryRestResource` asks `CatalogEnrichmentQueueable` to enrich its product ID only when the org configuration is enabled. Calls are split into groups of at most 50 IDs, matching the provider limit, and additional groups are chained as separate queueable jobs.

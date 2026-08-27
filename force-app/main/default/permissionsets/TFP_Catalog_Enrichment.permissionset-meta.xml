@@ -16,6 +16,8 @@
     <classAccesses><apexClass>CrossSellProductRelationshipService</apexClass><enabled>true</enabled></classAccesses>
     <classAccesses><apexClass>MembershipRelationshipService</apexClass><enabled>true</enabled></classAccesses>
     <classAccesses><apexClass>MembershipRelationshipBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>PackageLineRelationshipService</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>PackageLineRelationshipBackfillBatch</apexClass><enabled>true</enabled></classAccesses>
     <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Source_Product_Id__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Cross_Sell_Link_Id__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Cross_Sell_Product_Link__c.Target_Inventory__c</field><readable>true</readable></fieldPermissions>
@@ -191,6 +193,20 @@
     <fieldPermissions><editable>true</editable><field>Membership_Item_Price__c.Sequence__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>false</editable><field>Membership_Item_Price__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Sale_Period__c.Membership_Item_Price__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Package_Line__c.Relationship_Key__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Package_Line_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Sequence__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Rank__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Optional__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Forced_Audience_Subcategory_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Forced_Audience_Sub_Category__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Target_Product_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Target_Product_Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Target_Inventory__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Parent_Package_Line_Id__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Package_Line__c.Parent_Package_Line__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Package_Line__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>TFP Catalog Enrichment</label>
     <objectPermissions>
@@ -225,4 +241,6 @@
     <objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Membership__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Membership_Item__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Membership_Item_Price__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Pack__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Package_Line__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
 </PermissionSet>

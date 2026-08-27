@@ -43,6 +43,15 @@
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
 
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Target_Inventory__c</fields>
+        <fields>Quantity__c</fields>
+        <fields>Optional__c</fields>
+        <fields>Forced_Audience_Sub_Category__c</fields>
+        <relatedList>Package_Line__c.Pack__c</relatedList>
+    </relatedLists>
+
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>true</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>
