@@ -233,7 +233,7 @@ public without sharing class PerformancePriceRelationshipService {
                     Decimal externalId = key.startsWith('CODE:') ? null : asDecimal(key);
                     missingSeats.add(new Seat_Category__c(
                         Name = truncate('Seat Category ' + key, 80), Category_Key__c = key,
-                        Seat_Category_Id__c = externalId
+                        Seat_Category_Id__c = numberKey(externalId)
                     ));
                 }
             }
@@ -257,9 +257,9 @@ public without sharing class PerformancePriceRelationshipService {
                     ? null : seatByKey.get(item.seatKey).Id,
                 Audience_Sub_Category__c = item.audienceKey == null || audienceRefs.audiences.get(item.audienceKey) == null
                     ? null : audienceRefs.audiences.get(item.audienceKey).Id,
-                Seat_Category_Id__c = item.seatId,
-                Institution_Seat_Category_Id__c = item.institutionSeatId,
-                Audience_Subcategory_Id__c = item.audienceId,
+                Seat_Category_Id__c = numberKey(item.seatId),
+                Institution_Seat_Category_Id__c = numberKey(item.institutionSeatId),
+                Audience_Subcategory_Id__c = numberKey(item.audienceId),
                 Amount__c = money(item.payload.get('amount'), item.rawCents),
                 Min_Quantity__c = firstDecimal(item.payload, new List<String>{ 'minQty', 'minQuantity' }),
                 Max_Quantity__c = firstDecimal(item.payload, new List<String>{ 'maxQty', 'maxQuantity' }),
@@ -298,7 +298,7 @@ public without sharing class PerformancePriceRelationshipService {
                     Relationship_Key__c = relationshipKey,
                     Performance_Price__c = price.Id,
                     Charge_Component__c = component == null ? null : component.Id,
-                    Charge_Id__c = firstDecimal(payload, new List<String>{ 'chargesId', 'chargeId', 'id' }),
+                    Charge_Id__c = numberKey(firstDecimal(payload, new List<String>{ 'chargesId', 'chargeId', 'id' })),
                     Component_Code__c = truncate(firstString(payload, new List<String>{ 'component', 'code' }), 80),
                     Amount__c = money(payload.get('amount'), item.chargeAmountsAreRawCents),
                     Sequence__c = sequence,
@@ -393,7 +393,7 @@ public without sharing class PerformancePriceRelationshipService {
                 records.add(new Charge_Component__c(
                     Name = truncate(String.isBlank(code) ? 'Charge ' + key : code, 80),
                     Charge_Key__c = key,
-                    Charge_Id__c = firstDecimal(payload, new List<String>{ 'chargesId', 'chargeId', 'id' }),
+                    Charge_Id__c = numberKey(firstDecimal(payload, new List<String>{ 'chargesId', 'chargeId', 'id' })),
                     Code__c = truncate(code, 80),
                     Raw_JSON__c = truncate(JSON.serialize(payload), LONG_TEXT_LIMIT)
                 ));
@@ -415,8 +415,8 @@ public without sharing class PerformancePriceRelationshipService {
         return new Audience_Sub_Category__c(
             Name = truncate(displayName, 80),
             Audience_Key__c = key,
-            Audience_Subcategory_Id__c = asDecimal(payload.get('id')),
-            Audience_Category_Id__c = firstDecimal(payload, new List<String>{ 'audienceCategoryId', 'audienceCatId' }),
+            Audience_Subcategory_Id__c = numberKey(asDecimal(payload.get('id'))),
+            Audience_Category_Id__c = numberKey(firstDecimal(payload, new List<String>{ 'audienceCategoryId', 'audienceCatId' })),
             Code__c = truncate(code, 80),
             Kind__c = truncate(firstString(payload, new List<String>{ 'kind', 'audienceCategoryKind', 'category_kind' }), 80),
             Rank__c = firstDecimal(payload, new List<String>{ 'rank', 'rank_number' }),
@@ -543,5 +543,6 @@ public without sharing class PerformancePriceRelationshipService {
     private static Boolean asBoolean(Object value) { if (value == null) return null; return String.valueOf(value).toLowerCase() == 'true'; }
     private static String asString(Object value) { return value == null ? null : String.valueOf(value); }
     private static String numberKey(Decimal value) { return value == null ? null : value.setScale(0).toPlainString(); }
+    private static String numberKey(String value) { return value; }
     private static String truncate(String value, Integer limitValue) { return value == null || value.length() <= limitValue ? value : value.substring(0, limitValue); }
 }

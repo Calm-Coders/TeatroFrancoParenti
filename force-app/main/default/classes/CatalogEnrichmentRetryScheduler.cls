@@ -14,7 +14,7 @@ global without sharing class CatalogEnrichmentRetryScheduler implements Schedula
             ORDER BY Last_Enrichment_Attempt__c ASC NULLS FIRST
             LIMIT 2000
         ]) {
-            productIds.add(Long.valueOf(String.valueOf(inventory.Inventory_Id__c.setScale(0))));
+            productIds.add(Long.valueOf(inventory.Inventory_Id__c));
         }
         CatalogEnrichmentQueueable.enqueueIfConfigured(productIds, false);
     }

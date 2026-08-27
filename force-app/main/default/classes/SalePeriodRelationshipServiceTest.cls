@@ -4,7 +4,7 @@ private class SalePeriodRelationshipServiceTest {
     static void inventoryApiCreatesRelationalSalePeriodsAndRefreshesThem() {
         invokeInventoryApi(payload(true));
 
-        Decimal productId = Decimal.valueOf('10228689876699');
+        String productId = '10228689876699';
         Inventory__c inventory = [
             SELECT Id FROM Inventory__c WHERE Inventory_Id__c = :productId LIMIT 1
         ];

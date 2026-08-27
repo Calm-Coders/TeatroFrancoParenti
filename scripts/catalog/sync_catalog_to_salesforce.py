@@ -88,7 +88,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--product-id",
         action="append",
-        type=int,
+        type=str,
         dest="product_ids",
         help="Limit the sync to one product id; may be repeated",
     )
@@ -177,10 +177,11 @@ def load_latest_snapshot(db_project: Path) -> Snapshot:
     # SecuTix can reuse the same product id in overlapping seasons. Salesforce's
     # Inventory_Id__c is globally unique, so retain the version belonging to the
     # newest season instead of letting payload traversal order decide the winner.
-    products_by_id: dict[int, tuple[int, dict[str, Any]]] = {}
+    products_by_id: dict[str, tuple[int, dict[str, Any]]] = {}
     for (season_id, product_id), product in sorted(extracted.products.items()):
         if not isinstance(product, dict):
             continue
+        product_key = str(product_id)
         salesforce_product = dict(product)
         season = extracted.seasons.get(season_id) or {}
         # seasonId is contextual in the full catalog (the product is nested
@@ -195,14 +196,14 @@ def load_latest_snapshot(db_project: Path) -> Snapshot:
             "start": season.get("start"),
             "end": season.get("end"),
         }
-        previous = products_by_id.get(product_id)
+        previous = products_by_id.get(product_key)
         if previous is None or season_rank.get(season_id, ("", "", season_id)) > season_rank.get(
             previous[0], ("", "", previous[0])
         ):
-            products_by_id[product_id] = (season_id, salesforce_product)
+            products_by_id[product_key] = (season_id, salesforce_product)
 
     products = [item[1] for item in products_by_id.values()]
-    products.sort(key=lambda item: int(item.get("id", 0)))
+    products.sort(key=lambda item: str(item.get("id", "")))
     return Snapshot(int(row["id"]), int(row["product_count"]), products)
 
 
@@ -335,8 +336,8 @@ def main() -> int:
     products = snapshot.products
     if args.product_ids:
         requested = set(args.product_ids)
-        products = [product for product in products if int(product.get("id", 0)) in requested]
-        found = {int(product["id"]) for product in products}
+        products = [product for product in products if str(product.get("id", "")) in requested]
+        found = {str(product["id"]) for product in products}
         missing = requested - found
         if missing:
             raise RuntimeError(f"Product ids not present in snapshot {snapshot.import_id}: {sorted(missing)}")

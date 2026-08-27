@@ -12,7 +12,7 @@ private class PackageLineRelationshipServiceTest {
 
         Inventory__c ownerInventory = [
             SELECT Id FROM Inventory__c
-            WHERE Inventory_Id__c = :Decimal.valueOf(String.valueOf(OWNER_PRODUCT_ID))
+            WHERE Inventory_Id__c = :String.valueOf(OWNER_PRODUCT_ID)
         ];
         Pack__c pack = [SELECT Id FROM Pack__c WHERE Inventory__c = :ownerInventory.Id];
         List<Package_Line__c> lines = [
@@ -25,12 +25,12 @@ private class PackageLineRelationshipServiceTest {
             ORDER BY Sequence__c
         ];
         System.assertEquals(2, lines.size());
-        System.assertEquals(Decimal.valueOf(String.valueOf(FIRST_LINE_ID)), lines[0].Package_Line_Id__c);
+        System.assertEquals(String.valueOf(FIRST_LINE_ID), lines[0].Package_Line_Id__c);
         System.assertEquals(1, lines[0].Sequence__c);
         System.assertEquals(2, lines[0].Quantity__c);
         System.assertEquals(false, lines[0].Optional__c);
         System.assertNotEquals(null, lines[0].Forced_Audience_Sub_Category__c);
-        System.assertEquals(Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID)), lines[0].Target_Product_Id__c);
+        System.assertEquals(String.valueOf(TARGET_PRODUCT_ID), lines[0].Target_Product_Id__c);
         System.assertEquals('TARGET-01', lines[0].Target_Product_Code__c);
         System.assertEquals(null, lines[0].Target_Inventory__c);
         System.assertEquals(lines[0].Id, lines[1].Parent_Package_Line__c);
@@ -39,7 +39,7 @@ private class PackageLineRelationshipServiceTest {
         invokeInventoryApi(new List<Object>{ inventoryPayload(TARGET_PRODUCT_ID, null) });
         Inventory__c targetInventory = [
             SELECT Id FROM Inventory__c
-            WHERE Inventory_Id__c = :Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            WHERE Inventory_Id__c = :String.valueOf(TARGET_PRODUCT_ID)
         ];
         for (Package_Line__c line : [
             SELECT Target_Inventory__c FROM Package_Line__c WHERE Pack__c = :pack.Id
@@ -58,7 +58,7 @@ private class PackageLineRelationshipServiceTest {
             FROM Package_Line__c
             WHERE Pack__c = :pack.Id
         ];
-        System.assertEquals(Decimal.valueOf(String.valueOf(FIRST_LINE_ID)), remaining.Package_Line_Id__c);
+        System.assertEquals(String.valueOf(FIRST_LINE_ID), remaining.Package_Line_Id__c);
         System.assertEquals(null, remaining.Parent_Package_Line__c);
         System.assertEquals(targetInventory.Id, remaining.Target_Inventory__c);
     }
@@ -67,11 +67,11 @@ private class PackageLineRelationshipServiceTest {
     static void batchBackfillsStoredJsonAndCountsInvalidPayloads() {
         Inventory__c owner = new Inventory__c(
             Name = 'Stored Package Owner',
-            Inventory_Id__c = Decimal.valueOf(String.valueOf(OWNER_PRODUCT_ID + 100))
+            Inventory_Id__c = String.valueOf(OWNER_PRODUCT_ID + 100)
         );
         Inventory__c target = new Inventory__c(
             Name = 'Stored Target',
-            Inventory_Id__c = Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            Inventory_Id__c = String.valueOf(TARGET_PRODUCT_ID)
         );
         insert new List<Inventory__c>{ owner, target };
         Pack__c validPack = new Pack__c(

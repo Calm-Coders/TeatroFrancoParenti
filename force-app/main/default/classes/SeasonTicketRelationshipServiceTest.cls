@@ -10,7 +10,7 @@ private class SeasonTicketRelationshipServiceTest {
 
         Inventory__c ownerInventory = [
             SELECT Id FROM Inventory__c
-            WHERE Inventory_Id__c = :Decimal.valueOf(String.valueOf(OWNER_PRODUCT_ID))
+            WHERE Inventory_Id__c = :String.valueOf(OWNER_PRODUCT_ID)
         ];
         Season_Ticket__c seasonTicket = [
             SELECT Id FROM Season_Ticket__c WHERE Inventory__c = :ownerInventory.Id
@@ -33,7 +33,7 @@ private class SeasonTicketRelationshipServiceTest {
         invokeInventoryApi(new List<Object>{ inventoryPayload(TARGET_PRODUCT_ID, false) });
         Inventory__c targetInventory = [
             SELECT Id FROM Inventory__c
-            WHERE Inventory_Id__c = :Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            WHERE Inventory_Id__c = :String.valueOf(TARGET_PRODUCT_ID)
         ];
         System.assertEquals(targetInventory.Id, [
             SELECT Target_Inventory__c
@@ -56,11 +56,11 @@ private class SeasonTicketRelationshipServiceTest {
     static void enrichmentApiMapsSeasonTicketRelationshipsWhenPayloadContainsThem() {
         Inventory__c owner = new Inventory__c(
             Name = 'Owner',
-            Inventory_Id__c = Decimal.valueOf(String.valueOf(OWNER_PRODUCT_ID))
+            Inventory_Id__c = String.valueOf(OWNER_PRODUCT_ID)
         );
         Inventory__c target = new Inventory__c(
             Name = 'Target',
-            Inventory_Id__c = Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            Inventory_Id__c = String.valueOf(TARGET_PRODUCT_ID)
         );
         insert new List<Inventory__c>{ owner, target };
 

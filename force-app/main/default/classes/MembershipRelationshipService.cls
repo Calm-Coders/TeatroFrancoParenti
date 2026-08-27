@@ -19,7 +19,7 @@ public without sharing class MembershipRelationshipService {
         private Integer sequence;
         private String priceKey;
         private String audienceKey;
-        private Decimal audienceId;
+        private String audienceId;
         private Map<String, Object> payload;
     }
 
@@ -128,8 +128,8 @@ public without sharing class MembershipRelationshipService {
             }
             for (Integer itemIndex = 0; itemIndex < rawItems.size(); itemIndex++) {
                 Map<String, Object> payload = asMap(rawItems[itemIndex]);
-                Decimal externalId = payload == null ? null : asDecimal(payload.get('itemId'));
-                if (payload == null || externalId == null) {
+                String externalId = payload == null ? null : idKey(payload.get('itemId'));
+                if (payload == null || String.isBlank(externalId)) {
                     continue;
                 }
                 String relationshipKey = itemKey(membershipId, externalId);
@@ -140,7 +140,7 @@ public without sharing class MembershipRelationshipService {
                 String displayName = firstNotBlank(
                     nameIt,
                     nameEn,
-                    String.isBlank(code) ? 'Membership Item ' + numberKey(externalId) : code
+                    String.isBlank(code) ? 'Membership Item ' + externalId : code
                 );
                 items.add(new Membership_Item__c(
                     Relationship_Key__c = relationshipKey,
@@ -202,8 +202,8 @@ public without sharing class MembershipRelationshipService {
             List<Map<String, Object>> pricePayloads = pricePayloadsByItemKey.get(relationshipKey);
             for (Integer priceIndex = 0; priceIndex < pricePayloads.size(); priceIndex++) {
                 Map<String, Object> payload = pricePayloads[priceIndex];
-                Decimal audienceId = asDecimal(payload.get('audSubCatId'));
-                String audienceKey = audienceId == null ? null : numberKey(audienceId);
+                String audienceId = idKey(payload.get('audSubCatId'));
+                String audienceKey = audienceId;
                 String baseKey = relationshipKey + '|price|' +
                     (String.isBlank(audienceKey) ? 'NONE' : audienceKey);
                 Integer occurrence = occurrenceByBaseKey.containsKey(baseKey)
@@ -348,7 +348,7 @@ public without sharing class MembershipRelationshipService {
                 missing.add(new Audience_Sub_Category__c(
                     Name = truncate('Audience ' + key, 80),
                     Audience_Key__c = key,
-                    Audience_Subcategory_Id__c = asDecimal(key)
+                    Audience_Subcategory_Id__c = key
                 ));
             }
         }
@@ -374,8 +374,8 @@ public without sharing class MembershipRelationshipService {
         target.salePeriodAudiencesUpdated += source.salePeriodAudiencesUpdated;
     }
 
-    private static String itemKey(Id membershipId, Decimal externalId) {
-        return String.valueOf(membershipId) + '|item|' + numberKey(externalId);
+    private static String itemKey(Id membershipId, String externalId) {
+        return String.valueOf(membershipId) + '|item|' + externalId;
     }
 
     private static String translation(Object rawValue, String locale) {
@@ -465,6 +465,11 @@ public without sharing class MembershipRelationshipService {
         } catch (Exception error) {
             return null;
         }
+    }
+
+    private static String idKey(Object value) {
+        Decimal numeric = asDecimal(value);
+        return numeric == null ? asString(value) : numeric.setScale(0).toPlainString();
     }
 
     private static String numberKey(Decimal value) {

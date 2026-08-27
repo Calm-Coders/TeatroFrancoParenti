@@ -98,7 +98,7 @@ public without sharing class PackageLineRelationshipService {
         }
 
         List<LineInput> inputs = new List<LineInput>();
-        Set<Decimal> targetProductIds = new Set<Decimal>();
+        Set<String> targetProductIds = new Set<String>();
         Set<String> audienceKeys = new Set<String>();
         for (Id packId : scopedPayloads.keySet()) {
             List<Object> rawLines = asList(scopedPayloads.get(packId).get('packageLine'));
@@ -107,8 +107,8 @@ public without sharing class PackageLineRelationshipService {
             }
             for (Integer index = 0; index < rawLines.size(); index++) {
                 Map<String, Object> payload = asMap(rawLines[index]);
-                Decimal lineId = payload == null ? null : asDecimal(payload.get('packageLineId'));
-                if (payload == null || lineId == null) {
+                String lineId = payload == null ? null : idKey(payload.get('packageLineId'));
+                if (payload == null || String.isBlank(lineId)) {
                     continue;
                 }
                 LineInput input = new LineInput();
@@ -118,18 +118,18 @@ public without sharing class PackageLineRelationshipService {
                 input.relationshipKey = lineKey(packId, lineId);
                 inputs.add(input);
 
-                Decimal targetProductId = targetProductId(payload);
-                if (targetProductId != null) {
+                String targetProductId = targetProductId(payload);
+                if (!String.isBlank(targetProductId)) {
                     targetProductIds.add(targetProductId);
                 }
-                String audienceKey = numberKey(asDecimal(payload.get('forcedAudSubCatId')));
+                String audienceKey = idKey(payload.get('forcedAudSubCatId'));
                 if (!String.isBlank(audienceKey)) {
                     audienceKeys.add(audienceKey);
                 }
             }
         }
 
-        Map<Decimal, Id> targetInventoryIdByProductId = new Map<Decimal, Id>();
+        Map<String, Id> targetInventoryIdByProductId = new Map<String, Id>();
         if (!targetProductIds.isEmpty()) {
             for (Inventory__c inventory : [
                 SELECT Id, Inventory_Id__c
@@ -156,11 +156,11 @@ public without sharing class PackageLineRelationshipService {
         Set<String> desiredKeys = new Set<String>();
         for (LineInput input : inputs) {
             Map<String, Object> payload = input.payload;
-            Decimal lineId = asDecimal(payload.get('packageLineId'));
-            Decimal audienceId = asDecimal(payload.get('forcedAudSubCatId'));
-            String audienceKey = numberKey(audienceId);
+            String lineId = idKey(payload.get('packageLineId'));
+            String audienceId = idKey(payload.get('forcedAudSubCatId'));
+            String audienceKey = audienceId;
             Audience_Sub_Category__c audience = audienceResult.audienceByKey.get(audienceKey);
-            Decimal targetId = targetProductId(payload);
+            String targetId = targetProductId(payload);
             Map<String, Object> targetProduct = asMap(payload.get('product'));
             String targetCode = targetProduct == null ? null : asString(targetProduct.get('code'));
             desiredKeys.add(input.relationshipKey);
@@ -169,7 +169,7 @@ public without sharing class PackageLineRelationshipService {
                 Relationship_Key__c = input.relationshipKey,
                 Pack__c = input.packId,
                 Name = truncate(
-                    numberKey(lineId) + (String.isBlank(targetCode) ? '' : ' - ' + targetCode),
+                    lineId + (String.isBlank(targetCode) ? '' : ' - ' + targetCode),
                     80
                 ),
                 Package_Line_Id__c = lineId,
@@ -182,7 +182,7 @@ public without sharing class PackageLineRelationshipService {
                 Target_Product_Id__c = targetId,
                 Target_Product_Code__c = truncate(targetCode, 128),
                 Target_Inventory__c = targetInventoryIdByProductId.get(targetId),
-                Parent_Package_Line_Id__c = asDecimal(payload.get('parentPackageLineId')),
+                Parent_Package_Line_Id__c = idKey(payload.get('parentPackageLineId')),
                 Raw_JSON__c = shallowJson(payload)
             ));
         }
@@ -198,8 +198,8 @@ public without sharing class PackageLineRelationshipService {
         List<Package_Line__c> parentUpdates = new List<Package_Line__c>();
         for (Package_Line__c line : lines) {
             LineInput input = inputByKey.get(line.Relationship_Key__c);
-            Decimal parentLineId = asDecimal(input.payload.get('parentPackageLineId'));
-            Id parentId = parentLineId == null
+            String parentLineId = idKey(input.payload.get('parentPackageLineId'));
+            Id parentId = String.isBlank(parentLineId)
                 ? null
                 : lineIdByKey.get(lineKey(input.packId, parentLineId));
             if (parentId == line.Id) {
@@ -231,7 +231,7 @@ public without sharing class PackageLineRelationshipService {
     }
 
     public static Integer backfillTargetInventories(List<Inventory__c> inventories) {
-        Map<Decimal, Id> inventoryIdByProductId = new Map<Decimal, Id>();
+        Map<String, Id> inventoryIdByProductId = new Map<String, Id>();
         if (inventories != null) {
             for (Inventory__c inventory : inventories) {
                 if (inventory.Id != null && inventory.Inventory_Id__c != null) {
@@ -281,7 +281,7 @@ public without sharing class PackageLineRelationshipService {
                 missing.add(new Audience_Sub_Category__c(
                     Name = truncate('Audience ' + key, 80),
                     Audience_Key__c = key,
-                    Audience_Subcategory_Id__c = asDecimal(key)
+                    Audience_Subcategory_Id__c = key
                 ));
             }
         }
@@ -295,9 +295,9 @@ public without sharing class PackageLineRelationshipService {
         return result;
     }
 
-    private static Decimal targetProductId(Map<String, Object> line) {
+    private static String targetProductId(Map<String, Object> line) {
         Map<String, Object> product = line == null ? null : asMap(line.get('product'));
-        return product == null ? null : asDecimal(product.get('id'));
+        return product == null ? null : idKey(product.get('id'));
     }
 
     private static String shallowJson(Map<String, Object> payload) {
@@ -318,8 +318,8 @@ public without sharing class PackageLineRelationshipService {
         return truncate(JSON.serialize(shallow), LONG_TEXT_LIMIT);
     }
 
-    private static String lineKey(Id packId, Decimal lineId) {
-        return String.valueOf(packId) + '|line|' + numberKey(lineId);
+    private static String lineKey(Id packId, String lineId) {
+        return String.valueOf(packId) + '|line|' + lineId;
     }
 
     private static Map<String, Object> asMap(Object value) {
@@ -343,6 +343,11 @@ public without sharing class PackageLineRelationshipService {
         } catch (Exception error) {
             return null;
         }
+    }
+
+    private static String idKey(Object value) {
+        Decimal numeric = asDecimal(value);
+        return numeric == null ? asString(value) : numeric.setScale(0).toPlainString();
     }
 
     private static Boolean asBoolean(Object value) {

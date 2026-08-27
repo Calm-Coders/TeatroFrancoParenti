@@ -18,6 +18,11 @@ import sync_catalog_to_salesforce as sync
 DEFAULT_DB_PROJECT_DIR = Path.home() / "Desktop" / "DBTFP"
 
 
+def soql_quote(value: Any) -> str:
+    """Return a SOQL string literal without coercing an identifier to a number."""
+    return "'" + str(value).replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -265,7 +270,7 @@ def main() -> int:
     target_org = args.target_org or sync.read_project_target_org()
     snapshot = sync.load_latest_snapshot(args.db_project)
     session = sync.load_salesforce_session(target_org)
-    ids = ",".join(f"{int(product['id'])}.0" for product in snapshot.products)
+    ids = ",".join(soql_quote(product["id"]) for product in snapshot.products)
     scope = f"({ids})"
     expected_audience_keys = {
         str(value.get("id")) if isinstance(value, dict) and value.get("id") is not None

@@ -11,14 +11,14 @@ public without sharing class SeasonTicketRelationshipService {
 
     private class LineInput {
         private Id seasonTicketId;
-        private Decimal ownerProductId;
+        private String ownerProductId;
         private String placementType;
         private String subjectCode;
         private Map<String, Object> payload;
 
         private LineInput(
             Id seasonTicketId,
-            Decimal ownerProductId,
+            String ownerProductId,
             String placementType,
             String subjectCode,
             Map<String, Object> payload
@@ -33,7 +33,7 @@ public without sharing class SeasonTicketRelationshipService {
 
     public static Stats sync(
         Map<Id, Map<String, Object>> payloadBySeasonTicketId,
-        Map<Id, Decimal> ownerProductIdBySeasonTicketId
+        Map<Id, String> ownerProductIdBySeasonTicketId
     ) {
         Stats stats = new Stats();
         if (payloadBySeasonTicketId == null || payloadBySeasonTicketId.isEmpty()) {
@@ -68,7 +68,7 @@ public without sharing class SeasonTicketRelationshipService {
         List<LineInput> lineInputs = new List<LineInput>();
         for (Id seasonTicketId : scopedPayloads.keySet()) {
             Map<String, Object> payload = scopedPayloads.get(seasonTicketId);
-            Decimal ownerProductId = ownerProductIdBySeasonTicketId == null
+            String ownerProductId = ownerProductIdBySeasonTicketId == null
                 ? null
                 : ownerProductIdBySeasonTicketId.get(seasonTicketId);
             if (ownerProductId == null) {
@@ -133,14 +133,14 @@ public without sharing class SeasonTicketRelationshipService {
             subjectIdByKey.put(subject.Relationship_Key__c, subject.Id);
         }
 
-        Set<Decimal> targetProductIds = new Set<Decimal>();
+        Set<String> targetProductIds = new Set<String>();
         for (LineInput input : lineInputs) {
-            Decimal targetProductId = targetProductId(input.payload);
-            if (targetProductId != null) {
+            String targetProductId = targetProductId(input.payload);
+            if (!String.isBlank(targetProductId)) {
                 targetProductIds.add(targetProductId);
             }
         }
-        Map<Decimal, Id> targetInventoryIdByProductId = new Map<Decimal, Id>();
+        Map<String, Id> targetInventoryIdByProductId = new Map<String, Id>();
         if (!targetProductIds.isEmpty()) {
             for (Inventory__c inventory : [
                 SELECT Id, Inventory_Id__c
@@ -163,8 +163,8 @@ public without sharing class SeasonTicketRelationshipService {
         List<Season_Ticket_Line__c> lines = new List<Season_Ticket_Line__c>();
         Set<String> desiredLineKeys = new Set<String>();
         for (LineInput input : lineInputs) {
-            Decimal lineId = asDecimal(input.payload.get('seasonTicketLineId'));
-            if (lineId == null) {
+            String lineId = idKey(input.payload.get('seasonTicketLineId'));
+            if (String.isBlank(lineId)) {
                 continue;
             }
             String relationshipKey = lineKey(
@@ -174,7 +174,7 @@ public without sharing class SeasonTicketRelationshipService {
                 input.subjectCode
             );
             desiredLineKeys.add(relationshipKey);
-            Decimal targetProductId = targetProductId(input.payload);
+            String targetProductId = targetProductId(input.payload);
             Map<String, Object> targetProduct = asMap(input.payload.get('product'));
             String targetCode = targetProduct == null ? null : asString(targetProduct.get('code'));
             lines.add(new Season_Ticket_Line__c(
@@ -184,7 +184,7 @@ public without sharing class SeasonTicketRelationshipService {
                     ? null
                     : subjectIdByKey.get(subjectKey(input.ownerProductId, input.subjectCode)),
                 Name = truncate(
-                    numberKey(lineId) + (String.isBlank(targetCode) ? '' : ' - ' + targetCode),
+                    lineId + (String.isBlank(targetCode) ? '' : ' - ' + targetCode),
                     80
                 ),
                 Season_Ticket_Line_Id__c = lineId,
@@ -231,7 +231,7 @@ public without sharing class SeasonTicketRelationshipService {
     }
 
     public static Integer backfillTargetInventories(List<Inventory__c> inventories) {
-        Map<Decimal, Id> inventoryIdByProductId = new Map<Decimal, Id>();
+        Map<String, Id> inventoryIdByProductId = new Map<String, Id>();
         if (inventories != null) {
             for (Inventory__c inventory : inventories) {
                 if (inventory.Id != null && inventory.Inventory_Id__c != null) {
@@ -266,7 +266,7 @@ public without sharing class SeasonTicketRelationshipService {
     private static void addLines(
         List<LineInput> output,
         Id seasonTicketId,
-        Decimal ownerProductId,
+        String ownerProductId,
         String placementType,
         String subjectCode,
         List<Object> rawLines
@@ -288,22 +288,22 @@ public without sharing class SeasonTicketRelationshipService {
         }
     }
 
-    private static Decimal targetProductId(Map<String, Object> line) {
+    private static String targetProductId(Map<String, Object> line) {
         Map<String, Object> product = line == null ? null : asMap(line.get('product'));
-        return product == null ? null : asDecimal(product.get('id'));
+        return product == null ? null : idKey(product.get('id'));
     }
 
-    private static String subjectKey(Decimal ownerProductId, String subjectCode) {
-        return numberKey(ownerProductId) + '|subject|' + subjectCode;
+    private static String subjectKey(String ownerProductId, String subjectCode) {
+        return ownerProductId + '|subject|' + subjectCode;
     }
 
     private static String lineKey(
-        Decimal ownerProductId,
-        Decimal lineId,
+        String ownerProductId,
+        String lineId,
         String placementType,
         String subjectCode
     ) {
-        return numberKey(ownerProductId) + '|line|' + numberKey(lineId) + '|' +
+        return ownerProductId + '|line|' + lineId + '|' +
             placementType + '|' + (subjectCode == null ? '' : subjectCode);
     }
 
@@ -368,6 +368,11 @@ public without sharing class SeasonTicketRelationshipService {
         } catch (Exception error) {
             return null;
         }
+    }
+
+    private static String idKey(Object value) {
+        Decimal numeric = asDecimal(value);
+        return numeric == null ? asString(value) : numeric.setScale(0).toPlainString();
     }
 
     private static Boolean asBoolean(Object value) {

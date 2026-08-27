@@ -64,18 +64,34 @@ global without sharing class InventoryRestResource {
                 }
             }
 
-            // Upsert on the unique external id so concurrent webhook calls for the
-            // same product collide at database level instead of creating duplicates.
+            // Resolve existing rows by the unique external id, then upsert by record Id.
+            // The field's unique constraint still rejects concurrent duplicate inserts,
+            // while this form also remains deployable during an ID type migration.
             List<Inventory__c> recordsWithExternalId = new List<Inventory__c>();
             List<Inventory__c> recordsWithoutExternalId = new List<Inventory__c>();
+            Set<String> inventoryExternalIds = new Set<String>();
             for (Inventory__c inventoryRecord : inventoryRecords) {
                 if (inventoryRecord.Inventory_Id__c != null) {
                     recordsWithExternalId.add(inventoryRecord);
+                    inventoryExternalIds.add(String.valueOf(inventoryRecord.Inventory_Id__c));
                 } else {
                     recordsWithoutExternalId.add(inventoryRecord);
                 }
             }
-            upsert recordsWithExternalId Inventory_Id__c;
+            Map<String, Id> existingInventoryIds = new Map<String, Id>();
+            if (!inventoryExternalIds.isEmpty()) {
+                for (Inventory__c existingInventory : [
+                    SELECT Id, Inventory_Id__c
+                    FROM Inventory__c
+                    WHERE Inventory_Id__c IN :inventoryExternalIds
+                ]) {
+                    existingInventoryIds.put(String.valueOf(existingInventory.Inventory_Id__c), existingInventory.Id);
+                }
+            }
+            for (Inventory__c inventoryRecord : recordsWithExternalId) {
+                inventoryRecord.Id = existingInventoryIds.get(String.valueOf(inventoryRecord.Inventory_Id__c));
+            }
+            upsert recordsWithExternalId;
             insert recordsWithoutExternalId;
 
             CrossSellProductRelationshipService.syncInventoryPayloads(products, inventoryRecords);
@@ -192,7 +208,7 @@ global without sharing class InventoryRestResource {
             }
             Map<Id, Map<String, Object>> relationshipPayloadBySeasonTicketId =
                 new Map<Id, Map<String, Object>>();
-            Map<Id, Decimal> ownerProductIdBySeasonTicketId = new Map<Id, Decimal>();
+            Map<Id, String> ownerProductIdBySeasonTicketId = new Map<Id, String>();
             for (Integer i = 0; i < products.size(); i++) {
                 Season_Ticket__c seasonTicketRecord = seasonTicketByInventoryId.get(inventoryRecords[i].Id);
                 if (
@@ -208,7 +224,7 @@ global without sharing class InventoryRestResource {
                 if (products[i].id != null) {
                     ownerProductIdBySeasonTicketId.put(
                         seasonTicketRecord.Id,
-                        Decimal.valueOf(String.valueOf(products[i].id))
+                        String.valueOf(products[i].id)
                     );
                 }
             }
@@ -389,14 +405,14 @@ global without sharing class InventoryRestResource {
     }
 
     private static Inventory__c buildInventoryRecord(InventoryWrapper inventoryWrapper) {
-        // No pre-query matching: the upsert on the unique Inventory_Id__c external id
-        // finds the existing record atomically, which a SELECT-then-upsert cannot.
+        // Existing rows are matched in receiveInventory before DML. Inventory_Id__c
+        // remains unique, so concurrent inserts for the same product cannot coexist.
         Inventory__c recordItem = new Inventory__c(
             Name = buildRecordName(inventoryWrapper)
         );
 
-        setCustomField(recordItem, 'Inventory_Id__c', inventoryWrapper.id);
-        setCustomField(recordItem, 'Prev_Season_Product_Id__c', inventoryWrapper.prevSeasonProductId);
+        setCustomField(recordItem, 'Inventory_Id__c', asString(inventoryWrapper.id));
+        setCustomField(recordItem, 'Prev_Season_Product_Id__c', asString(inventoryWrapper.prevSeasonProductId));
         setCustomField(recordItem, 'Code__c', truncateValue(inventoryWrapper.code, 255));
         setCustomField(recordItem, 'Product_Family_Type__c', truncateValue(inventoryWrapper.productFamilyType, 80));
         setCustomField(recordItem, 'Product_Family_Sub_Type__c', truncateValue(inventoryWrapper.productFamilySubType, 80));
@@ -407,13 +423,13 @@ global without sharing class InventoryRestResource {
         setCustomField(recordItem, 'Medium_Image_Url__c', truncateValue(inventoryWrapper.mediumImageUrl, 255));
         setCustomField(recordItem, 'Large_Image_Url__c', truncateValue(inventoryWrapper.largeImageUrl, 255));
         setCustomField(recordItem, 'Detail_URL__c', truncateValue(inventoryWrapper.detailURL, 255));
-        setCustomField(recordItem, 'Vat_Code_Id__c', inventoryWrapper.vatCodeId);
-        setCustomField(recordItem, 'Ticket_Model_Id__c', inventoryWrapper.ticketModelId);
-        setCustomField(recordItem, 'Charges_Table_Id__c', inventoryWrapper.chargesTableId);
+        setCustomField(recordItem, 'Vat_Code_Id__c', asString(inventoryWrapper.vatCodeId));
+        setCustomField(recordItem, 'Ticket_Model_Id__c', asString(inventoryWrapper.ticketModelId));
+        setCustomField(recordItem, 'Charges_Table_Id__c', asString(inventoryWrapper.chargesTableId));
         setCustomField(recordItem, 'Partner_Contact_Number__c', truncateValue(inventoryWrapper.partnerContactNumber, 80));
-        setCustomField(recordItem, 'Product_Type_Id__c', inventoryWrapper.productTypeId);
+        setCustomField(recordItem, 'Product_Type_Id__c', asString(inventoryWrapper.productTypeId));
         setCustomField(recordItem, 'Allow_Questionnaire__c', inventoryWrapper.allowQuestionnaire);
-        setCustomField(recordItem, 'Questionnaire_Id__c', inventoryWrapper.questionnaireId);
+        setCustomField(recordItem, 'Questionnaire_Id__c', asString(inventoryWrapper.questionnaireId));
         setCustomField(recordItem, 'Sale_Periods__c', serializeRawValue(inventoryWrapper.salePeriods, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Sale_Close_Exceptions__c', serializeRawValue(inventoryWrapper.saleCloseExceptions, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'External_Name__c', serializeRawValue(inventoryWrapper.externalName, MAX_LONG_TEXT_LENGTH));
@@ -439,7 +455,7 @@ global without sharing class InventoryRestResource {
         setCustomField(recordItem, 'Max_Quantity__c', inventoryWrapper.maxQuantity);
         setCustomField(recordItem, 'Cultural_Contact__c', serializeRawValue(inventoryWrapper.culturalContact, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Waiting_List_Allowed__c', inventoryWrapper.waitingListAllowed);
-        setCustomField(recordItem, 'Partner_Contact_Id__c', inventoryWrapper.partnerContactId);
+        setCustomField(recordItem, 'Partner_Contact_Id__c', asString(inventoryWrapper.partnerContactId));
         setCustomField(recordItem, 'Season_Id__c', inventoryWrapper.seasonId);
         setCustomField(recordItem, 'Season_Code__c', truncateValue(inventoryWrapper.seasonCode, 80));
         setCustomField(recordItem, 'Season_Name__c', truncateValue(inventoryWrapper.seasonName, 255));
@@ -525,18 +541,18 @@ global without sharing class InventoryRestResource {
         );
 
         setCustomField(performanceRecord, 'Inventory_Event__c', eventRecord.Id);
-        setCustomField(performanceRecord, 'Performance_Id__c', asDecimal(performancePayload.get('id')));
+        setCustomField(performanceRecord, 'Performance_Id__c', asString(performancePayload.get('id')));
         setCustomField(performanceRecord, 'Code__c', asString(performancePayload.get('code')));
-        setCustomField(performanceRecord, 'Physical_Configuration_Id__c', asDecimal(performancePayload.get('physicalConfigurationId')));
-        setCustomField(performanceRecord, 'Logical_Configuration_Id__c', asDecimal(performancePayload.get('logicalConfigurationId')));
-        setCustomField(performanceRecord, 'Sale_Configuration_Id__c', asDecimal(performancePayload.get('saleConfigurationId')));
-        setCustomField(performanceRecord, 'Rate_Type_Id__c', asDecimal(performancePayload.get('rateTypeId')));
+        setCustomField(performanceRecord, 'Physical_Configuration_Id__c', asString(performancePayload.get('physicalConfigurationId')));
+        setCustomField(performanceRecord, 'Logical_Configuration_Id__c', asString(performancePayload.get('logicalConfigurationId')));
+        setCustomField(performanceRecord, 'Sale_Configuration_Id__c', asString(performancePayload.get('saleConfigurationId')));
+        setCustomField(performanceRecord, 'Rate_Type_Id__c', asString(performancePayload.get('rateTypeId')));
         setCustomField(performanceRecord, 'Rate_Type_Code__c', asString(performancePayload.get('rateTypeCode')));
-        setCustomField(performanceRecord, 'Rates_Table_Id__c', asDecimal(performancePayload.get('ratesTableId')));
-        setCustomField(performanceRecord, 'Charges_Table_Id__c', asDecimal(performancePayload.get('chargesTableId')));
+        setCustomField(performanceRecord, 'Rates_Table_Id__c', asString(performancePayload.get('ratesTableId')));
+        setCustomField(performanceRecord, 'Charges_Table_Id__c', asString(performancePayload.get('chargesTableId')));
         setCustomField(performanceRecord, 'Start__c', asDatetime(performancePayload.get('start')));
         setCustomField(performanceRecord, 'Duration__c', asDecimal(performancePayload.get('duration')));
-        setCustomField(performanceRecord, 'Space_Id__c', asDecimal(performancePayload.get('spaceId')));
+        setCustomField(performanceRecord, 'Space_Id__c', asString(performancePayload.get('spaceId')));
         setCustomField(performanceRecord, 'Space_Code__c', asString(performancePayload.get('spaceCode')));
         setCustomField(performanceRecord, 'Site_Code__c', asString(performancePayload.get('siteCode')));
         setCustomField(performanceRecord, 'Kind__c', asString(performancePayload.get('kind')));
@@ -1111,7 +1127,7 @@ global without sharing class InventoryRestResource {
             }
 
             setCustomField(eventRecord, 'Inventory__c', inventoryRecord.Id);
-            setCustomField(eventRecord, 'Activity_Id__c', asDecimal(eventPayload.get('activityId')));
+            setCustomField(eventRecord, 'Activity_Id__c', asString(eventPayload.get('activityId')));
             setCustomField(eventRecord, 'Activity_Code__c', asString(eventPayload.get('activityCode')));
             setCustomField(eventRecord, 'Activity_Type__c', asString(eventPayload.get('activityType')));
             setCustomField(eventRecord, 'Time_Tolerance__c', asDecimal(eventPayload.get('timeTolerance')));
@@ -1119,7 +1135,7 @@ global without sharing class InventoryRestResource {
             setCustomField(eventRecord, 'Language__c', asString(eventPayload.get('language')));
             setCustomField(eventRecord, 'Name_Add_On__c', serializeRawValue(eventPayload.get('nameAddOn'), MAX_LONG_TEXT_LENGTH));
             setCustomField(eventRecord, 'Activity_External_Name__c', serializeRawValue(eventPayload.get('activityExternalName'), MAX_LONG_TEXT_LENGTH));
-            setCustomField(eventRecord, 'Competition_Type_Id__c', asDecimal(eventPayload.get('competitionTypeId')));
+            setCustomField(eventRecord, 'Competition_Type_Id__c', asString(eventPayload.get('competitionTypeId')));
             setCustomField(eventRecord, 'Alert_Ratio__c', asDecimal(eventPayload.get('alertRatio')));
             setCustomField(eventRecord, 'Performances__c', serializeRawValue(eventPayload.get('performances'), MAX_LONG_TEXT_LENGTH));
 

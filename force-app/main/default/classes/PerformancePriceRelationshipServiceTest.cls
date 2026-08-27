@@ -20,8 +20,8 @@ private class PerformancePriceRelationshipServiceTest {
         ];
         System.assertEquals(performance.Id, price.Performance__c);
         System.assertEquals(340, price.Amount__c);
-        System.assertEquals(101, price.Seat_Category__r.Seat_Category_Id__c);
-        System.assertEquals(201, price.Audience_Sub_Category__r.Audience_Subcategory_Id__c);
+        System.assertEquals('101', price.Seat_Category__r.Seat_Category_Id__c);
+        System.assertEquals('201', price.Audience_Sub_Category__r.Audience_Subcategory_Id__c);
         System.assertEquals('INTERO + prev.', price.Audience_Sub_Category__r.Name_IT__c);
         System.assertEquals(40, [SELECT Amount__c FROM Performance_Price_Charge__c LIMIT 1].Amount__c);
 
@@ -39,7 +39,7 @@ private class PerformancePriceRelationshipServiceTest {
     static void enrichmentPriceGridCreatesNamedLookupsAndFormattedAmounts() {
         Performance__c performance = createPerformance(910002, 'Enrichment Price');
         insert new Seat_Category__c(
-            Name = 'SETTORE A', Category_Key__c = '301', Seat_Category_Id__c = 301,
+            Name = 'SETTORE A', Category_Key__c = '301', Seat_Category_Id__c = '301',
             Code__c = 'SA', Name_IT__c = 'SETTORE A'
         );
         Map<String, Object> priceGridRow = new Map<String, Object>{
@@ -92,7 +92,7 @@ private class PerformancePriceRelationshipServiceTest {
         );
         insert period;
         insert new Sale_Period_Audience__c(
-            Sale_Period__c = period.Id, Audience_Subcategory_Id__c = 601,
+            Sale_Period__c = period.Id, Audience_Subcategory_Id__c = '601',
             Code__c = 'I5', Name_IT__c = 'OVER 65', Kind__c = 'FULL'
         );
 
@@ -109,16 +109,16 @@ private class PerformancePriceRelationshipServiceTest {
             FROM Sale_Period_Audience__c LIMIT 1
         ];
         System.assertNotEquals(null, restriction.Audience_Sub_Category__c);
-        System.assertEquals(601, restriction.Audience_Sub_Category__r.Audience_Subcategory_Id__c);
+        System.assertEquals('601', restriction.Audience_Sub_Category__r.Audience_Subcategory_Id__c);
     }
 
     private static Performance__c createPerformance(Integer externalId, String label) {
-        Inventory__c inventory = new Inventory__c(Name = label, Inventory_Id__c = externalId + 10000);
+        Inventory__c inventory = new Inventory__c(Name = label, Inventory_Id__c = String.valueOf(externalId + 10000));
         insert inventory;
         Inventory_Event__c eventRecord = new Inventory_Event__c(Name = label + ' Event', Inventory__c = inventory.Id);
         insert eventRecord;
         Performance__c performance = new Performance__c(
-            Name = label, Inventory_Event__c = eventRecord.Id, Performance_Id__c = externalId
+            Name = label, Inventory_Event__c = eventRecord.Id, Performance_Id__c = String.valueOf(externalId)
         );
         insert performance;
         return [

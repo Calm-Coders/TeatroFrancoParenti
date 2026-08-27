@@ -88,7 +88,7 @@ private class InventoryRestResourceTest {
         Test.stopTest();
 
         System.assertEquals(200, RestContext.response.statusCode);
-        Decimal productId = Decimal.valueOf('10228689876617');
+        String productId = '10228689876617';
         Inventory__c inventory = [
             SELECT Season_Id__c, Season_Code__c, Season_Name__c, Season_Start__c, Season_End__c
             FROM Inventory__c

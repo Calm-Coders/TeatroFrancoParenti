@@ -452,7 +452,7 @@ global without sharing class OrderRestResource {
         setCustomField(
             orderRecord,
             'Product_Id__c',
-            productId == null ? null : Decimal.valueOf(String.valueOf(productId))
+            stringifyLong(productId)
         );
         setCustomField(orderRecord, 'Order_Id__c', truncateValue(details.orderId == null ? null : String.valueOf(details.orderId), 30));
         setCustomField(orderRecord, 'Order_Secret_Id__c', truncateValue(details.orderSecretId, 255));
@@ -482,7 +482,7 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'User_Inserted__c', truncateValue(details.userInserted, 80));
         setCustomField(orderRecord, 'User_Updated__c', truncateValue(details.userUpdated, 80));
         setCustomField(orderRecord, 'Pos_Num__c', truncateValue(details.posNum, 40));
-        setCustomField(orderRecord, 'Point_Of_Sales_Id__c', decimalFromLong(details.pointOfSalesId));
+        setCustomField(orderRecord, 'Point_Of_Sales_Id__c', stringifyLong(details.pointOfSalesId));
         setCustomField(orderRecord, 'Point_Of_Sales_Code__c', truncateValue(details.pointOfSalesCode, 80));
         setCustomField(orderRecord, 'Point_Of_Sales_Name__c', truncateValue(details.pointOfSalesName, 255));
         setCustomField(orderRecord, 'Shipments__c', serializeRawValue(orderWrapper.rawPayload.get('shipments'), MAX_SECUTIX_LONG_TEXT_LENGTH));
@@ -601,23 +601,23 @@ global without sharing class OrderRestResource {
             setCustomField(operationRecord, 'Unit_Price__c', scaleStoredAmount(operation == null ? null : operation.unitPrice));
             setCustomField(operationRecord, 'Without_Vat_Total_Amount__c', scaleStoredAmount(operation == null ? null : operation.withoutVatTotalAmount));
             setCustomField(operationRecord, 'Total_Amount__c', scaleStoredAmount(operation == null ? null : operation.totalAmount));
-            setCustomField(operationRecord, 'Product_Id__c', decimalFromLong(operation == null ? null : operation.productId));
+            setCustomField(operationRecord, 'Product_Id__c', stringifyLong(operation == null ? null : operation.productId));
             setCustomField(operationRecord, 'Product__c', truncateValue(operation == null ? null : operation.product, 255));
             setCustomField(operationRecord, 'Product_Code__c', truncateValue(operation == null ? null : operation.productCode, 80));
-            setCustomField(operationRecord, 'Item_Id__c', decimalFromLong(operation == null ? null : operation.itemId));
-            setCustomField(operationRecord, 'Performance_Id__c', decimalFromLong(operation == null ? null : operation.performanceId));
+            setCustomField(operationRecord, 'Item_Id__c', stringifyLong(operation == null ? null : operation.itemId));
+            setCustomField(operationRecord, 'Performance_Id__c', stringifyLong(operation == null ? null : operation.performanceId));
             setCustomField(operationRecord, 'Performance__c', truncateValue(operation == null ? null : operation.performance, 255));
-            setCustomField(operationRecord, 'Event_Id__c', decimalFromLong(operation == null ? null : operation.eventId));
-            setCustomField(operationRecord, 'Physical_Configuration_Id__c', decimalFromLong(operation == null ? null : operation.physicalConfigurationId));
-            setCustomField(operationRecord, 'Site_Id__c', decimalFromLong(operation == null ? null : operation.siteId));
+            setCustomField(operationRecord, 'Event_Id__c', stringifyLong(operation == null ? null : operation.eventId));
+            setCustomField(operationRecord, 'Physical_Configuration_Id__c', stringifyLong(operation == null ? null : operation.physicalConfigurationId));
+            setCustomField(operationRecord, 'Site_Id__c', stringifyLong(operation == null ? null : operation.siteId));
             setCustomField(operationRecord, 'Site__c', truncateValue(operation == null ? null : operation.site, 255));
             setCustomField(operationRecord, 'Space__c', truncateValue(operation == null ? null : operation.space, 255));
             setCustomField(operationRecord, 'Contingent__c', truncateValue(operation == null ? null : operation.contingent, 255));
             setCustomField(operationRecord, 'Numbered__c', operation == null ? null : operation.numbered);
-            setCustomField(operationRecord, 'Seat_Category_Id__c', decimalFromLong(operation == null ? null : operation.seatCategoryId));
+            setCustomField(operationRecord, 'Seat_Category_Id__c', stringifyLong(operation == null ? null : operation.seatCategoryId));
             setCustomField(operationRecord, 'Seat_Category__c', truncateValue(operation == null ? null : operation.seatCategory, 255));
             setCustomField(operationRecord, 'Seat_Category_Rank__c', operation == null || operation.seatCategoryRank == null ? null : Decimal.valueOf(String.valueOf(operation.seatCategoryRank)));
-            setCustomField(operationRecord, 'Audience_SubCategory_Id__c', decimalFromLong(operation == null ? null : operation.audienceSubCategoryId));
+            setCustomField(operationRecord, 'Audience_SubCategory_Id__c', stringifyLong(operation == null ? null : operation.audienceSubCategoryId));
             setCustomField(operationRecord, 'Audience_SubCategory__c', truncateValue(operation == null ? null : operation.audienceSubCategory, 255));
             setCustomField(operationRecord, 'Audience_SubCategory_Rank__c', operation == null || operation.audienceSubCategoryRank == null ? null : Decimal.valueOf(String.valueOf(operation.audienceSubCategoryRank)));
             setCustomField(operationRecord, 'Audience_SubCategory_Require_Attachment__c', operation == null ? null : operation.audienceSubCategoryRequireAttachment);
@@ -632,17 +632,17 @@ global without sharing class OrderRestResource {
             setCustomField(operationRecord, 'Performance_Duration__c', operation == null || operation.performanceDuration == null ? null : Decimal.valueOf(String.valueOf(operation.performanceDuration)));
             setCustomField(operationRecord, 'Expiration_Date__c', truncateValue(operation == null ? null : operation.expirationDate, 40));
             setCustomField(operationRecord, 'Item_Display_External_Designation__c', truncateValue(operation == null ? null : operation.itemDisplayExternalDesignation, 255));
-            setCustomField(operationRecord, 'File_Id__c', decimalFromLong(operation == null ? null : operation.fileId));
+            setCustomField(operationRecord, 'File_Id__c', stringifyLong(operation == null ? null : operation.fileId));
             setCustomField(operationRecord, 'Waiting_Account_Balance__c', scaleStoredAmount(operation == null ? null : operation.waitingAccountBalance));
             setCustomField(operationRecord, 'Season__c', truncateValue(operation == null ? null : operation.season, 255));
             setCustomField(operationRecord, 'Season_Code__c', truncateValue(operation == null ? null : operation.seasonCode, 80));
-            setCustomField(operationRecord, 'Season_Id__c', decimalFromLong(operation == null ? null : operation.seasonId));
+            setCustomField(operationRecord, 'Season_Id__c', stringifyLong(operation == null ? null : operation.seasonId));
             setCustomField(operationRecord, 'Cross_Sell_Parent_Operation_Ids__c', serializeRawValue(rawOperation.get('crossSellParentOperationIds'), MAX_SECUTIX_LONG_TEXT_LENGTH));
             setCustomField(operationRecord, 'Comfort_Variable_Values__c', serializeRawValue(rawOperation.get('comfortVariableValues'), MAX_SECUTIX_LONG_TEXT_LENGTH));
             setCustomField(operationRecord, 'Performance_Code__c', truncateValue(operation == null ? null : operation.performanceCode, 80));
-            setCustomField(operationRecord, 'Audience_Cat_Id__c', decimalFromLong(operation == null ? null : operation.audienceCatId));
+            setCustomField(operationRecord, 'Audience_Cat_Id__c', stringifyLong(operation == null ? null : operation.audienceCatId));
             setCustomField(operationRecord, 'Exchangeable__c', operation == null ? null : operation.exchangeable);
-            setCustomField(operationRecord, 'Activity_Id__c', decimalFromLong(operation == null ? null : operation.activityId));
+            setCustomField(operationRecord, 'Activity_Id__c', stringifyLong(operation == null ? null : operation.activityId));
             setCustomField(operationRecord, 'Activity_Name__c', truncateValue(operation == null ? null : operation.activityName, 255));
             setCustomField(operationRecord, 'Activity_Code__c', truncateValue(operation == null ? null : operation.activityCode, 80));
             setCustomField(operationRecord, 'Included_In_Shipment_Fee__c', operation == null ? null : operation.includedInShipmentFee);
@@ -695,18 +695,18 @@ global without sharing class OrderRestResource {
             setCustomField(movementRecord, 'Movement_Id__c', stringifyLong(movement == null ? null : movement.movementId));
             setCustomField(movementRecord, 'Operation_Id__c', operationExternalId);
             setCustomField(movementRecord, 'Type__c', truncateValue(movement == null ? null : movement.type, 80));
-            setCustomField(movementRecord, 'Seat_Id__c', decimalFromLong(movement == null ? null : movement.seatId));
-            setCustomField(movementRecord, 'Sale_Seat_Id__c', decimalFromLong(movement == null ? null : movement.saleSeatId));
-            setCustomField(movementRecord, 'Seat_Category_Id__c', decimalFromLong(movement == null ? null : movement.seatCategoryId));
+            setCustomField(movementRecord, 'Seat_Id__c', stringifyLong(movement == null ? null : movement.seatId));
+            setCustomField(movementRecord, 'Sale_Seat_Id__c', stringifyLong(movement == null ? null : movement.saleSeatId));
+            setCustomField(movementRecord, 'Seat_Category_Id__c', stringifyLong(movement == null ? null : movement.seatCategoryId));
             setCustomField(movementRecord, 'Seat_Category__c', truncateValue(movement == null ? null : movement.seatCategory, 255));
-            setCustomField(movementRecord, 'Area_Id__c', decimalFromLong(movement == null ? null : movement.areaId));
+            setCustomField(movementRecord, 'Area_Id__c', stringifyLong(movement == null ? null : movement.areaId));
             setCustomField(movementRecord, 'Area__c', truncateValue(movement == null ? null : movement.area, 255));
-            setCustomField(movementRecord, 'Entrance_Id__c', decimalFromLong(movement == null ? null : movement.entranceId));
+            setCustomField(movementRecord, 'Entrance_Id__c', stringifyLong(movement == null ? null : movement.entranceId));
             setCustomField(movementRecord, 'Entrance__c', truncateValue(movement == null ? null : movement.entrance, 255));
             setCustomField(movementRecord, 'Entrance_Code__c', truncateValue(movement == null ? null : movement.entranceCode, 80));
             setCustomField(movementRecord, 'Row__c', truncateValue(movement == null ? null : movement.row, 80));
             setCustomField(movementRecord, 'Seat_Number__c', truncateValue(movement == null ? null : movement.seatNumber, 80));
-            setCustomField(movementRecord, 'Seat_Quality_Id__c', decimalFromLong(movement == null ? null : movement.seatQualityId));
+            setCustomField(movementRecord, 'Seat_Quality_Id__c', stringifyLong(movement == null ? null : movement.seatQualityId));
             setCustomField(movementRecord, 'Seat_Quality__c', truncateValue(movement == null ? null : movement.seatQuality, 255));
             setCustomField(movementRecord, 'Seat_Quality_Code__c', truncateValue(movement == null ? null : movement.seatQualityCode, 80));
             setCustomField(movementRecord, 'Y_Coordinate__c', movement == null || movement.yCoordinate == null ? null : Decimal.valueOf(String.valueOf(movement.yCoordinate)));
@@ -780,7 +780,7 @@ global without sharing class OrderRestResource {
 
     private static Map<Long, Id> resolveInventoryIdsByProductId(List<OrderWrapper.OperationData> operations) {
         Map<Long, Id> inventoryIdsByProductId = new Map<Long, Id>();
-        Set<Long> productIds = new Set<Long>();
+        Set<String> productIds = new Set<String>();
 
         if (operations == null) {
             return inventoryIdsByProductId;
@@ -788,7 +788,7 @@ global without sharing class OrderRestResource {
 
         for (OrderWrapper.OperationData operation : operations) {
             if (operation != null && operation.productId != null) {
-                productIds.add(operation.productId);
+                productIds.add(String.valueOf(operation.productId));
             }
         }
 
@@ -1212,10 +1212,6 @@ global without sharing class OrderRestResource {
 
     private static String stringifyLong(Long value) {
         return value == null ? null : String.valueOf(value);
-    }
-
-    private static Decimal decimalFromLong(Long value) {
-        return value == null ? null : Decimal.valueOf(String.valueOf(value));
     }
 
     private static Decimal scaleStoredAmount(Decimal value) {

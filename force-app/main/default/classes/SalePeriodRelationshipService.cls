@@ -93,13 +93,6 @@ public without sharing class SalePeriodRelationshipService {
         List<PeriodInput> inputs = new List<PeriodInput>();
         Set<Id> inventoryIds = new Set<Id>(productsByInventoryId.keySet());
         Set<Id> performanceIds = new Set<Id>();
-        Map<Id, Decimal> productIdByInventoryId = new Map<Id, Decimal>();
-        for (Inventory__c inventory : [
-            SELECT Id, Inventory_Id__c FROM Inventory__c WHERE Id IN :inventoryIds
-        ]) {
-            productIdByInventoryId.put(inventory.Id, inventory.Inventory_Id__c);
-        }
-
         Map<String, Performance__c> performanceByOwnerAndExternalId =
             new Map<String, Performance__c>();
         for (Performance__c performance : [
@@ -368,7 +361,7 @@ public without sharing class SalePeriodRelationshipService {
         return new Sales_Channel__c(
             Name = truncate(displayName, 80),
             Channel_Key__c = key,
-            Channel_Id__c = channelId,
+            Channel_Id__c = numberKey(channelId),
             Code__c = truncate(code, 80),
             Name_IT__c = truncate(nameIt, 255),
             Name_EN__c = truncate(nameEn, 255)
@@ -404,7 +397,7 @@ public without sharing class SalePeriodRelationshipService {
             }
             byKey.put(key, new Sale_Period_Audience__c(
                 Sale_Period__c = periodId,
-                Audience_Subcategory_Id__c = externalId,
+                Audience_Subcategory_Id__c = numberKey(externalId),
                 Code__c = truncate(code, 80),
                 Name_IT__c = truncate(item == null ? null : firstValue(item, 'name_it', 'name'), 255),
                 Kind__c = truncate(item == null ? null : asString(item.get('kind')), 80)
@@ -441,7 +434,7 @@ public without sharing class SalePeriodRelationshipService {
             }
             byKey.put(key, new Sale_Period_Seat_Category__c(
                 Sale_Period__c = periodId,
-                Seat_Category_Id__c = externalId,
+                Seat_Category_Id__c = numberKey(externalId),
                 Code__c = truncate(code, 80),
                 Name_IT__c = truncate(item == null ? null : firstValue(item, 'name_it', 'name'), 255)
             ));
@@ -518,6 +511,10 @@ public without sharing class SalePeriodRelationshipService {
 
     private static String numberKey(Decimal value) {
         return value == null ? '' : String.valueOf(value.setScale(0));
+    }
+
+    private static String numberKey(String value) {
+        return value == null ? '' : value;
     }
 
     private static String truncate(String value, Integer length) {

@@ -3,9 +3,8 @@
     <fullName>Logical_Configuration_Id__c</fullName>
     <externalId>false</externalId>
     <label>Logical Configuration Id</label>
-    <precision>18</precision>
+    <length>255</length>
     <required>false</required>
-    <scale>0</scale>
     <trackTrending>false</trackTrending>
-    <type>Number</type>
+    <type>Text</type>
 </CustomField>

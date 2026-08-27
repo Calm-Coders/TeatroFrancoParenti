@@ -12,7 +12,7 @@ private class MembershipRelationshipServiceTest {
         Membership__c membership = [
             SELECT Id, Inventory__c, Items__c
             FROM Membership__c
-            WHERE Inventory__r.Inventory_Id__c = :Decimal.valueOf(String.valueOf(PRODUCT_ID))
+            WHERE Inventory__r.Inventory_Id__c = :String.valueOf(PRODUCT_ID)
         ];
         Membership_Item__c item = [
             SELECT Id, Membership__c, Item_Id__c, Name_IT__c, Relationship_Key__c,
@@ -44,17 +44,17 @@ private class MembershipRelationshipServiceTest {
         ];
 
         System.assertEquals(membership.Id, item.Membership__c);
-        System.assertEquals(Decimal.valueOf(String.valueOf(ITEM_ID)), item.Item_Id__c);
+        System.assertEquals(String.valueOf(ITEM_ID), item.Item_Id__c);
         System.assertEquals('Carta sociale', item.Name_IT__c);
         System.assert(item.Relationship_Key__c.contains(String.valueOf(ITEM_ID)));
         System.assert(!item.Raw_JSON__c.contains('itemPrices'));
         System.assertEquals(100, price.Amount__c);
         System.assertEquals(1, price.Min_Quantity__c);
         System.assertEquals(null, price.Max_Quantity__c);
-        System.assertEquals(Decimal.valueOf(String.valueOf(AUDIENCE_ID)), price.Audience_Subcategory_Id__c);
+        System.assertEquals(String.valueOf(AUDIENCE_ID), price.Audience_Subcategory_Id__c);
         System.assertNotEquals(null, price.Audience_Sub_Category__c);
         System.assertEquals(
-            Decimal.valueOf(String.valueOf(AUDIENCE_ID)),
+            String.valueOf(AUDIENCE_ID),
             price.Audience_Sub_Category__r.Audience_Subcategory_Id__c
         );
         System.assert(!price.Raw_JSON__c.contains('salePeriods'));
@@ -64,11 +64,11 @@ private class MembershipRelationshipServiceTest {
         System.assertEquals('STANDARD', period.Type__c);
         System.assertEquals(true, period.Sale_Possible__c);
         System.assertEquals(false, period.Reservation_Possible__c);
-        System.assertEquals(Decimal.valueOf(String.valueOf(CHANNEL_ID)), period.Sales_Channel__r.Channel_Id__c);
+        System.assertEquals(String.valueOf(CHANNEL_ID), period.Sales_Channel__r.Channel_Id__c);
         System.assertEquals('TS', period.Sales_Channel__r.Code__c);
         System.assertNotEquals(null, restriction.Audience_Sub_Category__c);
         System.assertEquals(
-            Decimal.valueOf(String.valueOf(AUDIENCE_ID)),
+            String.valueOf(AUDIENCE_ID),
             restriction.Audience_Sub_Category__r.Audience_Subcategory_Id__c
         );
 
@@ -112,7 +112,7 @@ private class MembershipRelationshipServiceTest {
 
     @IsTest
     static void backfillBatchNormalizesStoredLegacyItems() {
-        Inventory__c inventory = new Inventory__c(Name = 'Legacy', Inventory_Id__c = 90001);
+        Inventory__c inventory = new Inventory__c(Name = 'Legacy', Inventory_Id__c = '90001');
         insert inventory;
         Map<String, Object> legacyItem = new Map<String, Object>{
             'itemId' => 90002,
@@ -138,7 +138,7 @@ private class MembershipRelationshipServiceTest {
                    Voucher_Min_Amount__c, Name_IT__c
             FROM Membership_Item__c
         ];
-        System.assertEquals(90002, item.Item_Id__c);
+        System.assertEquals('90002', item.Item_Id__c);
         System.assertEquals('LEGACY', item.Code__c);
         System.assertEquals(3, item.Rank__c);
         System.assertEquals(25, item.Donation_Amount__c);

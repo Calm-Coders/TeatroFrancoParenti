@@ -5,8 +5,8 @@ private class VenueLocationRelationshipServiceTest {
         Inventory_Event__c eventRecord = createEvent(920001, 'Location Test');
         String locationJson = JSON.serialize(location('1', 'GRANDE', 'Teatro Franco Parenti', 'SALA GRANDE'));
         List<Performance__c> performances = new List<Performance__c>{
-            new Performance__c(Name = 'L1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = 930001, Location__c = locationJson),
-            new Performance__c(Name = 'L2', Inventory_Event__c = eventRecord.Id, Performance_Id__c = 930002, Location__c = locationJson)
+            new Performance__c(Name = 'L1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = '930001', Location__c = locationJson),
+            new Performance__c(Name = 'L2', Inventory_Event__c = eventRecord.Id, Performance_Id__c = '930002', Location__c = locationJson)
         };
         insert performances;
 
@@ -30,7 +30,7 @@ private class VenueLocationRelationshipServiceTest {
     static void enrichmentFlatVenueFieldsCreateLookup() {
         Inventory_Event__c eventRecord = createEvent(920002, 'Enrichment Location');
         Performance__c performance = new Performance__c(
-            Name = 'EL1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = 930003
+            Name = 'EL1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = '930003'
         );
         insert performance;
         Id inventoryId = [SELECT Inventory__c FROM Inventory_Event__c WHERE Id = :eventRecord.Id].Inventory__c;
@@ -59,7 +59,7 @@ private class VenueLocationRelationshipServiceTest {
     static void enrichmentNestedVenueNodesAreAuthoritative() {
         Inventory_Event__c eventRecord = createEvent(920004, 'Nested Enrichment Location');
         Performance__c performance = new Performance__c(
-            Name = 'NEL1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = 930005
+            Name = 'NEL1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = '930005'
         );
         insert performance;
         Id inventoryId = [SELECT Inventory__c FROM Inventory_Event__c WHERE Id = :eventRecord.Id].Inventory__c;
@@ -97,8 +97,8 @@ private class VenueLocationRelationshipServiceTest {
             FROM Venue_Location__c
             WHERE Location_Key__c = '1|GRANDE'
         ];
-        System.assertEquals(Decimal.valueOf('10228544852613'), location.Site_Id__c);
-        System.assertEquals(Decimal.valueOf('10228544852816'), location.Space_Id__c);
+        System.assertEquals('10228544852613', location.Site_Id__c);
+        System.assertEquals('10228544852816', location.Space_Id__c);
         System.assertEquals('Teatro Franco Parenti', location.Site_Name_IT__c);
         System.assertEquals('SALA GRANDE', location.Space_Name_IT__c);
         System.assertEquals('Milano', location.Town__c);
@@ -114,7 +114,7 @@ private class VenueLocationRelationshipServiceTest {
     static void backfillBatchLinksStoredLocation() {
         Inventory_Event__c eventRecord = createEvent(920003, 'Batch Location');
         insert new Performance__c(
-            Name = 'BL1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = 930004,
+            Name = 'BL1', Inventory_Event__c = eventRecord.Id, Performance_Id__c = '930004',
             Location__c = JSON.serialize(location('1', 'ROUGE', 'Teatro Franco Parenti', 'SALA ROUGE'))
         );
         Test.startTest();
@@ -125,7 +125,7 @@ private class VenueLocationRelationshipServiceTest {
     }
 
     private static Inventory_Event__c createEvent(Integer externalId, String label) {
-        Inventory__c inventory = new Inventory__c(Name = label, Inventory_Id__c = externalId);
+        Inventory__c inventory = new Inventory__c(Name = label, Inventory_Id__c = String.valueOf(externalId));
         insert inventory;
         Inventory_Event__c eventRecord = new Inventory_Event__c(Name = label + ' Event', Inventory__c = inventory.Id);
         insert eventRecord;

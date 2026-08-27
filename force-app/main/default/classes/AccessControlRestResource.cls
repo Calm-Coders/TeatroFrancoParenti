@@ -156,11 +156,11 @@ global without sharing class AccessControlRestResource {
         );
 
         setCustomField(recordItem, 'Barcode__c', truncateValue(accessControlWrapper.barcode, 255));
-        setCustomField(recordItem, 'Ticket_Id__c', accessControlWrapper.ticketId);
+        setCustomField(recordItem, 'Ticket_Id__c', accessControlWrapper.ticketId == null ? null : String.valueOf(accessControlWrapper.ticketId));
         setCustomField(recordItem, 'Ticket_State__c', truncateValue(accessControlWrapper.ticketState, 40));
         setCustomField(recordItem, 'Cancellation_Cause__c', truncateValue(accessControlWrapper.cancellationCause, 80));
         setCustomField(recordItem, 'Tariff_Code__c', truncateValue(accessControlWrapper.tariffCode, 80));
-        setCustomField(recordItem, 'Product_Id__c', accessControlWrapper.productId);
+        setCustomField(recordItem, 'Product_Id__c', accessControlWrapper.productId == null ? null : String.valueOf(accessControlWrapper.productId));
         setCustomField(recordItem, 'Inventory__c', resolveInventoryLookupId(accessControlWrapper.productId));
         setCustomField(recordItem, 'Product_Code__c', truncateValue(accessControlWrapper.productCode, 80));
         setCustomField(recordItem, 'Validity_Start_Time__c', truncateValue(accessControlWrapper.validityStartTime, 40));
@@ -168,7 +168,7 @@ global without sharing class AccessControlRestResource {
         setCustomField(recordItem, 'Holder_Info__c', serializeRawValue(accessControlWrapper.holderInfo, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Validity_End_Time__c', truncateValue(accessControlWrapper.validityEndTime, 40));
         setCustomField(recordItem, 'Sales_Channel_Code_Mapping__c', truncateValue(accessControlWrapper.salesChannelCodeMapping, 40));
-        setCustomField(recordItem, 'Order_Id__c', accessControlWrapper.orderId);
+        setCustomField(recordItem, 'Order_Id__c', accessControlWrapper.orderId == null ? null : String.valueOf(accessControlWrapper.orderId));
         setCustomField(recordItem, 'Order__c', resolveOrderLookupId(accessControlWrapper.orderId));
         setCustomField(recordItem, 'Creation_Date__c', truncateValue(accessControlWrapper.creationDate, 40));
         setCustomField(recordItem, 'Group_Size__c', accessControlWrapper.groupSize);
@@ -215,7 +215,7 @@ global without sharing class AccessControlRestResource {
             return null;
         }
 
-        Decimal productIdValue = Decimal.valueOf(String.valueOf(externalProductId));
+        String productIdValue = String.valueOf(externalProductId);
         List<Inventory__c> matchingInventories = [
             SELECT Id
             FROM Inventory__c

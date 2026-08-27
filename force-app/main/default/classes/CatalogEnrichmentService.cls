@@ -81,7 +81,7 @@ public without sharing class CatalogEnrichmentService {
 
     public static Result applyProducts(List<Object> rawProducts) {
         Result result = new Result();
-        Map<Decimal, Map<String, Object>> productById = new Map<Decimal, Map<String, Object>>();
+        Map<String, Map<String, Object>> productById = new Map<String, Map<String, Object>>();
         for (Object rawProduct : rawProducts) {
             if (!(rawProduct instanceof Map<String, Object>)) {
                 result.errors.add('Ignored a non-object order entry.');
@@ -89,8 +89,8 @@ public without sharing class CatalogEnrichmentService {
             }
             Map<String, Object> product = (Map<String, Object>) rawProduct;
             normalizeProductPayload(product);
-            Decimal productId = asDecimal(product.get('productId'));
-            if (productId == null) {
+            String productId = idKey(product.get('productId'));
+            if (String.isBlank(productId)) {
                 result.errors.add('Ignored an order entry without productId.');
                 continue;
             }
@@ -101,7 +101,7 @@ public without sharing class CatalogEnrichmentService {
             return result;
         }
 
-        Map<Decimal, Inventory__c> inventoryByProductId = new Map<Decimal, Inventory__c>();
+        Map<String, Inventory__c> inventoryByProductId = new Map<String, Inventory__c>();
         for (Inventory__c inventory : [
             SELECT Id, Inventory_Id__c
             FROM Inventory__c
@@ -113,7 +113,7 @@ public without sharing class CatalogEnrichmentService {
         Datetime attemptTime = System.now();
         List<Inventory__c> inventoryUpdates = new List<Inventory__c>();
         Map<Id, Map<String, Object>> foundProductByInventoryId = new Map<Id, Map<String, Object>>();
-        for (Decimal productId : productById.keySet()) {
+        for (String productId : productById.keySet()) {
             Map<String, Object> product = productById.get(productId);
             Inventory__c existing = inventoryByProductId.get(productId);
             if (existing == null) {
@@ -158,7 +158,7 @@ public without sharing class CatalogEnrichmentService {
 
             Map<String, Object> productType = asMap(product.get('productType'));
             if (productType != null) {
-                updateRecord.Product_Type_Id__c = asDecimal(productType.get('id'));
+                updateRecord.Product_Type_Id__c = idKey(productType.get('id'));
                 updateRecord.Product_Type_Code__c = truncate(asString(productType.get('code')), 80);
                 updateRecord.Product_Type_Name__c = truncate(firstValue(productType, new List<String>{ 'name_it', 'name' }), 255);
             }
@@ -216,10 +216,10 @@ public without sharing class CatalogEnrichmentService {
         if (productIds == null || productIds.isEmpty()) {
             return;
         }
-        Set<Decimal> ids = new Set<Decimal>();
+        Set<String> ids = new Set<String>();
         for (Long productId : productIds) {
             if (productId != null) {
-                ids.add(Decimal.valueOf(String.valueOf(productId)));
+                ids.add(String.valueOf(productId));
             }
         }
         List<Inventory__c> updates = new List<Inventory__c>();
@@ -261,7 +261,7 @@ public without sharing class CatalogEnrichmentService {
             }
             updates.add(new Inventory_Event__c(
                 Id = existing.Id,
-                Activity_Id__c = asDecimal(activity.get('id')),
+                Activity_Id__c = idKey(activity.get('id')),
                 Activity_Code__c = truncate(asString(activity.get('code')), 255),
                 Activity_Type__c = truncate(asString(activity.get('type')), 255),
                 Activity_Name_IT__c = truncate(firstValue(activity, new List<String>{ 'name_it', 'name' }), 255),
@@ -272,9 +272,9 @@ public without sharing class CatalogEnrichmentService {
     }
 
     private static void applyPerformances(Map<Id, Map<String, Object>> productsByInventoryId, Result result) {
-        Set<Decimal> performanceIds = new Set<Decimal>();
+        Set<String> performanceIds = new Set<String>();
         Map<String, Map<String, Object>> payloadByCompositeKey = new Map<String, Map<String, Object>>();
-        Map<Id, Decimal> productIdByInventoryId = new Map<Id, Decimal>();
+        Map<Id, String> productIdByInventoryId = new Map<Id, String>();
         for (Inventory__c inventory : [
             SELECT Id, Inventory_Id__c
             FROM Inventory__c
@@ -284,15 +284,15 @@ public without sharing class CatalogEnrichmentService {
         }
 
         for (Id inventoryId : productsByInventoryId.keySet()) {
-            Decimal productId = productIdByInventoryId.get(inventoryId);
+            String productId = productIdByInventoryId.get(inventoryId);
             List<Object> performances = asList(productsByInventoryId.get(inventoryId).get('performances'));
             if (productId == null || performances == null) {
                 continue;
             }
             for (Object rawPerformance : performances) {
                 Map<String, Object> performance = asMap(rawPerformance);
-                Decimal performanceId = performanceExternalId(performance);
-                if (performanceId == null) {
+                String performanceId = performanceExternalId(performance);
+                if (String.isBlank(performanceId)) {
                     continue;
                 }
                 performanceIds.add(performanceId);
@@ -311,7 +311,7 @@ public without sharing class CatalogEnrichmentService {
             WHERE Performance_Id__c IN :performanceIds
               AND Inventory_Event__r.Inventory__c IN :productsByInventoryId.keySet()
         ]) {
-            Decimal productId = existing.Inventory_Event__r.Inventory__r.Inventory_Id__c;
+            String productId = existing.Inventory_Event__r.Inventory__r.Inventory_Id__c;
             Map<String, Object> performance = payloadByCompositeKey.get(
                 numberKey(productId) + '|' + numberKey(existing.Performance_Id__c)
             );
@@ -326,8 +326,8 @@ public without sharing class CatalogEnrichmentService {
             Map<String, Object> product = productsByInventoryId.get(existing.Inventory_Event__r.Inventory__c);
             String siteCode = preferredValue(site, performance, 'code', 'siteCode');
             String spaceCode = preferredValue(space, performance, 'code', 'spaceCode');
-            Decimal siteId = preferredDecimal(site, performance, 'id', 'siteId');
-            Decimal spaceId = preferredDecimal(space, performance, 'id', 'spaceId');
+            String siteId = idKey(preferredDecimal(site, performance, 'id', 'siteId'));
+            String spaceId = idKey(preferredDecimal(space, performance, 'id', 'spaceId'));
             updates.add(new Performance__c(
                 Id = existing.Id,
                 Code__c = truncate(asString(performance.get('code')), 255),
@@ -343,11 +343,11 @@ public without sharing class CatalogEnrichmentService {
                 Space_Name_IT__c = truncate(preferredName(performance, space, 'spaceName_it', 'name_it'), 255),
                 Space_Name_EN__c = truncate(preferredName(performance, space, 'spaceName_en', 'name_en'), 255),
                 Location__c = jsonValue(locationAudit(site, space, performance)),
-                Physical_Configuration_Id__c = asDecimal(physical == null ? null : physical.get('id')),
+                Physical_Configuration_Id__c = idKey(physical == null ? null : physical.get('id')),
                 Physical_Configuration_Name__c = truncate(firstValue(physical, new List<String>{ 'name_it', 'name' }), 255),
-                Logical_Configuration_Id__c = asDecimal(logical == null ? null : logical.get('id')),
+                Logical_Configuration_Id__c = idKey(logical == null ? null : logical.get('id')),
                 Logical_Configuration_Name__c = truncate(firstValue(logical, new List<String>{ 'name_it', 'name' }), 255),
-                Rate_Type_Id__c = asDecimal(rateType == null ? null : rateType.get('id')),
+                Rate_Type_Id__c = idKey(rateType == null ? null : rateType.get('id')),
                 Rate_Type_Code__c = truncate(firstValue(rateType, new List<String>{ 'code' }), 255),
                 Rate_Type_Name__c = truncate(firstValue(rateType, new List<String>{ 'name_it', 'name' }), 255),
                 Sale_Periods__c = jsonValue(performance.get('salePeriods')),
@@ -416,7 +416,7 @@ public without sharing class CatalogEnrichmentService {
         result.seasonTicketsUpdated = seasonTickets.size();
 
         Map<Id, Map<String, Object>> payloadBySeasonTicketId = new Map<Id, Map<String, Object>>();
-        Map<Id, Decimal> ownerProductIdBySeasonTicketId = new Map<Id, Decimal>();
+        Map<Id, String> ownerProductIdBySeasonTicketId = new Map<Id, String>();
         for (Season_Ticket__c seasonTicket : seasonTickets) {
             Map<String, Object> product = productsByInventoryId.get(seasonTicket.Inventory__c);
             payloadBySeasonTicketId.put(
@@ -425,7 +425,7 @@ public without sharing class CatalogEnrichmentService {
             );
             ownerProductIdBySeasonTicketId.put(
                 seasonTicket.Id,
-                asDecimal(product.get('productId'))
+                idKey(product.get('productId'))
             );
         }
         SeasonTicketRelationshipService.Stats relationshipStats =
@@ -497,12 +497,12 @@ public without sharing class CatalogEnrichmentService {
         return audit;
     }
 
-    private static Decimal performanceExternalId(Map<String, Object> performance) {
+    private static String performanceExternalId(Map<String, Object> performance) {
         if (performance == null) {
             return null;
         }
-        Decimal value = asDecimal(performance.get('id'));
-        return value == null ? asDecimal(performance.get('performanceId')) : value;
+        String value = idKey(performance.get('id'));
+        return String.isBlank(value) ? idKey(performance.get('performanceId')) : value;
     }
 
     private static void normalizeProductPayload(Map<String, Object> product) {
@@ -553,6 +553,14 @@ public without sharing class CatalogEnrichmentService {
 
     private static String asString(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private static String idKey(Object value) {
+        if (value == null) {
+            return null;
+        }
+        Decimal numeric = asDecimal(value);
+        return numeric == null ? asString(value) : numeric.setScale(0).toPlainString();
     }
 
     private static Decimal asDecimal(Object value) {
@@ -608,6 +616,10 @@ public without sharing class CatalogEnrichmentService {
 
     private static String numberKey(Decimal value) {
         return value == null ? '' : String.valueOf(value.setScale(0));
+    }
+
+    private static String numberKey(String value) {
+        return value == null ? '' : value;
     }
 
     public class CatalogEnrichmentException extends Exception {

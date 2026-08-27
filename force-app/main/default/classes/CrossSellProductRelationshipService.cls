@@ -9,7 +9,7 @@ public without sharing class CrossSellProductRelationshipService {
 
     private class Input {
         public Id sourceInventoryId;
-        public Decimal sourceProductId;
+        public String sourceProductId;
         public Integer sequence;
         public Map<String, Object> payload;
     }
@@ -29,7 +29,7 @@ public without sharing class CrossSellProductRelationshipService {
             addInputs(
                 inputs,
                 inventory.Id,
-                product.id == null ? null : Decimal.valueOf(String.valueOf(product.id)),
+                idKey(product.id),
                 links
             );
         }
@@ -39,7 +39,7 @@ public without sharing class CrossSellProductRelationshipService {
     public static Stats syncEnrichment(Map<Id, Map<String, Object>> productsByInventoryId) {
         List<Input> inputs = new List<Input>();
         Set<Id> scopedInventoryIds = new Set<Id>();
-        Map<Id, Decimal> productIdByInventoryId = new Map<Id, Decimal>();
+        Map<Id, String> productIdByInventoryId = new Map<Id, String>();
         for (Inventory__c inventory : [
             SELECT Id, Inventory_Id__c
             FROM Inventory__c
@@ -59,7 +59,7 @@ public without sharing class CrossSellProductRelationshipService {
     }
 
     public static Integer backfillTargetInventories(List<Inventory__c> inventories) {
-        Map<Decimal, Id> inventoryIdByProductId = new Map<Decimal, Id>();
+        Map<String, Id> inventoryIdByProductId = new Map<String, Id>();
         for (Inventory__c inventory : inventories) {
             if (inventory.Id != null && inventory.Inventory_Id__c != null) {
                 inventoryIdByProductId.put(inventory.Inventory_Id__c, inventory.Id);
@@ -89,7 +89,7 @@ public without sharing class CrossSellProductRelationshipService {
     private static void addInputs(
         List<Input> inputs,
         Id sourceInventoryId,
-        Decimal sourceProductId,
+        String sourceProductId,
         List<Object> rawLinks
     ) {
         for (Integer sequence = 0; sequence < rawLinks.size(); sequence++) {
@@ -108,12 +108,12 @@ public without sharing class CrossSellProductRelationshipService {
         Stats stats = new Stats();
         if (scopedInventoryIds.isEmpty()) return stats;
 
-        Set<Decimal> targetProductIds = new Set<Decimal>();
+        Set<String> targetProductIds = new Set<String>();
         for (Input input : inputs) {
-            Decimal targetProductId = targetProductId(input.payload);
+            String targetProductId = targetProductId(input.payload);
             if (targetProductId != null) targetProductIds.add(targetProductId);
         }
-        Map<Decimal, Inventory__c> targetByProductId = new Map<Decimal, Inventory__c>();
+        Map<String, Inventory__c> targetByProductId = new Map<String, Inventory__c>();
         if (!targetProductIds.isEmpty()) {
             for (Inventory__c target : [
                 SELECT Id, Inventory_Id__c, Name
@@ -125,8 +125,8 @@ public without sharing class CrossSellProductRelationshipService {
         Set<String> desiredKeys = new Set<String>();
         List<Cross_Sell_Product_Link__c> links = new List<Cross_Sell_Product_Link__c>();
         for (Input input : inputs) {
-            Decimal linkId = asDecimal(input.payload.get('id'));
-            Decimal targetProductId = targetProductId(input.payload);
+            String linkId = idKey(input.payload.get('id'));
+            String targetProductId = targetProductId(input.payload);
             String key = relationshipKey(
                 input.sourceProductId,
                 input.sourceInventoryId,
@@ -185,22 +185,22 @@ public without sharing class CrossSellProductRelationshipService {
         return stats;
     }
 
-    private static Decimal targetProductId(Map<String, Object> payload) {
-        Decimal value = asDecimal(payload.get('targetProductId'));
+    private static String targetProductId(Map<String, Object> payload) {
+        String value = idKey(payload.get('targetProductId'));
         Map<String, Object> target = asMap(payload.get('targetProduct'));
-        return value == null && target != null ? asDecimal(target.get('id')) : value;
+        return String.isBlank(value) && target != null ? idKey(target.get('id')) : value;
     }
 
     private static String relationshipKey(
-        Decimal sourceProductId,
+        String sourceProductId,
         Id sourceInventoryId,
-        Decimal linkId,
-        Decimal targetProductId,
+        String linkId,
+        String targetProductId,
         Integer sequence
     ) {
-        String sourceKey = sourceProductId == null ? String.valueOf(sourceInventoryId) : numberKey(sourceProductId);
-        String linkKey = linkId == null ? 'ROW:' + sequence : 'LINK:' + numberKey(linkId);
-        String targetKey = targetProductId == null ? 'ROW:' + sequence : 'TARGET:' + numberKey(targetProductId);
+        String sourceKey = String.isBlank(sourceProductId) ? String.valueOf(sourceInventoryId) : sourceProductId;
+        String linkKey = String.isBlank(linkId) ? 'ROW:' + sequence : 'LINK:' + linkId;
+        String targetKey = String.isBlank(targetProductId) ? 'ROW:' + sequence : 'TARGET:' + targetProductId;
         return sourceKey + '|' + linkKey + '|' + targetKey;
     }
 
@@ -258,6 +258,7 @@ public without sharing class CrossSellProductRelationshipService {
     private static Decimal asDecimal(Object value) { if (value == null) return null; try { return Decimal.valueOf(String.valueOf(value)); } catch (Exception ignored) { return null; } }
     private static Boolean asBoolean(Object value) { return value instanceof Boolean ? (Boolean) value : value == null ? null : String.valueOf(value).toLowerCase() == 'true'; }
     private static String asString(Object value) { return value == null ? null : String.valueOf(value); }
+    private static String idKey(Object value) { Decimal numeric = asDecimal(value); return numeric == null ? asString(value) : numeric.setScale(0).toPlainString(); }
     private static String numberKey(Decimal value) { return value == null ? null : value.setScale(0).toPlainString(); }
     private static String truncate(String value, Integer limitValue) { return value == null || value.length() <= limitValue ? value : value.substring(0, limitValue); }
 }

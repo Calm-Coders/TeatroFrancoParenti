@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Item_Id__c</fullName><externalId>false</externalId><label>Item Id</label><precision>18</precision><required>false</required><scale>0</scale><type>Number</type><unique>false</unique></CustomField>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Item_Id__c</fullName><externalId>false</externalId><label>Item Id</label><length>255</length><required>false</required><type>Text</type><unique>false</unique></CustomField>

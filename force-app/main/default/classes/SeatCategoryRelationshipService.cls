@@ -192,9 +192,9 @@ public with sharing class SeatCategoryRelationshipService {
         return new Seat_Category__c(
             Name = truncate(displayName, 80),
             Category_Key__c = key,
-            Seat_Category_Id__c = asDecimal(payload.get('id')),
+            Seat_Category_Id__c = idKey(payload.get('id')),
             Code__c = truncate(asString(payload.get('code')), 80),
-            Institution_Category_Id__c = asDecimal(payload.get('institutionCategoryId')),
+            Institution_Category_Id__c = idKey(payload.get('institutionCategoryId')),
             Category_Number__c = truncate(asString(payload.get('catNum')), 80),
             Name_IT__c = truncate(nameIt, 255),
             Name_EN__c = truncate(nameEn, 255),
@@ -242,7 +242,9 @@ public with sharing class SeatCategoryRelationshipService {
         try { return Decimal.valueOf(String.valueOf(value)); } catch (Exception ignored) { return null; }
     }
     private static String asString(Object value) { return value == null ? null : String.valueOf(value); }
+    private static String idKey(Object value) { Decimal numeric = asDecimal(value); return numeric == null ? asString(value) : numeric.setScale(0).toPlainString(); }
     private static String numberKey(Decimal value) { return value == null ? null : value.setScale(0).toPlainString(); }
+    private static String numberKey(String value) { return value; }
     private static String truncate(String value, Integer limitValue) {
         return value == null || value.length() <= limitValue ? value : value.substring(0, limitValue);
     }

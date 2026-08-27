@@ -155,8 +155,23 @@ existing UAT Pack twice left exactly 5 Package Lines: all 5 source IDs matched,
 no duplicates were created, and every forced-audience lookup was populated. The
 five target Inventory lookups remain pending because target product
 `10228683831060` has not been loaded as a top-level UAT Inventory; they will
-backfill when it arrives. Production was inspected read-only (35 Packs and 112
-Package Lines) and was not changed.
+backfill when it arrives. At the time of this UAT verification, Production was
+inspected read-only (35 Packs and 112 Package Lines) and was not changed.
+
+### Production promotion — 2026-08-27
+
+The complete UAT catalog structure was validated against `TFA Prod` as deployment
+`0AfSX000000p8bR0AQ`: 287 components and all 34 focused tests passed. Quick
+deployment `0AfSX000000p8d30AA` then promoted that exact validated artifact.
+The `TFP Catalog Enrichment` permission set was assigned to the Production
+integration/admin user used by the sync.
+
+The existing Production JSON was backfilled idempotently. The resulting 13
+Membership Items match all 13 source item IDs, and the resulting 112 Package
+Lines match all source line IDs across 35 Packs, with no missing or extra child
+records. Every target Inventory lookup is populated. Every line that supplies a
+forced audience ID has an Audience Sub-Category lookup; 11 lines have no audience
+lookup because the source payload does not force an audience.
 
 ## Ongoing catalog enrichment
 

@@ -15,9 +15,9 @@ private class CrossSellProductRelationshipServiceTest {
                    Message_IT__c, Start__c, End__c
             FROM Cross_Sell_Product_Link__c
         ];
-        System.assertEquals(Decimal.valueOf(String.valueOf(SOURCE_PRODUCT_ID)), linkBeforeTarget.Source_Inventory__r.Inventory_Id__c);
-        System.assertEquals(Decimal.valueOf(String.valueOf(LINK_ID)), linkBeforeTarget.Cross_Sell_Link_Id__c);
-        System.assertEquals(Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID)), linkBeforeTarget.Target_Product_Id__c);
+        System.assertEquals(String.valueOf(SOURCE_PRODUCT_ID), linkBeforeTarget.Source_Inventory__r.Inventory_Id__c);
+        System.assertEquals(String.valueOf(LINK_ID), linkBeforeTarget.Cross_Sell_Link_Id__c);
+        System.assertEquals(String.valueOf(TARGET_PRODUCT_ID), linkBeforeTarget.Target_Product_Id__c);
         System.assertEquals(null, linkBeforeTarget.Target_Inventory__c);
         System.assertEquals('UP_SELL', linkBeforeTarget.Link_Type__c);
         System.assertEquals('Scegli anche il prodotto target', linkBeforeTarget.Message_IT__c);
@@ -25,7 +25,7 @@ private class CrossSellProductRelationshipServiceTest {
         invokeInventoryApi(new List<Object>{ inventoryPayload(TARGET_PRODUCT_ID, false) });
         Inventory__c target = [
             SELECT Id FROM Inventory__c
-            WHERE Inventory_Id__c = :Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            WHERE Inventory_Id__c = :String.valueOf(TARGET_PRODUCT_ID)
         ];
         System.assertEquals(target.Id, [
             SELECT Target_Inventory__c
@@ -40,10 +40,10 @@ private class CrossSellProductRelationshipServiceTest {
     @IsTest
     static void enrichmentMapsNestedTargetAndDeletesExplicitlyRemovedLinks() {
         Inventory__c source = new Inventory__c(
-            Name = 'Source', Inventory_Id__c = Decimal.valueOf(String.valueOf(SOURCE_PRODUCT_ID))
+            Name = 'Source', Inventory_Id__c = String.valueOf(SOURCE_PRODUCT_ID)
         );
         Inventory__c target = new Inventory__c(
-            Name = 'Target', Inventory_Id__c = Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            Name = 'Target', Inventory_Id__c = String.valueOf(TARGET_PRODUCT_ID)
         );
         insert new List<Inventory__c>{ source, target };
 
@@ -88,13 +88,13 @@ private class CrossSellProductRelationshipServiceTest {
     @IsTest
     static void repeatedExternalLinkIdSupportsMultipleTargets() {
         Inventory__c source = new Inventory__c(
-            Name = 'Source', Inventory_Id__c = Decimal.valueOf(String.valueOf(SOURCE_PRODUCT_ID))
+            Name = 'Source', Inventory_Id__c = String.valueOf(SOURCE_PRODUCT_ID)
         );
         Inventory__c firstTarget = new Inventory__c(
-            Name = 'First Target', Inventory_Id__c = Decimal.valueOf(String.valueOf(TARGET_PRODUCT_ID))
+            Name = 'First Target', Inventory_Id__c = String.valueOf(TARGET_PRODUCT_ID)
         );
         Inventory__c secondTarget = new Inventory__c(
-            Name = 'Second Target', Inventory_Id__c = Decimal.valueOf(String.valueOf(SECOND_TARGET_PRODUCT_ID))
+            Name = 'Second Target', Inventory_Id__c = String.valueOf(SECOND_TARGET_PRODUCT_ID)
         );
         insert new List<Inventory__c>{ source, firstTarget, secondTarget };
 
@@ -123,7 +123,7 @@ private class CrossSellProductRelationshipServiceTest {
         System.assertEquals(2, [
             SELECT COUNT()
             FROM Cross_Sell_Product_Link__c
-            WHERE Cross_Sell_Link_Id__c = :Decimal.valueOf(String.valueOf(LINK_ID))
+            WHERE Cross_Sell_Link_Id__c = :String.valueOf(LINK_ID)
               AND Target_Inventory__c != null
         ]);
         System.assertEquals(0, [

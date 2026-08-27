@@ -38,7 +38,7 @@ def sf_query(session: sync.SalesforceSession, soql: str) -> list[dict[str, Any]]
     return json.loads(completed.stdout)["result"]["records"]
 
 
-def load_audience_legends(db_project: Path, import_id: int) -> dict[int, dict[str, Any]]:
+def load_audience_legends(db_project: Path, import_id: int) -> dict[str, dict[str, Any]]:
     _, mysql_connector = sync.load_db_modules(db_project)
     connection = mysql_connector.connect(**sync.mysql_config())
     try:
@@ -47,22 +47,22 @@ def load_audience_legends(db_project: Path, import_id: int) -> dict[int, dict[st
             "SELECT source_id, metadata_json FROM audience_subcategories WHERE import_id = %s",
             (import_id,),
         )
-        legends: dict[int, dict[str, Any]] = {}
+        legends: dict[str, dict[str, Any]] = {}
         for row in cursor.fetchall():
             payload = row["metadata_json"]
             if isinstance(payload, str):
                 payload = json.loads(payload)
             if isinstance(payload, dict):
-                legends[int(row["source_id"])] = payload
+                legends[str(row["source_id"])] = payload
         return legends
     finally:
         connection.close()
 
 
-def desired_performances(snapshot: sync.Snapshot, legends: dict[int, dict[str, Any]]) -> dict[tuple[int, int], dict[str, str]]:
-    desired: dict[tuple[int, int], dict[str, str]] = {}
+def desired_performances(snapshot: sync.Snapshot, legends: dict[str, dict[str, Any]]) -> dict[tuple[str, str], dict[str, str]]:
+    desired: dict[tuple[str, str], dict[str, str]] = {}
     for product in snapshot.products:
-        product_id = int(product["id"])
+        product_id = str(product["id"])
         event = product.get("event")
         performances = event.get("performances") if isinstance(event, dict) else None
         if not isinstance(performances, list):
@@ -72,12 +72,12 @@ def desired_performances(snapshot: sync.Snapshot, legends: dict[int, dict[str, A
                 continue
             prices = [item for item in performance.get("prices") or [] if isinstance(item, dict)]
             audience_ids = {
-                int(item["audSubCatId"])
+                str(item["audSubCatId"])
                 for item in prices
                 if item.get("audSubCatId") is not None
             }
             tariff_legend = [legends[value] for value in sorted(audience_ids) if value in legends]
-            desired[(product_id, int(performance["id"]))] = {
+            desired[(product_id, str(performance["id"]))] = {
                 "Prices__c": json.dumps(prices, ensure_ascii=False, separators=(",", ":")),
                 "Tariff_Legend__c": json.dumps(tariff_legend, ensure_ascii=False, separators=(",", ":")),
             }
@@ -116,15 +116,15 @@ def main() -> int:
         "SELECT Id, Performance_Id__c, Inventory_Event__r.Inventory__r.Inventory_Id__c FROM Performance__c",
     )
     updates: list[dict[str, Any]] = []
-    missing: list[tuple[int, int]] = []
-    matched: set[tuple[int, int]] = set()
+    missing: list[tuple[str, str]] = []
+    matched: set[tuple[str, str]] = set()
     for row in rows:
         inventory = row.get("Inventory_Event__r", {}).get("Inventory__r", {})
         product_id = inventory.get("Inventory_Id__c")
         performance_id = row.get("Performance_Id__c")
         if product_id is None or performance_id is None:
             continue
-        key = (int(product_id), int(performance_id))
+        key = (str(product_id), str(performance_id))
         payload = desired.get(key)
         if payload is None:
             continue

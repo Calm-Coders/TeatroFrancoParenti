@@ -36,7 +36,7 @@ private class CatalogEnrichmentTest {
         System.assertEquals('2526', inventory.Season_Code__c);
         System.assertEquals('STAGIONE 25-26', inventory.Season_Name__c);
         System.assertEquals(Date.newInstance(2025, 6, 1), inventory.Season_Start__c);
-        System.assertEquals(Decimal.valueOf('10228687303720'), inventory.Product_Type_Id__c);
+        System.assertEquals('10228687303720', inventory.Product_Type_Id__c);
         System.assertEquals('ABBONAMENTI E CARD', inventory.Product_Type_Name__c);
         System.assert(inventory.Ticket_Types__c.contains('INTERO'));
         System.assert(inventory.Product_Advantages__c.contains('RID50'));
@@ -50,7 +50,7 @@ private class CatalogEnrichmentTest {
             FROM Inventory_Event__c
             WHERE Id = :data.eventId
         ];
-        System.assertEquals(Decimal.valueOf('10228635444869'), eventRecord.Activity_Id__c);
+        System.assertEquals('10228635444869', eventRecord.Activity_Id__c);
         System.assertEquals('TEATRO', eventRecord.Activity_Name_IT__c);
 
         Performance__c performance = [
@@ -123,15 +123,15 @@ private class CatalogEnrichmentTest {
             FROM Performance__c
             WHERE Id = :data.performanceRecordId
         ];
-        System.assertEquals(Decimal.valueOf('10228544852613'), performance.Site_Id__c);
+        System.assertEquals('10228544852613', performance.Site_Id__c);
         System.assertEquals('1', performance.Site_Code__c);
-        System.assertEquals(Decimal.valueOf('10228544852816'), performance.Space_Id__c);
+        System.assertEquals('10228544852816', performance.Space_Id__c);
         System.assertEquals('GRANDE', performance.Space_Code__c);
         System.assertEquals('Teatro Franco Parenti', performance.Site_Name_IT__c);
         System.assertEquals('SALA GRANDE', performance.Space_Name_IT__c);
-        System.assertEquals(Decimal.valueOf('10228544670213'), performance.Physical_Configuration_Id__c);
-        System.assertEquals(Decimal.valueOf('10228635451835'), performance.Logical_Configuration_Id__c);
-        System.assertEquals(Decimal.valueOf('10228635445070'), performance.Rate_Type_Id__c);
+        System.assertEquals('10228544670213', performance.Physical_Configuration_Id__c);
+        System.assertEquals('10228635451835', performance.Logical_Configuration_Id__c);
+        System.assertEquals('10228635445070', performance.Rate_Type_Id__c);
         System.assertEquals('1', performance.Rate_Type_Code__c);
         System.assert(performance.Location__c.contains('"site"'));
         System.assertNotEquals(null, performance.Venue_Location__c);
@@ -141,8 +141,8 @@ private class CatalogEnrichmentTest {
             FROM Venue_Location__c
             WHERE Id = :performance.Venue_Location__c
         ];
-        System.assertEquals(Decimal.valueOf('10228544852613'), location.Site_Id__c);
-        System.assertEquals(Decimal.valueOf('10228544852816'), location.Space_Id__c);
+        System.assertEquals('10228544852613', location.Site_Id__c);
+        System.assertEquals('10228544852816', location.Space_Id__c);
         System.assertEquals('Milano', location.Town__c);
         System.assertEquals('Via Pier Lombardo 14, Milano', location.Address__c);
     }
@@ -329,7 +329,7 @@ private class CatalogEnrichmentTest {
     private static TestData createTestData(Long productId, Long performanceId) {
         Inventory__c inventory = new Inventory__c(
             Name = 'Test Inventory',
-            Inventory_Id__c = Decimal.valueOf(String.valueOf(productId)),
+            Inventory_Id__c = String.valueOf(productId),
             Enrichment_Status__c = 'Pending'
         );
         insert inventory;
@@ -341,7 +341,7 @@ private class CatalogEnrichmentTest {
         Performance__c performance = new Performance__c(
             Name = 'Test Performance',
             Inventory_Event__c = eventRecord.Id,
-            Performance_Id__c = Decimal.valueOf(String.valueOf(performanceId))
+            Performance_Id__c = String.valueOf(performanceId)
         );
         insert performance;
         return new TestData(inventory.Id, eventRecord.Id, performance.Id);

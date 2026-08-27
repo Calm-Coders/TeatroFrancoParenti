@@ -150,9 +150,9 @@ public without sharing class VenueLocationRelationshipService {
         if (String.isBlank(displayName)) displayName = key;
         return new Venue_Location__c(
             Name = truncate(displayName, 80), Location_Key__c = key,
-            Site_Id__c = asDecimal(payload.get('siteId')),
+            Site_Id__c = idKey(payload.get('siteId')),
             Site_Code__c = truncate(asString(payload.get('siteCode')), 80),
-            Space_Id__c = asDecimal(payload.get('spaceId')),
+            Space_Id__c = idKey(payload.get('spaceId')),
             Space_Code__c = truncate(asString(payload.get('spaceCode')), 80),
             Site_Name_IT__c = truncate(siteIt, 255), Site_Name_EN__c = truncate(siteEn, 255),
             Space_Name_IT__c = truncate(spaceIt, 255), Space_Name_EN__c = truncate(spaceEn, 255),
@@ -308,6 +308,8 @@ public without sharing class VenueLocationRelationshipService {
     private static List<Object> asList(Object value) { return value instanceof List<Object> ? (List<Object>) value : null; }
     private static Decimal asDecimal(Object value) { if (value == null) return null; try { return Decimal.valueOf(String.valueOf(value)); } catch (Exception ignored) { return null; } }
     private static String asString(Object value) { return value == null ? null : String.valueOf(value); }
+    private static String idKey(Object value) { Decimal numeric = asDecimal(value); return numeric == null ? asString(value) : numeric.setScale(0).toPlainString(); }
     private static String numberKey(Decimal value) { return value == null ? null : value.setScale(0).toPlainString(); }
+    private static String numberKey(String value) { return value; }
     private static String truncate(String value, Integer limitValue) { return value == null || value.length() <= limitValue ? value : value.substring(0, limitValue); }
 }
