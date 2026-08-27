@@ -74,6 +74,50 @@ Snapshot `9` contained 166 season-scoped product rows and 164 unique external pr
 
 The Salesforce performance count is intentionally 19 lower than the 1,003 season-scoped MySQL rows: two external product IDs occur in both overlapping seasons, and Salesforce's unique `Inventory_Id__c` retains only each product's newest-season payload.
 
+## Relational membership items
+
+`Membership__c.Items__c` remains the lossless raw JSON audit copy, but membership
+items are also synchronized into reportable Salesforce relationships:
+
+```text
+Membership__c
+  -> Membership_Item__c
+       -> Membership_Item_Price__c
+            -> Audience_Sub_Category__c
+            -> Sale_Period__c
+                 -> Sales_Channel__c
+                 -> Sale_Period_Audience__c
+                      -> Audience_Sub_Category__c
+```
+
+The item relationship key combines the Salesforce Membership ID and the source
+`itemId`. Price keys combine the item key, audience subcategory, and duplicate
+occurrence. Replaying a payload therefore updates the same records and removes
+stale items, prices, sale periods, and restrictions. Source integer amounts are
+minor currency units, so `10000` is stored as `100.00` in the Salesforce Currency
+field. The scalar source fragments remain available in each record's `Raw_JSON__c`.
+
+The initial inventory API performs this synchronization automatically. Existing
+stored `Items__c` values can be normalized without calling the catalog endpoint:
+
+```apex
+Database.executeBatch(new MembershipRelationshipBackfillBatch(), 100);
+```
+
+### UAT verification — 2026-08-27
+
+Validated deployment `0AfMA00000CaP100AF` ran seven passing tests. Quick deployment
+`0AfMA00000CaPiX0AV` created the two membership relationship objects and extended
+sale periods with a Membership Item Price parent. Replaying the two current
+membership products twice left exactly 2 Membership Items, 2 Membership Item
+Prices, 2 membership Sale Periods, and 2 audience restrictions, demonstrating
+idempotency. Both price and sale-period audience lookups are populated.
+
+The complete snapshot `9` audit matched UAT across all 164 unique inventories,
+including 984 performances, 112 performance prices, 2 membership items, 2
+membership item prices, 1,030 total sale periods, and 3,775 sale-period audience
+restrictions. Production was not changed.
+
 ## Ongoing catalog enrichment
 
 The first load continues to use the local MySQL bridge above. After an inventory is inserted or updated, `InventoryRestResource` asks `CatalogEnrichmentQueueable` to enrich its product ID only when the org configuration is enabled. Calls are split into groups of at most 50 IDs, matching the provider limit, and additional groups are chained as separate queueable jobs.

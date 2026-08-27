@@ -175,6 +175,12 @@ global without sharing class InventoryRestResource {
             upsert packRecords;
             upsert seasonTicketRecords;
 
+            MembershipRelationshipService.syncInventoryPayloads(
+                products,
+                inventoryRecords,
+                membershipRecords
+            );
+
             Map<Id, Season_Ticket__c> seasonTicketByInventoryId = new Map<Id, Season_Ticket__c>();
             for (Season_Ticket__c seasonTicketRecord : seasonTicketRecords) {
                 seasonTicketByInventoryId.put(seasonTicketRecord.Inventory__c, seasonTicketRecord);
@@ -230,6 +236,18 @@ global without sharing class InventoryRestResource {
                 SalePeriodRelationshipService.deleteForPerformances(existingPerformancesToDelete);
                 delete existingPerformancesToDelete;
             }
+
+            List<Membership__c> membershipsToDelete = new List<Membership__c>();
+            for (Id inventoryId : inventoryIds) {
+                if (!desiredMembershipInventoryIds.contains(inventoryId)) {
+                    Membership__c existingMembership =
+                        (Membership__c) existingMembershipByInventoryId.get(inventoryId);
+                    if (existingMembership != null) {
+                        membershipsToDelete.add(existingMembership);
+                    }
+                }
+            }
+            MembershipRelationshipService.deleteSalePeriodsForMemberships(membershipsToDelete);
 
             deleteUndesiredRelatedRecords(existingEventByInventoryId, desiredEventInventoryIds, inventoryIds);
             deleteUndesiredRelatedRecords(existingMembershipByInventoryId, desiredMembershipInventoryIds, inventoryIds);

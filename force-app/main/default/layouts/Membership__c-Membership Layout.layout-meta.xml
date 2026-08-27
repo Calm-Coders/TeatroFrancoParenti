@@ -47,6 +47,15 @@
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
 
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Item_Id__c</fields>
+        <fields>Code__c</fields>
+        <fields>Name_IT__c</fields>
+        <fields>Sequence__c</fields>
+        <relatedList>Membership_Item__c.Membership__c</relatedList>
+    </relatedLists>
+
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>true</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>

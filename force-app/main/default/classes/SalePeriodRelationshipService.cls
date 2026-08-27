@@ -13,6 +13,7 @@ public without sharing class SalePeriodRelationshipService {
         public String relationshipKey;
         public Id inventoryId;
         public Id performanceId;
+        public Id membershipItemPriceId;
         public Integer sequence;
         public Map<String, Object> payload;
         public String channelKey;
@@ -85,7 +86,7 @@ public without sharing class SalePeriodRelationshipService {
                 }
             }
         }
-        return sync(inputs, inventoryIds, performanceIds);
+        return sync(inputs, inventoryIds, performanceIds, new Set<Id>());
     }
 
     public static Stats syncEnrichment(Map<Id, Map<String, Object>> productsByInventoryId) {
@@ -140,7 +141,18 @@ public without sharing class SalePeriodRelationshipService {
                 }
             }
         }
-        return sync(inputs, inventoryIds, performanceIds);
+        return sync(inputs, inventoryIds, performanceIds, new Set<Id>());
+    }
+
+    public static Stats syncMembershipItemPrices(Map<Id, Object> rawPeriodsByPriceId) {
+        List<PeriodInput> inputs = new List<PeriodInput>();
+        Set<Id> priceIds = rawPeriodsByPriceId == null
+            ? new Set<Id>()
+            : new Set<Id>(rawPeriodsByPriceId.keySet());
+        for (Id priceId : priceIds) {
+            addMembershipItemPricePeriods(inputs, priceId, rawPeriodsByPriceId.get(priceId));
+        }
+        return sync(inputs, new Set<Id>(), new Set<Id>(), priceIds);
     }
 
     public static void deleteForPerformances(List<Performance__c> performances) {
@@ -155,10 +167,21 @@ public without sharing class SalePeriodRelationshipService {
         }
     }
 
+    public static void deleteForMembershipItemPrices(Set<Id> priceIds) {
+        if (priceIds != null && !priceIds.isEmpty()) {
+            delete [
+                SELECT Id
+                FROM Sale_Period__c
+                WHERE Membership_Item_Price__c IN :priceIds
+            ];
+        }
+    }
+
     private static Stats sync(
         List<PeriodInput> inputs,
         Set<Id> inventoryIds,
-        Set<Id> performanceIds
+        Set<Id> performanceIds,
+        Set<Id> membershipItemPriceIds
     ) {
         Stats stats = new Stats();
         Map<String, Sales_Channel__c> channelByKey = new Map<String, Sales_Channel__c>();
@@ -187,7 +210,10 @@ public without sharing class SalePeriodRelationshipService {
                 Relationship_Key__c = input.relationshipKey,
                 Inventory__c = input.inventoryId,
                 Performance__c = input.performanceId,
-                Parent_Type__c = input.performanceId == null ? 'Inventory' : 'Performance',
+                Membership_Item_Price__c = input.membershipItemPriceId,
+                Parent_Type__c = input.membershipItemPriceId != null
+                    ? 'Membership Item Price'
+                    : (input.performanceId == null ? 'Inventory' : 'Performance'),
                 Sequence__c = input.sequence,
                 Start__c = asDatetime(input.payload.get('start')),
                 End__c = asDatetime(input.payload.get('end')),
@@ -219,6 +245,13 @@ public without sharing class SalePeriodRelationshipService {
             existingById.putAll([
                 SELECT Id, Relationship_Key__c
                 FROM Sale_Period__c WHERE Performance__c IN :performanceIds
+            ]);
+        }
+        if (!membershipItemPriceIds.isEmpty()) {
+            existingById.putAll([
+                SELECT Id, Relationship_Key__c
+                FROM Sale_Period__c
+                WHERE Membership_Item_Price__c IN :membershipItemPriceIds
             ]);
         }
         List<Sale_Period__c> stale = new List<Sale_Period__c>();
@@ -288,6 +321,29 @@ public without sharing class SalePeriodRelationshipService {
             input.payload = payload;
             input.relationshipKey = parentType.substring(0, 1) + '|' +
                 String.valueOf(performanceId == null ? inventoryId : performanceId) + '|' + index;
+            inputs.add(input);
+        }
+    }
+
+    private static void addMembershipItemPricePeriods(
+        List<PeriodInput> inputs,
+        Id priceId,
+        Object rawPeriods
+    ) {
+        List<Object> periods = asList(rawPeriods);
+        if (periods == null) {
+            return;
+        }
+        for (Integer index = 0; index < periods.size(); index++) {
+            Map<String, Object> payload = asMap(periods[index]);
+            if (payload == null) {
+                continue;
+            }
+            PeriodInput input = new PeriodInput();
+            input.membershipItemPriceId = priceId;
+            input.sequence = index;
+            input.payload = payload;
+            input.relationshipKey = 'MIP|' + String.valueOf(priceId) + '|' + index;
             inputs.add(input);
         }
     }

@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,7 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         return [product for product in products if isinstance(product.get(field), dict) and product[field]]
 
     events = typed("event")
+    memberships = typed("membership")
     season_tickets = typed("seasonTicket")
     season_ticket_subjects = [
         subject
@@ -54,6 +56,24 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         for period in performance.get("salePeriods") or []
         if isinstance(period, dict)
     ]
+    membership_items = [
+        item
+        for product in memberships
+        for item in product["membership"].get("items") or []
+        if isinstance(item, dict) and item.get("itemId") is not None
+    ]
+    membership_item_prices = [
+        price
+        for item in membership_items
+        for price in item.get("itemPrices") or []
+        if isinstance(price, dict)
+    ]
+    membership_sale_periods = [
+        period
+        for price in membership_item_prices
+        for period in price.get("salePeriods") or []
+        if isinstance(period, dict)
+    ]
 
     def restriction_count(periods: list[dict[str, Any]], keys: tuple[str, ...]) -> int:
         total = 0
@@ -72,7 +92,9 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
             total += len(values)
         return total
 
-    all_sale_periods = product_sale_periods + performance_sale_periods
+    all_sale_periods = (
+        product_sale_periods + performance_sale_periods + membership_sale_periods
+    )
     performance_prices = [
         price
         for product in events
@@ -111,7 +133,7 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
     )
     audience_reference_keys.update(
         str(price["audSubCatId"])
-        for price in performance_prices
+        for price in performance_prices + membership_item_prices
         if price.get("audSubCatId") is not None
     )
     charge_reference_keys = reference_keys(
@@ -150,6 +172,7 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         "missing_season_metadata": 0,
         "inventory_sale_periods": len(product_sale_periods),
         "performance_sale_periods": len(performance_sale_periods),
+        "membership_sale_periods": len(membership_sale_periods),
         "sale_period_audiences": restriction_count(
             all_sale_periods, ("audienceSubCatIds", "tariffs", "ticketTypes")
         ),
@@ -168,11 +191,14 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
         "performance_prices": len(performance_prices),
         "missing_price_seat_lookup": 0,
         "missing_price_audience_lookup": 0,
+        "membership_items": len(membership_items),
+        "membership_item_prices": len(membership_item_prices),
+        "missing_membership_price_audience_lookup": 0,
         "charge_components": len(charge_reference_keys),
         "performance_price_charges": len(performance_price_charges),
         "missing_price_charge_lookup": 0,
         "events": len(events),
-        "memberships": len(typed("membership")),
+        "memberships": len(memberships),
         "packs": len(typed("pack")),
         "season_tickets": len(season_tickets),
         "season_ticket_subjects": len(season_ticket_subjects),
@@ -190,23 +216,28 @@ def expected_counts(products: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def query_count(session: sync.SalesforceSession, soql: str) -> int:
-    completed = subprocess.run(
-        [
-            session.sf_executable,
-            "data",
-            "query",
-            "--target-org",
-            session.target_org,
-            "--query",
-            soql,
-            "--json",
-        ],
-        cwd=sync.SALESFORCE_PROJECT_DIR,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    # The full catalog scope contains enough 14-digit IDs to exceed Windows'
+    # command-line length limit. Pass SOQL through a temporary file instead.
+    with tempfile.TemporaryDirectory(prefix="tfp-soql-") as temp_dir:
+        query_path = Path(temp_dir) / "query.soql"
+        query_path.write_text(soql, encoding="utf-8")
+        completed = subprocess.run(
+            [
+                session.sf_executable,
+                "data",
+                "query",
+                "--target-org",
+                session.target_org,
+                "--file",
+                str(query_path),
+                "--json",
+            ],
+            cwd=sync.SALESFORCE_PROJECT_DIR,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
     if completed.returncode != 0:
         detail = completed.stdout.strip() or completed.stderr.strip()
         raise RuntimeError(f"Salesforce count query failed: {detail}")
@@ -239,23 +270,31 @@ def main() -> int:
             "SELECT COUNT() FROM Sale_Period__c "
             f"WHERE Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
         ),
+        "membership_sale_periods": (
+            "SELECT COUNT() FROM Sale_Period__c WHERE "
+            f"Membership_Item_Price__r.Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
         "sale_period_audiences": (
             "SELECT COUNT() FROM Sale_Period_Audience__c WHERE "
             f"Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
-            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Sale_Period__r.Membership_Item_Price__r.Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope}"
         ),
         "sale_period_seats": (
             "SELECT COUNT() FROM Sale_Period_Seat_Category__c WHERE "
             f"Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
-            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}"
+            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Sale_Period__r.Membership_Item_Price__r.Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope}"
         ),
         "missing_sale_period_parent": (
-            "SELECT COUNT() FROM Sale_Period__c WHERE Inventory__c = null AND Performance__c = null"
+            "SELECT COUNT() FROM Sale_Period__c WHERE Inventory__c = null "
+            "AND Performance__c = null AND Membership_Item_Price__c = null"
         ),
         "missing_sale_period_channel": (
             "SELECT COUNT() FROM Sale_Period__c WHERE Sales_Channel__c = null AND ("
             f"Inventory__r.Inventory_Id__c IN {scope} OR "
-            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope})"
+            f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Membership_Item_Price__r.Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope})"
         ),
         "seat_categories": (
             "SELECT Seat_Category__c FROM Performance_Seat_Category__c WHERE "
@@ -281,7 +320,8 @@ def main() -> int:
         "missing_sale_period_audience_lookup": (
             "SELECT COUNT() FROM Sale_Period_Audience__c WHERE "
             f"(Sale_Period__r.Inventory__r.Inventory_Id__c IN {scope} OR "
-            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope}) "
+            f"Sale_Period__r.Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} OR "
+            f"Sale_Period__r.Membership_Item_Price__r.Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope}) "
             "AND Audience_Sub_Category__c = null"
         ),
         "performance_prices": (
@@ -297,6 +337,19 @@ def main() -> int:
             "SELECT COUNT() FROM Performance_Price__c WHERE "
             f"Performance__r.Inventory_Event__r.Inventory__r.Inventory_Id__c IN {scope} "
             "AND Audience_Sub_Category__c = null"
+        ),
+        "membership_items": (
+            "SELECT COUNT() FROM Membership_Item__c "
+            f"WHERE Membership__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "membership_item_prices": (
+            "SELECT COUNT() FROM Membership_Item_Price__c WHERE "
+            f"Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope}"
+        ),
+        "missing_membership_price_audience_lookup": (
+            "SELECT COUNT() FROM Membership_Item_Price__c WHERE "
+            f"Membership_Item__r.Membership__r.Inventory__r.Inventory_Id__c IN {scope} "
+            "AND Audience_Subcategory_Id__c != null AND Audience_Sub_Category__c = null"
         ),
         "charge_components": (
             "SELECT Charge_Component__c FROM Performance_Price_Charge__c WHERE "
@@ -352,12 +405,12 @@ def main() -> int:
     expected = expected_counts(snapshot.products)
     actual = {name: query_count(session, query) for name, query in queries.items()}
     print(f"Snapshot {snapshot.import_id} vs {target_org} ({session.username})")
-    print("relationship       expected  actual  result")
+    print("relationship                                expected  actual  result")
     mismatches = 0
     for name in queries:
         passed = expected[name] == actual[name]
         mismatches += 0 if passed else 1
-        print(f"{name:18} {expected[name]:8} {actual[name]:7}  {'OK' if passed else 'MISMATCH'}")
+        print(f"{name:42} {expected[name]:8} {actual[name]:7}  {'OK' if passed else 'MISMATCH'}")
     if mismatches:
         print(f"Verification failed: {mismatches} relationship counts differ.", file=sys.stderr)
         return 1

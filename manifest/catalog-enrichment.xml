@@ -9,6 +9,9 @@
         <members>CrossSellProductRelationshipService</members>
         <members>CrossSellProductRelationshipServiceTest</members>
         <members>InventoryRestResource</members>
+        <members>MembershipRelationshipBackfillBatch</members>
+        <members>MembershipRelationshipService</members>
+        <members>MembershipRelationshipServiceTest</members>
         <members>SalePeriodRelationshipService</members>
         <members>SalePeriodRelationshipServiceTest</members>
         <members>SeatCategoryBackfillBatch</members>
@@ -24,6 +27,8 @@
     <types>
         <members>Catalog_Enrichment_Setting__c</members>
         <members>Cross_Sell_Product_Link__c</members>
+        <members>Membership_Item__c</members>
+        <members>Membership_Item_Price__c</members>
         <members>Sale_Period__c</members>
         <members>Sale_Period_Audience__c</members>
         <members>Sale_Period_Seat_Category__c</members>
@@ -71,6 +76,7 @@
         <members>Performance__c.Space_Name_IT__c</members>
         <members>Performance__c.Tariff_Legend__c</members>
         <members>Performance__c.Venue_Location__c</members>
+        <members>Sale_Period__c.Membership_Item_Price__c</members>
         <members>Season_Ticket_Line__c.Allow_Seat_Category_Change__c</members>
         <members>Season_Ticket_Line__c.Mandatory_Event__c</members>
         <members>Season_Ticket_Line__c.Multiple_Performances__c</members>
@@ -99,6 +105,8 @@
         <members>Cross_Sell_Product_Link__c-Cross Sell Product Link Layout</members>
         <members>Inventory__c-Inventory Layout</members>
         <members>Membership__c-Membership Layout</members>
+        <members>Membership_Item__c-Membership Item Layout</members>
+        <members>Membership_Item_Price__c-Membership Item Price Layout</members>
         <members>Pack__c-Pack Layout</members>
         <members>Performance__c-Performance Layout</members>
         <members>Sale_Period__c-Sale Period Layout</members>
