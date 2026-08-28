@@ -19,11 +19,11 @@ private class PerformancePriceRelationshipServiceTest {
             FROM Performance_Price__c LIMIT 1
         ];
         System.assertEquals(performance.Id, price.Performance__c);
-        System.assertEquals(340, price.Amount__c);
+        System.assertEquals(34, price.Amount__c);
         System.assertEquals('101', price.Seat_Category__r.Seat_Category_Id__c);
         System.assertEquals('201', price.Audience_Sub_Category__r.Audience_Subcategory_Id__c);
         System.assertEquals('INTERO + prev.', price.Audience_Sub_Category__r.Name_IT__c);
-        System.assertEquals(40, [SELECT Amount__c FROM Performance_Price_Charge__c LIMIT 1].Amount__c);
+        System.assertEquals(4, [SELECT Amount__c FROM Performance_Price_Charge__c LIMIT 1].Amount__c);
 
         performance.Prices__c = '[]';
         update performance;

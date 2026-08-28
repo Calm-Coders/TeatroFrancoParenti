@@ -1,5 +1,6 @@
 public without sharing class PerformancePriceRelationshipService {
     private static final Integer LONG_TEXT_LIMIT = 32768;
+    private static final Decimal SECUTIX_AMOUNT_SCALE = 1000;
 
     public class Stats {
         public Integer audiencesUpserted = 0;
@@ -260,7 +261,7 @@ public without sharing class PerformancePriceRelationshipService {
                 Seat_Category_Id__c = numberKey(item.seatId),
                 Institution_Seat_Category_Id__c = numberKey(item.institutionSeatId),
                 Audience_Subcategory_Id__c = numberKey(item.audienceId),
-                Amount__c = money(item.payload.get('amount'), item.rawCents),
+                Amount__c = money(item.payload.get('amount')),
                 Min_Quantity__c = firstDecimal(item.payload, new List<String>{ 'minQty', 'minQuantity' }),
                 Max_Quantity__c = firstDecimal(item.payload, new List<String>{ 'maxQty', 'maxQuantity' }),
                 Sequence__c = item.sequence,
@@ -300,7 +301,7 @@ public without sharing class PerformancePriceRelationshipService {
                     Charge_Component__c = component == null ? null : component.Id,
                     Charge_Id__c = numberKey(firstDecimal(payload, new List<String>{ 'chargesId', 'chargeId', 'id' })),
                     Component_Code__c = truncate(firstString(payload, new List<String>{ 'component', 'code' }), 80),
-                    Amount__c = money(payload.get('amount'), item.chargeAmountsAreRawCents),
+                    Amount__c = money(payload.get('amount')),
                     Sequence__c = sequence,
                     Raw_JSON__c = truncate(JSON.serialize(payload), LONG_TEXT_LIMIT)
                 ));
@@ -496,7 +497,7 @@ public without sharing class PerformancePriceRelationshipService {
     }
     private static String nullKey(String value) { return String.isBlank(value) ? 'NONE' : value; }
 
-    private static Decimal money(Object value, Boolean rawCents) {
+    private static Decimal money(Object value) {
         if (value == null) return null;
         if (value instanceof String) {
             String original = String.valueOf(value).trim();
@@ -507,11 +508,11 @@ public without sharing class PerformancePriceRelationshipService {
             try {
                 Decimal parsed = Decimal.valueOf(cleaned);
                 Boolean explicitlyFormatted = original.contains('€') || original.contains('.') || original.contains(',');
-                return rawCents && !explicitlyFormatted ? parsed / 100 : parsed;
+                return explicitlyFormatted ? parsed : parsed / SECUTIX_AMOUNT_SCALE;
             } catch (Exception ignored) { return null; }
         }
         Decimal parsed = asDecimal(value);
-        return parsed == null ? null : (rawCents ? parsed / 100 : parsed / 100);
+        return parsed == null ? null : parsed / SECUTIX_AMOUNT_SCALE;
     }
 
     private static String translatedValue(Object rawValue, String locale) {
