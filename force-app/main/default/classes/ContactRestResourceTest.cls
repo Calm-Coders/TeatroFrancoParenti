@@ -72,7 +72,7 @@ private class ContactRestResourceTest {
             System.assert(createdAccount.Individual_Contact__c.contains('"individualFirstname":"Mario"'));
             System.assert(createdAccount.Structure_Contact__c.contains('"companyName":"Teatro Demo SRL"'));
             System.assert(createdAccount.Addresses__c.contains('"town":"Milano"'));
-            System.assert(createdAccount.Contact_Origin_Translations__c.contains('"it":"Biglietteria"'));
+            System.assertEquals('Biglietteria', createdAccount.Contact_Origin_Translations__c);
             System.assertEquals('IC-1001', createdAccount.Individual_Contact_Number__c);
             System.assertEquals('mario.rossi@example.com', createdAccount.Individual_Login__c);
             System.assertEquals('it', createdAccount.Individual_Preferred_Language__c);

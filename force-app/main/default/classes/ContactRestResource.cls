@@ -407,7 +407,10 @@ global without sharing class ContactRestResource {
         setSObjectField(
             accountRecord,
             'Contact_Origin_Translations__c',
-            serializeRawValue(payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.translations, MAX_SECUTIX_LONG_TEXT_LENGTH)
+            SecuTixTranslationParser.italianOrEnglish(
+                payload == null || payload.contactOrigin == null ? null : payload.contactOrigin.translations,
+                MAX_SECUTIX_LONG_TEXT_LENGTH
+            )
         );
         setSObjectField(accountRecord, 'State__c', truncateValue(payload == null ? null : payload.state, 40));
         setSObjectField(

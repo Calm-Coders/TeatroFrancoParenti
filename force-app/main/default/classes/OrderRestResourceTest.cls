@@ -123,7 +123,8 @@ private class OrderRestResourceTest {
         System.assertEquals(1, ((List<Object>) resp.get('contactReferences')).size());
 
         Order insertedOrder = [
-            SELECT Id, AccountId, BillToContactId, ShipToContactId, EffectiveDate, Description
+            SELECT Id, AccountId, BillToContactId, ShipToContactId, EffectiveDate, Description,
+                   Sales_Channel_Name__c, Organization_Name__c
             FROM Order
             ORDER BY CreatedDate DESC
             LIMIT 1
@@ -133,6 +134,8 @@ private class OrderRestResourceTest {
         System.assertEquals(null, insertedOrder.ShipToContactId);
         System.assertEquals(Date.newInstance(2026, 5, 20), insertedOrder.EffectiveDate);
         System.assertEquals(null, insertedOrder.Description);
+        System.assertEquals('Biglietteria - Test', insertedOrder.Sales_Channel_Name__c);
+        System.assertEquals('Teatro Franco Parenti - TEST', insertedOrder.Organization_Name__c);
         System.assertEquals(2, countRows('Order_Operation_Data__c', 'Order__c = \'' + insertedOrder.Id + '\''));
         System.assertEquals(2, countRows('Order_Movement_Data__c', 'Order__c = \'' + insertedOrder.Id + '\''));
 

@@ -432,10 +432,26 @@ global without sharing class InventoryRestResource {
         setCustomField(recordItem, 'Questionnaire_Id__c', asString(inventoryWrapper.questionnaireId));
         setCustomField(recordItem, 'Sale_Periods__c', serializeRawValue(inventoryWrapper.salePeriods, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Sale_Close_Exceptions__c', serializeRawValue(inventoryWrapper.saleCloseExceptions, MAX_LONG_TEXT_LENGTH));
-        setCustomField(recordItem, 'External_Name__c', serializeRawValue(inventoryWrapper.externalName, MAX_LONG_TEXT_LENGTH));
-        setCustomField(recordItem, 'Internal_Name__c', serializeRawValue(inventoryWrapper.internalName, MAX_LONG_TEXT_LENGTH));
-        setCustomField(recordItem, 'Short_Name__c', serializeRawValue(inventoryWrapper.shortName, MAX_LONG_TEXT_LENGTH));
-        setCustomField(recordItem, 'External_Description__c', serializeRawValue(inventoryWrapper.externalDescription, MAX_LONG_TEXT_LENGTH));
+        setCustomField(
+            recordItem,
+            'External_Name__c',
+            extractItalianOrEnglishTranslatedValue(inventoryWrapper.externalName)
+        );
+        setCustomField(
+            recordItem,
+            'Internal_Name__c',
+            extractItalianOrEnglishTranslatedValue(inventoryWrapper.internalName)
+        );
+        setCustomField(
+            recordItem,
+            'Short_Name__c',
+            extractItalianOrEnglishTranslatedValue(inventoryWrapper.shortName)
+        );
+        setCustomField(
+            recordItem,
+            'External_Description__c',
+            extractItalianOrEnglishTranslatedValue(inventoryWrapper.externalDescription)
+        );
         setCustomField(recordItem, 'Option_Availabilities__c', serializeRawValue(inventoryWrapper.optionAvailabilities, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Cross_Sell_Product_Links__c', serializeRawValue(inventoryWrapper.crossSellProductLinks, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Sub_Topic_Links__c', serializeRawValue(inventoryWrapper.subTopicLinks, MAX_LONG_TEXT_LENGTH));
@@ -556,7 +572,11 @@ global without sharing class InventoryRestResource {
         setCustomField(performanceRecord, 'Space_Code__c', asString(performancePayload.get('spaceCode')));
         setCustomField(performanceRecord, 'Site_Code__c', asString(performancePayload.get('siteCode')));
         setCustomField(performanceRecord, 'Kind__c', asString(performancePayload.get('kind')));
-        setCustomField(performanceRecord, 'Kind_External_Name__c', asString(performancePayload.get('kindExternalName')));
+        setCustomField(
+            performanceRecord,
+            'Kind_External_Name__c',
+            SecuTixTranslationParser.italianOrEnglish(performancePayload.get('kindExternalName'), 255)
+        );
         setCustomField(performanceRecord, 'Seat_Selection_Mode__c', asString(performancePayload.get('seatSelectionMode')));
         setCustomField(performanceRecord, 'Breaks_Quantity__c', asDecimal(performancePayload.get('breaksQuantity')));
         setCustomField(performanceRecord, 'State__c', asString(performancePayload.get('state')));
@@ -569,17 +589,53 @@ global without sharing class InventoryRestResource {
         setCustomField(performanceRecord, 'Block_Comparison_Enabled__c', asBoolean(performancePayload.get('blockComparisonEnabled')));
         setCustomField(performanceRecord, 'Numbered__c', asBoolean(performancePayload.get('numbered')));
         setCustomField(performanceRecord, 'Always_Allow_Isolated_Seats__c', asBoolean(performancePayload.get('alwaysAllowIsolatedSeats')));
-        setCustomField(performanceRecord, 'External_Name__c', serializeRawValue(performancePayload.get('externalName'), MAX_LONG_TEXT_LENGTH));
-        setCustomField(performanceRecord, 'Internal_Name__c', serializeRawValue(performancePayload.get('internalName'), MAX_LONG_TEXT_LENGTH));
-        setCustomField(performanceRecord, 'External_Short_Name__c', serializeRawValue(performancePayload.get('externalShortName'), MAX_LONG_TEXT_LENGTH));
-        setCustomField(performanceRecord, 'Name_Add_On__c', serializeRawValue(performancePayload.get('nameAddOn'), MAX_LONG_TEXT_LENGTH));
-        setCustomField(performanceRecord, 'Space_External_Name__c', asString(performancePayload.get('spaceExternalName')));
-        setCustomField(performanceRecord, 'Site_External_Name__c', asString(performancePayload.get('siteExternalName')));
+        setCustomField(
+            performanceRecord,
+            'External_Name__c',
+            extractItalianOrEnglishTranslatedValue(performancePayload.get('externalName'))
+        );
+        setCustomField(
+            performanceRecord,
+            'Internal_Name__c',
+            extractItalianOrEnglishTranslatedValue(performancePayload.get('internalName'))
+        );
+        setCustomField(
+            performanceRecord,
+            'External_Short_Name__c',
+            extractItalianOrEnglishTranslatedValue(performancePayload.get('externalShortName'))
+        );
+        setCustomField(
+            performanceRecord,
+            'Name_Add_On__c',
+            extractItalianOrEnglishTranslatedValue(performancePayload.get('nameAddOn'))
+        );
+        setCustomField(
+            performanceRecord,
+            'Space_External_Name__c',
+            SecuTixTranslationParser.italianOrEnglish(performancePayload.get('spaceExternalName'), 255)
+        );
+        setCustomField(
+            performanceRecord,
+            'Site_External_Name__c',
+            SecuTixTranslationParser.italianOrEnglish(performancePayload.get('siteExternalName'), 255)
+        );
         setCustomField(performanceRecord, 'Location__c', serializeRawValue(performancePayload.get('location'), MAX_LONG_TEXT_LENGTH));
         setCustomField(performanceRecord, 'Match__c', serializeRawValue(performancePayload.get('match'), MAX_LONG_TEXT_LENGTH));
-        setCustomField(performanceRecord, 'Event_External_Name__c', asString(performancePayload.get('eventExternalName')));
-        setCustomField(performanceRecord, 'External_Description__c', serializeRawValue(performancePayload.get('externalDescription'), MAX_LONG_TEXT_LENGTH));
-        setCustomField(performanceRecord, 'Internal_Description__c', serializeRawValue(performancePayload.get('internalDescription'), MAX_LONG_TEXT_LENGTH));
+        setCustomField(
+            performanceRecord,
+            'Event_External_Name__c',
+            SecuTixTranslationParser.italianOrEnglish(performancePayload.get('eventExternalName'), 255)
+        );
+        setCustomField(
+            performanceRecord,
+            'External_Description__c',
+            extractItalianOrEnglishTranslatedValue(performancePayload.get('externalDescription'))
+        );
+        setCustomField(
+            performanceRecord,
+            'Internal_Description__c',
+            extractItalianOrEnglishTranslatedValue(performancePayload.get('internalDescription'))
+        );
         setCustomField(performanceRecord, 'Sale_Close_Exceptions__c', serializeRawValue(performancePayload.get('saleCloseExceptions'), MAX_LONG_TEXT_LENGTH));
         setCustomField(performanceRecord, 'Seat_Categories__c', serializeRawValue(performancePayload.get('seatCategories'), MAX_LONG_TEXT_LENGTH));
         setCustomField(performanceRecord, 'Prices__c', serializeRawValue(performancePayload.get('prices'), MAX_LONG_TEXT_LENGTH));
@@ -757,6 +813,10 @@ global without sharing class InventoryRestResource {
         }
 
         return null;
+    }
+
+    private static String extractItalianOrEnglishTranslatedValue(Object rawValue) {
+        return SecuTixTranslationParser.italianOrEnglish(rawValue, MAX_LONG_TEXT_LENGTH);
     }
 
     private static void setCustomField(SObject recordItem, String fieldApiName, Object value) {
@@ -1133,8 +1193,16 @@ global without sharing class InventoryRestResource {
             setCustomField(eventRecord, 'Time_Tolerance__c', asDecimal(eventPayload.get('timeTolerance')));
             setCustomField(eventRecord, 'Minimum_Age__c', asDecimal(eventPayload.get('minimumAge')));
             setCustomField(eventRecord, 'Language__c', asString(eventPayload.get('language')));
-            setCustomField(eventRecord, 'Name_Add_On__c', serializeRawValue(eventPayload.get('nameAddOn'), MAX_LONG_TEXT_LENGTH));
-            setCustomField(eventRecord, 'Activity_External_Name__c', serializeRawValue(eventPayload.get('activityExternalName'), MAX_LONG_TEXT_LENGTH));
+            setCustomField(
+                eventRecord,
+                'Name_Add_On__c',
+                extractItalianOrEnglishTranslatedValue(eventPayload.get('nameAddOn'))
+            );
+            setCustomField(
+                eventRecord,
+                'Activity_External_Name__c',
+                extractItalianOrEnglishTranslatedValue(eventPayload.get('activityExternalName'))
+            );
             setCustomField(eventRecord, 'Competition_Type_Id__c', asString(eventPayload.get('competitionTypeId')));
             setCustomField(eventRecord, 'Alert_Ratio__c', asDecimal(eventPayload.get('alertRatio')));
             setCustomField(eventRecord, 'Performances__c', serializeRawValue(eventPayload.get('performances'), MAX_LONG_TEXT_LENGTH));

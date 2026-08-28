@@ -473,12 +473,26 @@ global without sharing class OrderRestResource {
         setCustomField(orderRecord, 'Option_Amount__c', scaleStoredAmount(details.optionAmount));
         setCustomField(orderRecord, 'Waiting_Account_Balance_Amount__c', scaleStoredAmount(details.waitingAccountBalanceAmount));
         setCustomField(orderRecord, 'Movement_Ticket_Datas__c', serializeRawValue(rawDetails.get('movementTicketDatas'), MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Sales_Channel_Name__c', serializeRawValue(rawDetails.get('salesChannelName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(
+            orderRecord,
+            'Sales_Channel_Name__c',
+            SecuTixTranslationParser.italianOrEnglish(
+                rawDetails.get('salesChannelName'),
+                MAX_SECUTIX_LONG_TEXT_LENGTH
+            )
+        );
         setCustomField(orderRecord, 'Generated_Contiguities__c', serializeRawValue(rawDetails.get('generatedContiguities'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Order_Origin_Data__c', serializeRawValue(rawDetails.get('orderOriginData'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Order_Installments__c', serializeRawValue(rawDetails.get('orderInstallmentsToCreate'), MAX_SECUTIX_LONG_TEXT_LENGTH));
         setCustomField(orderRecord, 'Catalog_Currency__c', serializeRawValue(rawDetails.get('catalogCurrency'), MAX_SECUTIX_LONG_TEXT_LENGTH));
-        setCustomField(orderRecord, 'Organization_Name__c', serializeRawValue(rawDetails.get('organizationName'), MAX_SECUTIX_LONG_TEXT_LENGTH));
+        setCustomField(
+            orderRecord,
+            'Organization_Name__c',
+            SecuTixTranslationParser.italianOrEnglish(
+                rawDetails.get('organizationName'),
+                MAX_SECUTIX_LONG_TEXT_LENGTH
+            )
+        );
         setCustomField(orderRecord, 'User_Inserted__c', truncateValue(details.userInserted, 80));
         setCustomField(orderRecord, 'User_Updated__c', truncateValue(details.userUpdated, 80));
         setCustomField(orderRecord, 'Pos_Num__c', truncateValue(details.posNum, 40));
