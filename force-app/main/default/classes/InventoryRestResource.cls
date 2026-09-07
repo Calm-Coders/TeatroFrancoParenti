@@ -450,7 +450,10 @@ global without sharing class InventoryRestResource {
         setCustomField(
             recordItem,
             'External_Description__c',
-            extractItalianOrEnglishTranslatedValue(inventoryWrapper.externalDescription)
+            SecuTixTranslationParser.plainText(
+                SecuTixTranslationParser.italianOrEnglish(inventoryWrapper.externalDescription, null),
+                MAX_LONG_TEXT_LENGTH
+            )
         );
         setCustomField(recordItem, 'Option_Availabilities__c', serializeRawValue(inventoryWrapper.optionAvailabilities, MAX_LONG_TEXT_LENGTH));
         setCustomField(recordItem, 'Cross_Sell_Product_Links__c', serializeRawValue(inventoryWrapper.crossSellProductLinks, MAX_LONG_TEXT_LENGTH));

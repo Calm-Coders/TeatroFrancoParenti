@@ -127,11 +127,11 @@ private class InventoryRestResourceTest {
             '"translations":[{"locale":"it","value":"EXTERNAL IT"},{"locale":"en","value":"EXTERNAL EN"}]',
             '"translations":[{"locale":"it","value":"INTERNAL IT"},{"locale":"en","value":"INTERNAL EN"}]',
             '"translations":[{"locale":"it","value":"SHORT IT"},{"locale":"en","value":"SHORT EN"}]',
-            '"translations":[{"locale":"it","value":"DESCRIPTION IT"},{"locale":"en","value":"DESCRIPTION EN"}]',
+            '"translations":[{"locale":"it","value":"<p>DESCRIPTION&nbsp;IT</p><p>SECOND LINE</p>"},{"locale":"en","value":"DESCRIPTION EN"}]',
             'EXTERNAL IT',
             'INTERNAL IT',
             'SHORT IT',
-            'DESCRIPTION IT'
+            'DESCRIPTION IT\nSECOND LINE'
         );
     }
 

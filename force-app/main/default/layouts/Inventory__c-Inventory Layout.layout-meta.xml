@@ -113,10 +113,6 @@
                     <behavior>Edit</behavior>
                     <field>Partner_Contact_Id__c</field>
                 </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Cultural_Contact__c</field>
-                </layoutItems>
         </layoutColumns>
         <layoutColumns>
                 <layoutItems>
@@ -214,102 +210,11 @@
                 <layoutItems><behavior>Edit</behavior><field>Season_Start__c</field></layoutItems>
                 <layoutItems><behavior>Edit</behavior><field>Season_End__c</field></layoutItems>
                 <layoutItems><behavior>Edit</behavior><field>Ticket_Model_Name__c</field></layoutItems>
-                <layoutItems><behavior>Edit</behavior><field>Ticket_Types__c</field></layoutItems>
-                <layoutItems><behavior>Edit</behavior><field>Product_Advantages__c</field></layoutItems>
                 <layoutItems><behavior>Edit</behavior><field>Catalog_Description_IT__c</field></layoutItems>
                 <layoutItems><behavior>Edit</behavior><field>Catalog_Description_EN__c</field></layoutItems>
                 <layoutItems><behavior>Readonly</behavior><field>Enrichment_Error__c</field></layoutItems>
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
-    </layoutSections>
-    <layoutSections>
-        <customLabel>true</customLabel>
-        <detailHeading>true</detailHeading>
-        <editHeading>true</editHeading>
-        <label>Raw Payloads (JSON)</label>
-        <layoutColumns>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Contact_Product_Links__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Sale_Periods__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Sale_Close_Exceptions__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Event__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Pack__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Membership__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Service__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Goods__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Transport__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Pass__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Hospitality__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Option_Availabilities__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Cross_Sell_Product_Links__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Sub_Topic_Links__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Sub_Topics__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Product_Social_Network_Links__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Comfort_Variable_Values__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Media__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Redemption_Period__c</field>
-                </layoutItems>
-                <layoutItems>
-                    <behavior>Edit</behavior>
-                    <field>Redemption_Products__c</field>
-                </layoutItems>
-        </layoutColumns>
-        <style>OneColumn</style>
     </layoutSections>
     <layoutSections>
         <customLabel>true</customLabel>
@@ -331,7 +236,6 @@
                 </layoutItems>
         </layoutColumns>
         <layoutColumns>
-
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>

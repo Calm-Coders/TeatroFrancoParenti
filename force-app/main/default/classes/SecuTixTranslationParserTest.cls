@@ -22,4 +22,19 @@ private class SecuTixTranslationParserTest {
         System.assertEquals(null, SecuTixTranslationParser.italianOrEnglish(emptyTranslations, 255));
         System.assertEquals('12345', SecuTixTranslationParser.italianOrEnglish('123456789', 5));
     }
+
+    @IsTest
+    static void convertsHtmlToReadablePlainText() {
+        String html = '<script>alert("ignored")</script>' +
+            '<p>Prima&nbsp;<strong>riga</strong></p>' +
+            '<ul><li>Voce &amp; dettagli</li><li>Seconda voce</li></ul>' +
+            '<div>Finale<br/>Riga</div>';
+
+        System.assertEquals(
+            'Prima riga\n- Voce & dettagli\n- Seconda voce\nFinale\nRiga',
+            SecuTixTranslationParser.plainText(html, 32768)
+        );
+        System.assertEquals('12345', SecuTixTranslationParser.plainText('<b>123456</b>', 5));
+        System.assertEquals(null, SecuTixTranslationParser.plainText('<p>&nbsp;</p>', 255));
+    }
 }

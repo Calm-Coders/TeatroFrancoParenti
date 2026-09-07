@@ -27,6 +27,7 @@ private class CatalogEnrichmentTest {
             SELECT Catalog_Name_IT__c, Catalog_Name_EN__c, Season_Id__c, Season_Code__c,
                    Season_Name__c, Season_Start__c, Season_End__c, Product_Type_Id__c,
                    Product_Type_Name__c, Ticket_Types__c, Product_Advantages__c,
+                   Catalog_Description_IT__c, Catalog_Description_EN__c,
                    Enrichment_Status__c, Enriched_On__c, Enrichment_Error__c
             FROM Inventory__c
             WHERE Id = :data.inventoryId
@@ -38,6 +39,8 @@ private class CatalogEnrichmentTest {
         System.assertEquals(Date.newInstance(2025, 6, 1), inventory.Season_Start__c);
         System.assertEquals('10228687303720', inventory.Product_Type_Id__c);
         System.assertEquals('ABBONAMENTI E CARD', inventory.Product_Type_Name__c);
+        System.assertEquals('Descrizione', inventory.Catalog_Description_IT__c);
+        System.assertEquals('Description', inventory.Catalog_Description_EN__c);
         System.assert(inventory.Ticket_Types__c.contains('INTERO'));
         System.assert(inventory.Product_Advantages__c.contains('RID50'));
         System.assertEquals('Success', inventory.Enrichment_Status__c);

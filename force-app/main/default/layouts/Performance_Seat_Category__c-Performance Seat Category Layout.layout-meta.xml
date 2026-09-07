@@ -9,7 +9,6 @@
         <layoutColumns>
             <layoutItems><behavior>Required</behavior><field>Seat_Category__c</field></layoutItems>
             <layoutItems><behavior>Edit</behavior><field>Sequence__c</field></layoutItems>
-            <layoutItems><behavior>Readonly</behavior><field>Raw_JSON__c</field></layoutItems>
         </layoutColumns><style>TwoColumnsTopToBottom</style>
     </layoutSections>
     <showEmailCheckbox>false</showEmailCheckbox><showHighlightsPanel>true</showHighlightsPanel><showInteractionLogPanel>false</showInteractionLogPanel><showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox><showSubmitAndAttachButton>false</showSubmitAndAttachButton>

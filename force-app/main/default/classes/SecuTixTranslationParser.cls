@@ -15,6 +15,39 @@ public class SecuTixTranslationParser {
             : value;
     }
 
+    public static String plainText(String htmlValue, Integer maxLength) {
+        if (String.isBlank(htmlValue)) {
+            return null;
+        }
+
+        String lineBreakMarker = '___SECUTIX_LINE_BREAK___';
+        String value = htmlValue
+            .replaceAll('(?is)<script\\b[^>]*>.*?</script>', '')
+            .replaceAll('(?is)<style\\b[^>]*>.*?</style>', '')
+            .unescapeHtml4()
+            .replaceAll('(?i)<\\s*br\\s*/?\\s*>', lineBreakMarker)
+            .replaceAll('(?i)<\\s*li(?:\\s[^>]*)?>', '- ')
+            .replaceAll(
+                '(?i)</\\s*(p|div|li|h[1-6]|tr|blockquote)\\s*>',
+                lineBreakMarker
+            )
+            .stripHtmlTags()
+            .unescapeHtml4()
+            .stripHtmlTags()
+            .replace(lineBreakMarker, '\n')
+            .replaceAll('[\\u00A0\\t ]+', ' ')
+            .replaceAll(' *\\n *', '\n')
+            .replaceAll('\\n{3,}', '\n\n')
+            .trim();
+
+        if (String.isBlank(value)) {
+            return null;
+        }
+        return maxLength != null && maxLength > 0 && value.length() > maxLength
+            ? value.substring(0, maxLength)
+            : value;
+    }
+
     private static String translatedValue(Object rawValue, String locale) {
         if (rawValue == null || String.isBlank(locale)) {
             return null;

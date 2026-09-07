@@ -18,10 +18,6 @@
             <layoutItems><behavior>Edit</behavior><field>Same_Block_Restriction_Mode__c</field></layoutItems>
         </layoutColumns><style>TwoColumnsTopToBottom</style>
     </layoutSections>
-    <layoutSections><customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading><label>Source</label>
-        <layoutColumns><layoutItems><behavior>Edit</behavior><field>Pre_Request_Logical_Seat_Category_Ids__c</field></layoutItems></layoutColumns>
-        <layoutColumns><layoutItems><behavior>Readonly</behavior><field>Raw_JSON__c</field></layoutItems></layoutColumns><style>TwoColumnsTopToBottom</style>
-    </layoutSections>
     <relatedLists><fields>NAME</fields><fields>Performance__c</fields><fields>Sequence__c</fields><relatedList>Performance_Seat_Category__c.Seat_Category__c</relatedList></relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox><showHighlightsPanel>true</showHighlightsPanel><showInteractionLogPanel>false</showInteractionLogPanel><showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox><showSubmitAndAttachButton>false</showSubmitAndAttachButton>
 </Layout>

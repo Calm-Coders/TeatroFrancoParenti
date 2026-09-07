@@ -26,7 +26,6 @@
             <layoutItems><behavior>Edit</behavior><field>Allow_Seat_Category_Change__c</field></layoutItems>
         </layoutColumns>
         <layoutColumns>
-
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
@@ -35,10 +34,8 @@
         <label>Source Payload</label>
         <layoutColumns>
             <layoutItems><behavior>Edit</behavior><field>Relationship_Key__c</field></layoutItems>
-            <layoutItems><behavior>Edit</behavior><field>Raw_JSON__c</field></layoutItems>
         </layoutColumns>
         <layoutColumns>
-
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
@@ -53,7 +50,6 @@
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
-
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>true</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>

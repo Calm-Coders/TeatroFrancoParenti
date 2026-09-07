@@ -144,8 +144,14 @@ public without sharing class CatalogEnrichmentService {
             updateRecord.Waiting_List_Allowed__c = asBoolean(product.get('waitingListAllowed')) == true;
             updateRecord.Catalog_Name_IT__c = truncate(firstValue(product, new List<String>{ 'name_it', 'name' }), 255);
             updateRecord.Catalog_Name_EN__c = truncate(firstValue(product, new List<String>{ 'name_en', 'name' }), 255);
-            updateRecord.Catalog_Description_IT__c = truncate(asString(product.get('description_it')), LONG_TEXT_LIMIT);
-            updateRecord.Catalog_Description_EN__c = truncate(asString(product.get('description_en')), LONG_TEXT_LIMIT);
+            updateRecord.Catalog_Description_IT__c = SecuTixTranslationParser.plainText(
+                asString(product.get('description_it')),
+                LONG_TEXT_LIMIT
+            );
+            updateRecord.Catalog_Description_EN__c = SecuTixTranslationParser.plainText(
+                asString(product.get('description_en')),
+                LONG_TEXT_LIMIT
+            );
 
             Map<String, Object> season = asMap(product.get('season'));
             if (season != null) {

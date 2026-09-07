@@ -38,10 +38,5 @@
         <layoutColumns><layoutItems><behavior>Edit</behavior><field>Message_EN__c</field></layoutItems></layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
-    <layoutSections>
-        <customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading><label>Payload</label>
-        <layoutColumns><layoutItems><behavior>Readonly</behavior><field>Raw_JSON__c</field></layoutItems></layoutColumns>
-        <layoutColumns></layoutColumns><style>TwoColumnsTopToBottom</style>
-    </layoutSections>
     <showEmailCheckbox>false</showEmailCheckbox><showHighlightsPanel>true</showHighlightsPanel><showInteractionLogPanel>false</showInteractionLogPanel><showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox><showSubmitAndAttachButton>false</showSubmitAndAttachButton>
 </Layout>

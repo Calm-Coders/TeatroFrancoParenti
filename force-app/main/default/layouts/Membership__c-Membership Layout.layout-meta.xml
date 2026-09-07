@@ -23,19 +23,6 @@
         <customLabel>true</customLabel>
         <detailHeading>true</detailHeading>
         <editHeading>true</editHeading>
-        <label>Membership Items (JSON)</label>
-        <layoutColumns>
-            <layoutItems><behavior>Edit</behavior><field>Items__c</field></layoutItems>
-        </layoutColumns>
-        <layoutColumns>
-
-        </layoutColumns>
-        <style>TwoColumnsTopToBottom</style>
-    </layoutSections>
-    <layoutSections>
-        <customLabel>true</customLabel>
-        <detailHeading>true</detailHeading>
-        <editHeading>true</editHeading>
         <label>System</label>
         <layoutColumns>
             <layoutItems><behavior>Edit</behavior><field>OwnerId</field></layoutItems>
@@ -46,7 +33,6 @@
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
-
     <relatedLists>
         <fields>NAME</fields>
         <fields>Item_Id__c</fields>
@@ -55,7 +41,6 @@
         <fields>Sequence__c</fields>
         <relatedList>Membership_Item__c.Membership__c</relatedList>
     </relatedLists>
-
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>true</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>
