@@ -239,6 +239,11 @@
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel><detailHeading>true</detailHeading><editHeading>true</editHeading><label>Product Advantages</label>
+        <layoutColumns><layoutItems><behavior>Readonly</behavior><field>Product_Advantages__c</field></layoutItems></layoutColumns>
+        <style>OneColumn</style>
+    </layoutSections>
     <relatedLists>
         <fields>NAME</fields>
         <fields>Activity_Code__c</fields>
@@ -279,5 +284,9 @@
         <fields>NAME</fields><fields>Source_Inventory__c</fields><fields>Link_Type__c</fields>
         <fields>Start__c</fields><fields>End__c</fields>
         <relatedList>Cross_Sell_Product_Link__c.Target_Inventory__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields><fields>Catalog_Advantage__c</fields><fields>Season_Id__c</fields><fields>Product_Id__c</fields>
+        <relatedList>Catalog_Advantage_Product__c.Inventory__c</relatedList>
     </relatedLists>
 </Layout>

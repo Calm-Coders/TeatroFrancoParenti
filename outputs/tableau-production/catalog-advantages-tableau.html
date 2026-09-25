@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agevolazioni di catalogo · Salesforce → Tableau</title>
+<style>
+:root{font-family:system-ui,"Segoe UI",sans-serif;color:#1c2d37;background:#f5f8fa}*{box-sizing:border-box}body{max-width:1100px;margin:auto;padding:32px 22px 70px;line-height:1.55}h1{font-size:clamp(2rem,4vw,3.2rem);line-height:1.1;margin-bottom:8px}h2{margin-top:36px}a{color:#08746f}p{max-width:950px}.muted{color:#52636e}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0}.card{background:#fff;border:1px solid #d9e3e8;border-radius:16px;padding:20px;box-shadow:0 8px 24px #2138490a}.card b{font-size:2rem;display:block;color:#076b68}.flow{display:flex;align-items:stretch;gap:12px;margin:24px 0}.node{flex:1;background:#fff;border:2px solid #d2e2e5;border-radius:14px;padding:18px}.node strong,.node code{display:block}.node small{color:#52636e}.arrow{align-self:center;font-size:1.8rem;color:#08746f}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;overflow:hidden}th,td{text-align:left;vertical-align:top;padding:14px;border-bottom:1px solid #e1e8ec}th{background:#e7f1f1}code{font-size:.9em;overflow-wrap:anywhere}.note{padding:18px;border-left:4px solid #08746f;background:#e8f3f2;border-radius:8px}nav{display:flex;gap:18px;flex-wrap:wrap}@media(max-width:700px){.cards{grid-template-columns:1fr}.flow{flex-direction:column}.arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<nav><a href="tableau-production-relationships.html">← Atlante Tableau completo</a><a href="catalog-advantages-tableau.md">Versione Markdown</a></nav>
+<h1>Agevolazioni di catalogo</h1>
+<p class="muted">Salesforce produzione → Tableau · Aggiornato il 25 settembre 2026 · Distribuzione 0AfSX000000q44L0AQ · 87 test Salesforce completati</p>
+<div class="cards"><div class="card"><b>45</b>definizioni di agevolazione</div><div class="card"><b>207</b>relazioni con prodotti</div><div class="card"><b>207/207</b>lookup Inventory della stessa stagione</div></div>
+<h2>Modello relazionale</h2>
+<div class="flow"><div class="node"><strong>Catalog_Advantage__c</strong><small>Grana: stagione × agevolazione</small><code>Advantage_Key__c</code></div><span class="arrow" aria-label="uno a molti">→</span><div class="node"><strong>Catalog_Advantage_Product__c</strong><small>Grana: stagione × agevolazione × prodotto</small><code>Relationship_Key__c</code></div><span class="arrow" aria-label="molti a uno">→</span><div class="node"><strong>Inventory__c</strong><small>Prodotto corrente nella stessa stagione</small><code>Inventory_Id__c</code></div></div>
+<p>In Tableau crea due relazioni logiche: <code>Catalog_Advantage__c.Id = Catalog_Advantage_Product__c.Catalog_Advantage__c</code> e <code>Catalog_Advantage_Product__c.Inventory__c = Inventory__c.Id</code>. Mantieni la tabella ponte come oggetto distinto per non moltiplicare le righe dei prodotti.</p>
+<h2>Campi disponibili</h2>
+<div class="scroll"><table><thead><tr><th>Oggetto</th><th>Campi per analisi</th><th>Significato</th></tr></thead><tbody>
+<tr><td><code>Catalog_Advantage__c</code></td><td><code>Advantage_Id__c</code>, <code>Season_Id__c</code>, <code>Code__c</code>, <code>State__c</code>, <code>Advantage_Type__c</code>, <code>Target_Type__c</code>, <code>Access_Code__c</code>, <code>Name_IT__c</code>, <code>Name_EN__c</code>, descrizioni, data di inizio, limiti quantità e flag di idoneità</td><td>Definizione dettagliata dal GET Catalog completo. Il JSON sorgente senza la lista prodotti è in <code>Raw_JSON__c</code>.</td></tr>
+<tr><td><code>Catalog_Advantage_Product__c</code></td><td><code>Catalog_Advantage__c</code>, <code>Inventory__c</code>, <code>Product_Id__c</code>, <code>Product_Code__c</code>, <code>Season_Id__c</code>, <code>Sequence__c</code></td><td>Associazione tra agevolazione e prodotto.</td></tr>
+<tr><td><code>Inventory__c</code></td><td><code>Inventory_Id__c</code>, <code>Season_Id__c</code>, <code>Product_Advantages__c</code></td><td>Prodotto del catalogo; il precedente JSON condensato resta visibile nel layout.</td></tr>
+</tbody></table></div>
+<h2>Origine e interpretazione</h2>
+<p>Le definizioni provengono da <code>order.catalogData.seasons[].advantages[]</code> del GET Catalog SecuTix. Le chiavi univoche includono la stagione: <code>Season_Id|Advantage_Id</code> per la definizione e <code>Season_Id|Advantage_Id|Product_Id</code> per il legame. Lo script collega <code>Inventory__c</code> solo se coincidono ID prodotto e stagione.</p>
+<p class="note"><code>Account.Advantages__c</code> e <code>Account.Has_Advantages__c</code> arrivano invece dal webhook del contatto e descrivono l’idoneità del cliente. Questi oggetti non dimostrano quale sconto sia stato applicato in un ordine.</p>
+<p>Il precedente <a href="product-advantages.csv">export CSV</a> del JSON condensato rappresenta una fotografia diversa: 141 occorrenze e 39 ID distinti al momento dell’estrazione. Per nuovi report usa i due oggetti relazionali; mantieni il CSV per confronto storico.</p>
+<p class="muted">Copertura del payload attuale: 45 nomi italiani, nessun nome inglese o descrizione, 30 codici di accesso e 9 date di inizio. I campi vuoti riflettono il sorgente SecuTix.</p>
+<p>Il caricamento è ripetibile con lo <a href="../../scripts/catalog/sync_advantages_to_salesforce.py">script di sincronizzazione</a>. Aggiorna le chiavi presenti nello snapshot completo, senza cancellare automaticamente dati storici. Va rieseguito quando il catalogo cambia.</p>
+</body></html>

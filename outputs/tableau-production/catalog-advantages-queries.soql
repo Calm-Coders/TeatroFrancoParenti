@@ -1,0 +1,20 @@
+-- Detailed catalog advantages and their linked products.
+-- Verified in TFA Prod on 2026-09-25.
+SELECT Id, Name, Advantage_Id__c, Season_Id__c, Code__c,
+       State__c, Advantage_Type__c, Target_Type__c,
+       Name_IT__c, Name_EN__c, Access_Code__c,
+       Mandatory_Contact__c, Exclusive__c,
+       Max_Order_Quantity__c, Max_Quantity_Per_Performance__c,
+       (SELECT Id, Product_Id__c, Product_Code__c,
+               Inventory__c, Inventory__r.Name
+        FROM CatalogAdvantageProducts__r)
+FROM Catalog_Advantage__c
+ORDER BY Season_Id__c, Code__c
+
+-- One flat row per advantage/product relationship (use separately).
+SELECT Id, Relationship_Key__c, Season_Id__c,
+       Catalog_Advantage__c, Catalog_Advantage__r.Code__c,
+       Catalog_Advantage__r.Name_IT__c,
+       Product_Id__c, Product_Code__c,
+       Inventory__c, Inventory__r.Name
+FROM Catalog_Advantage_Product__c

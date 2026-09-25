@@ -209,6 +209,31 @@
     <fieldPermissions><editable>false</editable><field>Package_Line__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>TFP Catalog Enrichment</label>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Access_Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Advantage_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Allow_Purchase_Cultural_Contact__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Auto_Promote__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Contact_Limitation__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Description_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Description_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Exclusive__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Free_Shipment_Mode_Ids__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Mandatory_Contact__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Max_Order_Quantity__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Max_Quantity_Per_Performance__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Name_EN__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Name_IT__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Performance_End_Date_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Quota_Per_Timeslot__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Raw_JSON__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Single_Seat_Category_Per_Performance__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Start__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.State__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage__c.Target_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage_Product__c.Inventory__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage_Product__c.Product_Code__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Catalog_Advantage_Product__c.Sequence__c</field><readable>true</readable></fieldPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit>
         <allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords>
@@ -243,4 +268,6 @@
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Membership_Item_Price__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
     <objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Pack__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
     <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Package_Line__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Catalog_Advantage__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+    <objectPermissions><allowCreate>true</allowCreate><allowDelete>true</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Catalog_Advantage_Product__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
 </PermissionSet>

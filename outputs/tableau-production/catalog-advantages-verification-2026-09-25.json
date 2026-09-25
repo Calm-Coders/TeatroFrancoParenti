@@ -1,0 +1,27 @@
+{
+  "snapshot_sha256": "7c027aab197526a28ec5ebb9d02dca84ef0aae23c0782e2b605c71fc2c76bbb5",
+  "deployment_id": "0AfSX000000q44L0AQ",
+  "apex_tests_passed": 87,
+  "advantage_count": 45,
+  "link_count": 207,
+  "season_counts": {
+    "10228683117776": 30,
+    "10228635444462": 15
+  },
+  "target_type_counts": {
+    "CONTACT": 15,
+    "CODE": 30
+  },
+  "matched_catalog_advantage_keys": 45,
+  "matched_catalog_relationship_keys": 207,
+  "unmatched_inventory_links": 0,
+  "legacy_json_differences": 0,
+  "italian_names_populated": 45,
+  "raw_json_populated": 45,
+  "legacy_inventory_rows_cleaned": 79,
+  "english_names_populated": 0,
+  "italian_descriptions_populated": 0,
+  "english_descriptions_populated": 0,
+  "access_codes_populated": 30,
+  "start_dates_populated": 9
+}

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Quota_Per_Timeslot__c</fullName>
+    <label>Quota Per Timeslot</label>
+    <defaultValue>false</defaultValue>
+    <type>Checkbox</type>
+</CustomField>

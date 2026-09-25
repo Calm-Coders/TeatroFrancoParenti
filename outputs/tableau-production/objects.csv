@@ -1,0 +1,65 @@
+﻿name,label,domain,tier,count,grain
+Access_Control__c,Access Control,Access,core,8503,"Current snapshot: one record per populated unique Barcode__c; upserted state, not an immutable scan-event log."
+Account,Account,Customers,core,101476,One current customer or organization account; SecuTix contacts are loaded here.
+Asset,Asset,CRM extensions,optional,0,One Asset record at native Salesforce object grain.
+Audience_Sub_Category__c,Audience Sub-Category,Pricing,core,38,One catalog audience/tariff subcategory with unique Audience_Subcategory_Id__c.
+Campaign,Campaign,CRM extensions,optional,3,One Campaign record at native Salesforce object grain.
+CampaignMember,Campaign Member,CRM extensions,optional,15,One Campaign Member record at native Salesforce object grain.
+Catalog_Enrichment_Setting__c,Catalog Enrichment Setting,Operations,support,1,One administrative or support record.
+Charge_Component__c,Charge Component,Pricing,core,0,One reusable charge definition identified by Charge_Id__c / Charge_Key__c.
+Contact,Contact,CRM extensions,optional,3,One Contact record at native Salesforce object grain.
+Contract,Contract,CRM extensions,optional,0,One Contract record at native Salesforce object grain.
+Cross_Sell_Product_Link__c,Cross Sell Product Link,Composition,core,4,One directed source-product → recommended-target-product relationship.
+In_App_Checklist_Settings__c,In App Checklist Settings,Operations,support,3,One administrative or support record.
+Integration_Log__c,Integration Log,Operations,support,103870,One administrative or support record.
+Inventory_Event__c,Inventory Event,Catalog,core,865,One event-detail row linked to a catalog inventory product.
+Inventory__c,Inventory,Catalog,core,1058,One current catalog product per unique Inventory_Id__c.
+Lead,Lead,CRM extensions,optional,7,One Lead record at native Salesforce object grain.
+Membership_Item_Price__c,Membership Item Price,Composition,core,0,One configured price occurrence for a membership item and audience.
+Membership_Item__c,Membership Item,Composition,core,13,One membership item/option under a membership product.
+Membership__c,Membership,Composition,core,13,One membership product-detail row linked to inventory.
+Opportunity,Opportunity,CRM extensions,optional,50,One Opportunity record at native Salesforce object grain.
+OpportunityLineItem,Opportunity Product,CRM extensions,optional,0,One Opportunity Product record at native Salesforce object grain.
+Order,Order,Sales,core,409280,"One current order header, keyed by Order_Id__c or Order_Secret_Id__c."
+OrderItem,Order Product,CRM extensions,optional,0,One Order Product record at native Salesforce object grain.
+Order_Movement_Data__c,Order Movement Data,Sales,core,1073649,One seat/movement from the latest order payload; optionally associated with a holder account.
+Order_Operation_Data__c,Order Operation Data,Sales,core,934482,"One operation from the latest order payload; operations include admissions, composition, charges, refunds and reservations."
+Pack__c,Pack,Composition,core,35,One package product-detail row linked to inventory.
+Package_Line__c,Package Line,Composition,core,112,"One source package line within a pack, identified by Relationship_Key__c."
+Performance_Price_Charge__c,Performance Price Charge,Pricing,core,0,One charge occurrence under a configured performance price.
+Performance_Price__c,Performance Price,Pricing,core,2936,One configured performance price occurrence with optional audience and seat category.
+Performance_Seat_Category__c,Performance Seat Category,Pricing,core,1374,One performance-to-seat-category bridge row.
+Performance__c,Performance,Catalog,core,3414,One current scheduled performance under an inventory event.
+Pricebook2,Price Book,CRM extensions,optional,1,One Price Book record at native Salesforce object grain.
+PricebookEntry,Price Book Entry,CRM extensions,optional,0,One Price Book Entry record at native Salesforce object grain.
+Product2,Product,CRM extensions,optional,0,One Product record at native Salesforce object grain.
+RecordType,Record Type,Operations,support,10,One administrative or support record.
+Sale_Period_Audience__c,Sale Period Audience,Availability,core,1660,One audience restriction under a sale period.
+Sale_Period_Seat_Category__c,Sale Period Seat Category,Availability,core,5326,One source seat-category restriction under a sale period.
+Sale_Period__c,Sale Period,Availability,core,476,"One selling window for an inventory, performance or membership-item price."
+Sales_Channel__c,Sales Channel,Availability,core,1,One catalog selling channel keyed by Channel_Key__c.
+Season_Ticket_Line__c,Season Ticket Line,Composition,core,612,One season-ticket composition line under a season-ticket product.
+Season_Ticket_Subject__c,Season Ticket Subject,Composition,core,0,One subject/group within a season-ticket definition.
+Season_Ticket__c,Season Ticket,Composition,core,44,One season-ticket product-detail row linked to inventory.
+Seat_Category__c,Seat Category,Pricing,core,30,One catalog seat category with unique Seat_Category_Id__c and Category_Key__c.
+User,User,Operations,support,13,One administrative or support record.
+Venue_Location__c,Venue Location,Catalog,core,9,"One reusable site/space location, identified by Location_Key__c."
+et4ae5__AggregateLink__c,Aggregate Link Level Detail,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__Automated_Send__c,Triggered Send,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__Business_Unit__c,Business Unit,Marketing package,optional,1,One managed-package record; business grain needs package-specific validation.
+et4ae5__Campaign_Member_Configuration__c,Campaign Member Configuration,Marketing package,optional,1,One managed-package record; business grain needs package-specific validation.
+et4ae5__Configuration__c,Configuration,Marketing package,optional,1,One managed-package record; business grain needs package-specific validation.
+et4ae5__ET4AEConfig__c,ET4AE Config,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__ET4AE_Config__c,ET4AE Configuration,Marketing package,optional,1,One managed-package record; business grain needs package-specific validation.
+et4ae5__Email_Linkage__c,Email Linkage,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__IndividualEmailResult__c,Individual Email Result,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__IndividualLink__c,Individual Link Level Detail,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__MC_CDC_Journey__c,MC CDC Journey,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__SMSDefinition__c,Mobile Send,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__SMSJunction__c,SMS Junction,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__SendDefinition__c,Email Send,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__SendJunction__c,Send Junction,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__SupportRequest__c,Support Request,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__Triggered_Send_Execution__c,Triggered Send Execution,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__UEBU__c,User Enabled Business Unit,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.
+et4ae5__abTest__c,AB Test,Marketing package,optional,0,One managed-package record; business grain needs package-specific validation.

@@ -234,6 +234,25 @@ System.schedule(
 
 Use `forceRefresh = true` only for a deliberate manual run. Normal webhook and scheduled calls use the provider's nightly cache.
 
+### Detailed catalog advantages in production — 2026-09-25
+
+Full GET Catalog `order.catalogData.seasons[].advantages[]` is now stored in `Catalog_Advantage__c` (one row per season and advantage) and `Catalog_Advantage_Product__c` (one row per season, advantage and product). The bridge has required `Catalog_Advantage__c` and optional `Inventory__c` lookups; the Inventory lookup is set only when both SecuTix product ID and season match. External keys are `Season_Id|Advantage_Id` and `Season_Id|Advantage_Id|Product_Id`. The advantage object holds translated names/descriptions, type, target, state, code, eligibility limits/flags and source JSON without embedded products.
+
+The new object layouts display these details and the product relationship list. The Inventory layout displays the existing `Product_Advantages__c` JSON and the new related list. `TFP_Catalog_Enrichment` grants object and field access to its assignees. Tableau should relate `Catalog_Advantage__c.Id` to `Catalog_Advantage_Product__c.Catalog_Advantage__c`, then `Catalog_Advantage_Product__c.Inventory__c` to `Inventory__c.Id`. See [the reporting diagram](../outputs/tableau-production/catalog-advantages-tableau.html).
+
+Deployment `0AfSX000000q44L0AQ` passed 87 local Salesforce tests. The 2026-09-25 GET Catalog snapshot (SHA-256 `7c027aab197526a28ec5ebb9d02dca84ef0aae23c0782e2b605c71fc2c76bbb5`) produced 45 definitions and 207 product links in production; all 207 Inventory lookups match the source season. The old `Inventory__c.Product_Advantages__c` JSON was reconciled on 79 Inventory records. Before/after backups are in local `.local/advantage-sync/` and are intentionally not committed.
+
+To refresh from a newly downloaded full catalog, run a dry check first, then execute:
+
+```powershell
+python scripts/catalog/sync_advantages_to_salesforce.py --catalog-url 'https://teatrofrancoparenti.it/wp-json/tfp/v1/get-catalog-raw' --save-catalog-file '.local/advantage-sync/catalog-YYYY-MM-DD.json' --target-org 'TFA Prod'
+python scripts/catalog/sync_advantages_to_salesforce.py --catalog-file '.local/advantage-sync/catalog-YYYY-MM-DD.json' --target-org 'TFA Prod' --execute --allow-production --clean-legacy --backup-file '.local/advantage-sync/inventory-advantages-before-YYYY-MM-DD.json'
+```
+
+The script upserts the snapshot and checks record counts and legacy JSON parity. It does not delete advantage records missing from a later snapshot. Review any such historical records separately before removal. The full catalog sync is currently an explicit operator run; the per-product enrichment queue still updates the condensed Inventory JSON independently.
+
+Calling the GET Catalog URL alone does not write Salesforce; use the command above to fetch and map the response in one run. The inbound `/v1/catalog-enrichment` endpoint currently receives the condensed per-product `advantages[]` and updates only `Inventory__c.Product_Advantages__c`. It does not update `Catalog_Advantage__c` or `Catalog_Advantage_Product__c`. That condensed response had materially different product membership from the full catalog on 2026-09-25, so it must not overwrite the detailed season-scoped model without a confirmed SecuTix payload contract. SOQL examples are in [catalog-advantages-queries.soql](../outputs/tableau-production/catalog-advantages-queries.soql).
+
 ### UAT smoke test — 2026-08-06
 
 Deployment `0AfMA00000CVqcv0AD` installed the Apex, fields, custom setting, and layout with 11 passing tests. Permission-set deployment `0AfMA00000CVqhl0AD` exposed the new fields to the UAT user. A real authenticated POST to `/services/apexrest/v1/catalog-enrichment` processed one inventory, one inventory event, and one performance with zero errors. No outbound provider request was made because the custom setting has no enabled org-default record.

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Mandatory_Contact__c</fullName>
+    <label>Mandatory Contact</label>
+    <defaultValue>false</defaultValue>
+    <type>Checkbox</type>
+</CustomField>
