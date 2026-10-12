@@ -1,0 +1,16 @@
+.content {
+    min-height: 9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading {
+    position: relative;
+    width: 100%;
+    min-height: 9rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0.5rem;
+}
